@@ -57,10 +57,12 @@ color:#bbb;
 height:500px;
 background-image:url("https://images.unsplash.com/photo-1489599849927-2ee91cede3ba");
 background-size:cover;
+background-position:center;
 display:flex;
 flex-direction:column;
 justify-content:center;
 padding:80px;
+margin-bottom:40px;
 }
 
 .banner h1{
@@ -104,6 +106,7 @@ margin-bottom:10px;
 .row-posters{
 display:flex;
 overflow-x:auto;
+padding-bottom:20px;
 }
 
 .poster{
@@ -142,10 +145,6 @@ flex-direction:column;
 z-index:100;
 }
 
-#videoPlayer{
-width:80%;
-}
-
 #cerrar{
 position:absolute;
 top:20px;
@@ -155,6 +154,11 @@ background:none;
 border:none;
 color:white;
 cursor:pointer;
+}
+
+iframe{
+width:80%;
+height:80%;
 }
 
 </style>
@@ -182,10 +186,10 @@ cursor:pointer;
 
 <div class="banner">
 
-<h1>Serie Destacada</h1>
+<h1>Bienvenido a MiStream</h1>
 
 <p>
-Una serie increíble que domina el catálogo de tu plataforma.
+Disfruta de una colección de películas y series directamente desde tu plataforma.
 </p>
 
 <div>
@@ -195,91 +199,13 @@ Una serie increíble que domina el catálogo de tu plataforma.
 
 </div>
 
-<!-- FILA 1 -->
+<!-- FILA DE PELÍCULAS -->
 
 <div class="row">
 
-<h2>Tendencias</h2>
+<h2>Películas</h2>
 
-<div class="row-posters">
-
-<div class="poster" onclick="reproducir('pelicula1.mp4')">
-<img src="https://picsum.photos/200/300?1">
-</div>
-
-<div class="poster" onclick="reproducir('pelicula2.mp4')">
-<img src="https://picsum.photos/200/300?2">
-</div>
-
-<div class="poster" onclick="reproducir('pelicula3.mp4')">
-<img src="https://picsum.photos/200/300?3">
-</div>
-
-<div class="poster" onclick="reproducir('pelicula4.mp4')">
-<img src="https://picsum.photos/200/300?4">
-</div>
-
-<div class="poster" onclick="reproducir('pelicula5.mp4')">
-<img src="https://picsum.photos/200/300?5">
-</div>
-
-</div>
-
-</div>
-
-<!-- FILA 2 -->
-
-<div class="row">
-
-<h2>Películas populares</h2>
-
-<div class="row-posters">
-
-<div class="poster" onclick="reproducir('pelicula6.mp4')">
-<img src="https://picsum.photos/200/300?6">
-</div>
-
-<div class="poster" onclick="reproducir('pelicula7.mp4')">
-<img src="https://picsum.photos/200/300?7">
-</div>
-
-<div class="poster" onclick="reproducir('pelicula8.mp4')">
-<img src="https://picsum.photos/200/300?8">
-</div>
-
-<div class="poster" onclick="reproducir('pelicula9.mp4')">
-<img src="https://picsum.photos/200/300?9">
-</div>
-
-</div>
-
-</div>
-
-<!-- FILA 3 -->
-
-<div class="row">
-
-<h2>Series</h2>
-
-<div class="row-posters">
-
-<div class="poster" onclick="reproducir('serie1.mp4')">
-<img src="https://picsum.photos/200/300?10">
-</div>
-
-<div class="poster" onclick="reproducir('serie2.mp4')">
-<img src="https://picsum.photos/200/300?11">
-</div>
-
-<div class="poster" onclick="reproducir('serie3.mp4')">
-<img src="https://picsum.photos/200/300?12">
-</div>
-
-<div class="poster" onclick="reproducir('serie4.mp4')">
-<img src="https://picsum.photos/200/300?13">
-</div>
-
-</div>
+<div class="row-posters" id="movies-container"></div>
 
 </div>
 
@@ -289,18 +215,46 @@ Una serie increíble que domina el catálogo de tu plataforma.
 
 <button id="cerrar" onclick="cerrarVideo()">X</button>
 
-<video id="videoPlayer" controls></video>
+<div id="video-container"></div>
 
 </div>
 
 <script>
 
+fetch("movies.json")
+.then(response => response.json())
+.then(data => {
+
+let container = document.getElementById("movies-container")
+
+data.forEach(movie => {
+
+let poster = document.createElement("div")
+poster.className = "poster"
+
+poster.innerHTML = `
+<img src="${movie.poster}">
+`
+
+poster.onclick = function(){
+reproducir(movie.video)
+}
+
+container.appendChild(poster)
+
+})
+
+})
+
 function reproducir(video){
 
 let player = document.getElementById("player")
-let videoPlayer = document.getElementById("videoPlayer")
+let videoContainer = document.getElementById("video-container")
 
-videoPlayer.src = video
+videoContainer.innerHTML = `
+<iframe src="${video}" frameborder="0" allowfullscreen></iframe>
+`
+
 player.style.display = "flex"
 
 }
@@ -308,9 +262,9 @@ player.style.display = "flex"
 function cerrarVideo(){
 
 let player = document.getElementById("player")
-let videoPlayer = document.getElementById("videoPlayer")
+let videoContainer = document.getElementById("video-container")
 
-videoPlayer.pause()
+videoContainer.innerHTML = ""
 player.style.display = "none"
 
 }
