@@ -137,28 +137,52 @@ top:0;
 left:0;
 width:100%;
 height:100%;
-background:black;
+background:rgba(0,0,0,0.95);
 display:none;
 align-items:center;
 justify-content:center;
-flex-direction:column;
-z-index:100;
+z-index:1000;
 }
 
-#cerrar{
+.player-content{
+width:85%;
+max-width:1100px;
+background:#000;
+border-radius:10px;
+padding:20px;
+position:relative;
+animation:fadeIn 0.3s ease;
+}
+
+#movie-title{
+margin-bottom:15px;
+font-size:24px;
+}
+
+#video-container iframe{
+width:100%;
+height:600px;
+border-radius:6px;
+}
+
+.close-btn{
 position:absolute;
-top:20px;
-right:30px;
-font-size:30px;
+top:10px;
+right:15px;
+font-size:26px;
 background:none;
 border:none;
 color:white;
 cursor:pointer;
 }
 
-iframe{
-width:80%;
-height:80%;
+.close-btn:hover{
+color:#e50914;
+}
+
+@keyframes fadeIn{
+from{opacity:0; transform:scale(0.9);}
+to{opacity:1; transform:scale(1);}
 }
 
 </style>
@@ -213,9 +237,15 @@ Disfruta de una colección de películas y series directamente desde tu platafor
 
 <div id="player">
 
-<button id="cerrar" onclick="cerrarVideo()">X</button>
+<div class="player-content">
+
+<button class="close-btn" onclick="cerrarVideo()">✕</button>
+
+<h2 id="movie-title"></h2>
 
 <div id="video-container"></div>
+
+</div>
 
 </div>
 
@@ -237,7 +267,7 @@ poster.innerHTML = `
 `
 
 poster.onclick = function(){
-reproducir(movie.video)
+reproducir(movie.video, movie.title)
 }
 
 container.appendChild(poster)
@@ -246,10 +276,13 @@ container.appendChild(poster)
 
 })
 
-function reproducir(video){
+function reproducir(video, title){
 
 let player = document.getElementById("player")
 let videoContainer = document.getElementById("video-container")
+let movieTitle = document.getElementById("movie-title")
+
+movieTitle.innerText = title
 
 videoContainer.innerHTML = `
 <iframe src="${video}" frameborder="0" allowfullscreen></iframe>
@@ -264,8 +297,8 @@ function cerrarVideo(){
 let player = document.getElementById("player")
 let videoContainer = document.getElementById("video-container")
 
-videoContainer.innerHTML = ""
-player.style.display = "none"
+videoContainer.innerHTML=""
+player.style.display="none"
 
 }
 
