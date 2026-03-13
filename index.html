@@ -4,23 +4,23 @@
 <meta charset="UTF-8">
 <title>MiStream</title>
 
-<script src="https://cdn.jsdelivr.net/npm/webtorrent@latest/webtorrent.min.js"></script>
-
 <style>
 
 body{
 margin:0;
 font-family:Arial;
-background:#0f0f0f;
+background:#141414;
 color:white;
 }
+
+/* NAVBAR */
 
 .navbar{
 position:fixed;
 top:0;
 width:100%;
 height:70px;
-background:#000;
+background:black;
 display:flex;
 align-items:center;
 padding:0 40px;
@@ -31,32 +31,26 @@ z-index:100;
 color:#e50914;
 font-size:28px;
 font-weight:bold;
-margin-right:40px;
 }
 
-.search{
-margin-left:auto;
-}
-
-.search input{
-padding:8px;
-border:none;
-border-radius:4px;
-}
+/* HERO */
 
 .hero{
-height:450px;
+height:400px;
+margin-top:70px;
 display:flex;
 align-items:center;
-padding:80px;
-margin-top:70px;
-background:linear-gradient(to top,#0f0f0f 10%,transparent),
+padding-left:60px;
+background:
+linear-gradient(to top,#141414,transparent),
 url("https://image.tmdb.org/t/p/original/9Gtg2DzBhmYamXBS1hKAhiwbBKS.jpg");
 background-size:cover;
 }
 
+/* ROWS */
+
 .row{
-margin-top:40px;
+margin-top:30px;
 padding-left:40px;
 }
 
@@ -67,20 +61,22 @@ padding-top:20px;
 }
 
 .poster{
-width:200px;
-margin-right:12px;
+width:180px;
+margin-right:10px;
 cursor:pointer;
 transition:.3s;
 }
 
 .poster:hover{
-transform:scale(1.15);
+transform:scale(1.1);
 }
 
 .poster img{
 width:100%;
-border-radius:8px;
+border-radius:6px;
 }
+
+/* PLAYER */
 
 #player{
 position:fixed;
@@ -95,18 +91,12 @@ align-items:center;
 z-index:1000;
 }
 
-.player-content{
+.player-box{
 width:90%;
 max-width:1200px;
 }
 
-#video video{
-width:100%;
-height:80vh;
-background:black;
-}
-
-#video iframe{
+iframe{
 width:100%;
 height:80vh;
 border:none;
@@ -120,9 +110,13 @@ font-size:30px;
 cursor:pointer;
 }
 
+.server-buttons{
+margin-bottom:10px;
+}
+
 .server-buttons button{
-margin:5px;
-padding:6px 12px;
+padding:8px 15px;
+margin-right:5px;
 cursor:pointer;
 }
 
@@ -132,29 +126,20 @@ cursor:pointer;
 <body>
 
 <div class="navbar">
-
 <div class="logo">MiStream</div>
-
-<div class="search">
-<input id="search" placeholder="Buscar...">
-</div>
-
 </div>
 
 <div class="hero">
-
-<h1>MiStream</h1>
-<p>Películas y series en español</p>
-
+<h1>Streaming en Español</h1>
 </div>
 
 <div class="row">
-<h2>🔥 Películas populares</h2>
+<h2>Películas populares</h2>
 <div class="row-posters" id="movies"></div>
 </div>
 
 <div class="row">
-<h2>📺 Series populares</h2>
+<h2>Series populares</h2>
 <div class="row-posters" id="series"></div>
 </div>
 
@@ -162,13 +147,11 @@ cursor:pointer;
 
 <div class="close" onclick="closePlayer()">✕</div>
 
-<div class="player-content">
+<div class="player-box">
 
 <div class="server-buttons">
-
-<button onclick="useTorrent()">Servidor Torrent (sin anuncios)</button>
-<button onclick="useVidsrc()">Servidor Streaming</button>
-
+<button onclick="server1()">Servidor 1</button>
+<button onclick="server2()">Servidor 2</button>
 </div>
 
 <div id="video"></div>
@@ -179,18 +162,19 @@ cursor:pointer;
 
 <script>
 
-const API_KEY="8a2de0488825903a0a4b7d0ff12a3873"
+const API="8a2de0488825903a0a4b7d0ff12a3873"
 
 let currentId=null
+let currentType="movie"
 
 /* CARGAR PELICULAS */
 
 async function loadMovies(){
 
-let res=await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&language=es-ES`)
-let data=await res.json()
+let r=await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API}&language=es-ES`)
+let d=await r.json()
 
-render(data.results,"movies","movie")
+show(d.results,"movies","movie")
 
 }
 
@@ -198,81 +182,93 @@ render(data.results,"movies","movie")
 
 async function loadSeries(){
 
-let res=await fetch(`https://api.themoviedb.org/3/tv/popular?api_key=${API_KEY}&language=es-ES`)
-let data=await res.json()
+let r=await fetch(`https://api.themoviedb.org/3/tv/popular?api_key=${API}&language=es-ES`)
+let d=await r.json()
 
-render(data.results,"series","tv")
+show(d.results,"series","tv")
 
 }
 
-/* MOSTRAR POSTERS */
+/* MOSTRAR */
 
-function render(list,container,type){
+function show(list,container,type){
 
 let row=document.getElementById(container)
-
 row.innerHTML=""
 
 list.forEach(item=>{
 
 if(!item.poster_path) return
 
-let poster=document.createElement("div")
-poster.className="poster"
+let div=document.createElement("div")
+div.className="poster"
 
-let img=`https://image.tmdb.org/t/p/w500${item.poster_path}`
+div.innerHTML=`
+<img src="https://image.tmdb.org/t/p/w500${item.poster_path}">
+`
 
-poster.innerHTML=`<img src="${img}">`
-
-poster.onclick=()=>{
+div.onclick=()=>{
 
 currentId=item.id
+currentType=type
 
 openPlayer()
 
 }
 
-row.appendChild(poster)
+row.appendChild(div)
 
 })
 
 }
 
-/* ABRIR PLAYER */
+/* ABRIR */
 
 function openPlayer(){
 
 document.getElementById("player").style.display="flex"
 
-}
-
-/* TORRENT (sin anuncios) */
-
-function useTorrent(){
-
-const client=new WebTorrent()
-
-document.getElementById("video").innerHTML="Cargando torrent..."
-
-const torrentId="magnet:?xt=urn:btih:EXAMPLE"
-
-client.add(torrentId,function(torrent){
-
-const file=torrent.files.find(file=>file.name.endsWith(".mp4"))
-
-file.renderTo("#video")
-
-})
+server1()
 
 }
 
-/* STREAMING */
+/* SERVIDOR 1 */
 
-function useVidsrc(){
+function server1(){
+
+if(currentType==="movie"){
 
 document.getElementById("video").innerHTML=`
-<iframe src="https://vidsrc.to/embed/movie/${currentId}?lang=es" allowfullscreen></iframe>
+<iframe src="https://vidsrc.to/embed/movie/${currentId}?lang=es"></iframe>
 `
+
+}else{
+
+document.getElementById("video").innerHTML=`
+<iframe src="https://vidsrc.to/embed/tv/${currentId}/1/1?lang=es"></iframe>
+`
+
+}
+
+}
+
+/* SERVIDOR 2 */
+
+function server2(){
+
+if(currentType==="movie"){
+
+document.getElementById("video").innerHTML=`
+<iframe src="https://multiembed.mov/?video_id=${currentId}&tmdb=1"></iframe>
+`
+
+}else{
+
+document.getElementById("video").innerHTML=`
+<iframe src="https://multiembed.mov/?video_id=${currentId}&tmdb=1&s=1&e=1"></iframe>
+`
+
+}
 
 }
 
@@ -285,23 +281,6 @@ document.getElementById("player").style.display="none"
 document.getElementById("video").innerHTML=""
 
 }
-
-/* BUSCAR */
-
-document.getElementById("search").addEventListener("keypress",async e=>{
-
-if(e.key==="Enter"){
-
-let q=e.target.value
-
-let res=await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&language=es-ES&query=${q}`)
-let data=await res.json()
-
-render(data.results,"movies","movie")
-
-}
-
-})
 
 loadMovies()
 loadSeries()
