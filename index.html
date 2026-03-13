@@ -13,8 +13,6 @@ background:#141414;
 color:white;
 }
 
-/* NAVBAR */
-
 .navbar{
 position:fixed;
 top:0;
@@ -31,23 +29,36 @@ z-index:100;
 color:#e50914;
 font-size:28px;
 font-weight:bold;
+margin-right:30px;
 }
 
-/* HERO */
+.search input{
+padding:8px;
+border:none;
+border-radius:4px;
+}
 
 .hero{
-height:400px;
-margin-top:70px;
+height:500px;
 display:flex;
-align-items:center;
+flex-direction:column;
+justify-content:center;
 padding-left:60px;
-background:
-linear-gradient(to top,#141414,transparent),
-url("https://image.tmdb.org/t/p/original/9Gtg2DzBhmYamXBS1hKAhiwbBKS.jpg");
 background-size:cover;
+background-position:center;
+margin-top:70px;
 }
 
-/* ROWS */
+.hero h1{
+font-size:60px;
+}
+
+.hero button{
+padding:12px 25px;
+font-size:18px;
+margin-top:10px;
+cursor:pointer;
+}
 
 .row{
 margin-top:30px;
@@ -75,8 +86,6 @@ transform:scale(1.1);
 width:100%;
 border-radius:6px;
 }
-
-/* PLAYER */
 
 #player{
 position:fixed;
@@ -110,13 +119,21 @@ font-size:30px;
 cursor:pointer;
 }
 
-.server-buttons{
-margin-bottom:10px;
-}
-
 .server-buttons button{
 padding:8px 15px;
-margin-right:5px;
+margin:5px;
+cursor:pointer;
+}
+
+.episodes{
+margin-top:10px;
+display:flex;
+flex-wrap:wrap;
+}
+
+.episodes button{
+margin:3px;
+padding:5px 10px;
 cursor:pointer;
 }
 
@@ -126,12 +143,16 @@ cursor:pointer;
 <body>
 
 <div class="navbar">
+
 <div class="logo">MiStream</div>
+
+<div class="search">
+<input id="search" placeholder="Buscar...">
 </div>
 
-<div class="hero">
-<h1>Streaming en Español</h1>
 </div>
+
+<div id="hero" class="hero"></div>
 
 <div class="row">
 <h2>Películas populares</h2>
@@ -143,6 +164,11 @@ cursor:pointer;
 <div class="row-posters" id="series"></div>
 </div>
 
+<div class="row">
+<h2>⭐ Favoritos</h2>
+<div class="row-posters" id="favorites"></div>
+</div>
+
 <div id="player">
 
 <div class="close" onclick="closePlayer()">✕</div>
@@ -150,11 +176,15 @@ cursor:pointer;
 <div class="player-box">
 
 <div class="server-buttons">
+
 <button onclick="server1()">Servidor 1</button>
 <button onclick="server2()">Servidor 2</button>
+
 </div>
 
 <div id="video"></div>
+
+<div id="episodes" class="episodes"></div>
 
 </div>
 
@@ -166,32 +196,56 @@ const API="8a2de0488825903a0a4b7d0ff12a3873"
 
 let currentId=null
 let currentType="movie"
+let currentSeason=1
 
-/* CARGAR PELICULAS */
+/* HERO */
+
+async function loadHero(){
+
+let r=await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API}&language=es-ES`)
+let d=await r.json()
+
+let movie=d.results[0]
+
+let hero=document.getElementById("hero")
+
+hero.style.backgroundImage=`
+linear-gradient(to top,#141414,transparent),
+url(https://image.tmdb.org/t/p/original${movie.backdrop_path})
+`
+
+hero.innerHTML=`
+<h1>${movie.title}</h1>
+<button onclick="play(${movie.id},'movie')">▶ Ver ahora</button>
+`
+
+}
+
+/* PELICULAS */
 
 async function loadMovies(){
 
 let r=await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API}&language=es-ES`)
 let d=await r.json()
 
-show(d.results,"movies","movie")
+render(d.results,"movies","movie")
 
 }
 
-/* CARGAR SERIES */
+/* SERIES */
 
 async function loadSeries(){
 
 let r=await fetch(`https://api.themoviedb.org/3/tv/popular?api_key=${API}&language=es-ES`)
 let d=await r.json()
 
-show(d.results,"series","tv")
+render(d.results,"series","tv")
 
 }
 
-/* MOSTRAR */
+/* RENDER */
 
-function show(list,container,type){
+function render(list,container,type){
 
 let row=document.getElementById(container)
 row.innerHTML=""
@@ -207,14 +261,7 @@ div.innerHTML=`
 <img src="https://image.tmdb.org/t/p/w500${item.poster_path}">
 `
 
-div.onclick=()=>{
-
-currentId=item.id
-currentType=type
-
-openPlayer()
-
-}
+div.onclick=()=>play(item.id,type)
 
 row.appendChild(div)
 
@@ -222,13 +269,50 @@ row.appendChild(div)
 
 }
 
-/* ABRIR */
+/* PLAY */
 
-function openPlayer(){
+async function play(id,type){
+
+currentId=id
+currentType=type
 
 document.getElementById("player").style.display="flex"
 
+document.getElementById("episodes").innerHTML=""
+
+if(type==="tv"){
+
+let r=await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API}&language=es-ES`)
+let d=await r.json()
+
+let episodes=document.getElementById("episodes")
+
+for(let i=1;i<=10;i++){
+
+let b=document.createElement("button")
+b.innerText="Ep "+i
+
+b.onclick=()=>playEpisode(i)
+
+episodes.appendChild(b)
+
+}
+
+}
+
 server1()
+
+saveContinue(id,type)
+
+}
+
+/* EPISODIOS */
+
+function playEpisode(ep){
+
+document.getElementById("video").innerHTML=`
+<iframe src="https://vidsrc.to/embed/tv/${currentId}/${currentSeason}/${ep}?lang=es"></iframe>
+`
 
 }
 
@@ -244,9 +328,7 @@ document.getElementById("video").innerHTML=`
 
 }else{
 
-document.getElementById("video").innerHTML=`
-<iframe src="https://vidsrc.to/embed/tv/${currentId}/1/1?lang=es"></iframe>
-`
+playEpisode(1)
 
 }
 
@@ -277,11 +359,48 @@ document.getElementById("video").innerHTML=`
 function closePlayer(){
 
 document.getElementById("player").style.display="none"
-
 document.getElementById("video").innerHTML=""
 
 }
 
+/* FAVORITOS */
+
+function addFavorite(id,type){
+
+let fav=JSON.parse(localStorage.getItem("fav")||"[]")
+
+fav.push({id,type})
+
+localStorage.setItem("fav",JSON.stringify(fav))
+
+}
+
+/* CONTINUAR */
+
+function saveContinue(id,type){
+
+localStorage.setItem("continue",JSON.stringify({id,type}))
+
+}
+
+/* BUSCAR */
+
+document.getElementById("search").addEventListener("keypress",async e=>{
+
+if(e.key==="Enter"){
+
+let q=e.target.value
+
+let r=await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API}&language=es-ES&query=${q}`)
+let d=await r.json()
+
+render(d.results,"movies","movie")
+
+}
+
+})
+
+loadHero()
 loadMovies()
 loadSeries()
 
