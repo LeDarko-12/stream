@@ -137,7 +137,7 @@ top:0;
 left:0;
 width:100%;
 height:100%;
-background:rgba(0,0,0,0.95);
+background:black;
 display:none;
 align-items:center;
 justify-content:center;
@@ -145,31 +145,22 @@ z-index:1000;
 }
 
 .player-content{
-width:85%;
-max-width:1100px;
-background:#000;
-border-radius:10px;
-padding:20px;
+width:90%;
+max-width:1200px;
 position:relative;
-animation:fadeIn 0.3s ease;
-}
-
-#movie-title{
-margin-bottom:15px;
-font-size:24px;
 }
 
 #video-container iframe{
 width:100%;
-height:600px;
-border-radius:6px;
+height:80vh;
+border:none;
 }
 
 .close-btn{
 position:absolute;
-top:10px;
-right:15px;
-font-size:26px;
+top:-40px;
+right:0;
+font-size:30px;
 background:none;
 border:none;
 color:white;
@@ -178,11 +169,6 @@ cursor:pointer;
 
 .close-btn:hover{
 color:#e50914;
-}
-
-@keyframes fadeIn{
-from{opacity:0; transform:scale(0.9);}
-to{opacity:1; transform:scale(1);}
 }
 
 </style>
@@ -213,7 +199,7 @@ to{opacity:1; transform:scale(1);}
 <h1>Bienvenido a MiStream</h1>
 
 <p>
-Disfruta de una colección de películas y series directamente desde tu plataforma.
+Tu plataforma gratuita de películas y series.
 </p>
 
 <div>
@@ -223,7 +209,7 @@ Disfruta de una colección de películas y series directamente desde tu platafor
 
 </div>
 
-<!-- FILA DE PELÍCULAS -->
+<!-- FILA PELÍCULAS -->
 
 <div class="row">
 
@@ -241,8 +227,6 @@ Disfruta de una colección de películas y series directamente desde tu platafor
 
 <button class="close-btn" onclick="cerrarVideo()">✕</button>
 
-<h2 id="movie-title"></h2>
-
 <div id="video-container"></div>
 
 </div>
@@ -251,54 +235,78 @@ Disfruta de una colección de películas y series directamente desde tu platafor
 
 <script>
 
-fetch("movies.json")
-.then(response => response.json())
-.then(data => {
+/* PELICULAS DE EJEMPLO */
+
+const movies = [
+
+{
+title:"Inception",
+poster:"https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg",
+imdb:"tt1375666"
+},
+
+{
+title:"The Matrix",
+poster:"https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
+imdb:"tt0133093"
+},
+
+{
+title:"Interstellar",
+poster:"https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
+imdb:"tt0816692"
+},
+
+{
+title:"Joker",
+poster:"https://image.tmdb.org/t/p/w500/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg",
+imdb:"tt7286456"
+}
+
+]
 
 let container = document.getElementById("movies-container")
 
-data.forEach(movie => {
+movies.forEach(movie=>{
 
 let poster = document.createElement("div")
-poster.className = "poster"
 
-poster.innerHTML = `
-<img src="${movie.poster}">
-`
+poster.className="poster"
 
-poster.onclick = function(){
-reproducir(movie.video, movie.title)
+poster.innerHTML=`<img src="${movie.poster}">`
+
+poster.onclick=()=>{
+reproducir(movie.imdb)
 }
 
 container.appendChild(poster)
 
 })
 
-})
+/* REPRODUCTOR */
 
-function reproducir(video, title){
+function reproducir(imdb){
 
-let player = document.getElementById("player")
-let videoContainer = document.getElementById("video-container")
-let movieTitle = document.getElementById("movie-title")
+let player=document.getElementById("player")
 
-movieTitle.innerText = title
+let video=document.getElementById("video-container")
 
-videoContainer.innerHTML = `
-<iframe src="${video}" frameborder="0" allowfullscreen></iframe>
+video.innerHTML=`
+<iframe
+src="https://multiembed.mov/?video_id=${imdb}"
+allowfullscreen>
+</iframe>
 `
 
-player.style.display = "flex"
+player.style.display="flex"
 
 }
 
 function cerrarVideo(){
 
-let player = document.getElementById("player")
-let videoContainer = document.getElementById("video-container")
+document.getElementById("player").style.display="none"
 
-videoContainer.innerHTML=""
-player.style.display="none"
+document.getElementById("video-container").innerHTML=""
 
 }
 
