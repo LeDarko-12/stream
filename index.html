@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
 <meta charset="UTF-8">
 <title>MiStream</title>
@@ -8,9 +9,9 @@
 
 body{
 margin:0;
-font-family:Arial;
 background:#141414;
 color:white;
+font-family:Arial;
 }
 
 .navbar{
@@ -22,20 +23,23 @@ background:black;
 display:flex;
 align-items:center;
 padding:0 40px;
-z-index:100;
+z-index:10;
 }
 
 .logo{
 color:#e50914;
 font-size:28px;
 font-weight:bold;
-margin-right:30px;
+}
+
+.search{
+margin-left:auto;
 }
 
 .search input{
 padding:8px;
-border:none;
 border-radius:4px;
+border:none;
 }
 
 .hero{
@@ -44,31 +48,19 @@ display:flex;
 flex-direction:column;
 justify-content:center;
 padding-left:60px;
-background-size:cover;
-background-position:center;
 margin-top:70px;
-}
-
-.hero h1{
-font-size:60px;
-}
-
-.hero button{
-padding:12px 25px;
-font-size:18px;
-margin-top:10px;
-cursor:pointer;
+background-size:cover;
 }
 
 .row{
-margin-top:30px;
 padding-left:40px;
+margin-top:30px;
 }
 
 .row-posters{
 display:flex;
 overflow-x:auto;
-padding-top:20px;
+margin-top:10px;
 }
 
 .poster{
@@ -97,7 +89,7 @@ background:black;
 display:none;
 justify-content:center;
 align-items:center;
-z-index:1000;
+z-index:100;
 }
 
 .player-box{
@@ -120,15 +112,13 @@ cursor:pointer;
 }
 
 .server-buttons button{
-padding:8px 15px;
 margin:5px;
+padding:8px 14px;
 cursor:pointer;
 }
 
 .episodes{
 margin-top:10px;
-display:flex;
-flex-wrap:wrap;
 }
 
 .episodes button{
@@ -156,17 +146,12 @@ cursor:pointer;
 
 <div class="row">
 <h2>Películas populares</h2>
-<div class="row-posters" id="movies"></div>
+<div id="movies" class="row-posters"></div>
 </div>
 
 <div class="row">
 <h2>Series populares</h2>
-<div class="row-posters" id="series"></div>
-</div>
-
-<div class="row">
-<h2>⭐ Favoritos</h2>
-<div class="row-posters" id="favorites"></div>
+<div id="series" class="row-posters"></div>
 </div>
 
 <div id="player">
@@ -177,8 +162,9 @@ cursor:pointer;
 
 <div class="server-buttons">
 
-<button onclick="server1()">Servidor 1</button>
-<button onclick="server2()">Servidor 2</button>
+<button onclick="loadServer(0)">Servidor 1</button>
+<button onclick="loadServer(1)">Servidor 2</button>
+<button onclick="loadServer(2)">Servidor 3</button>
 
 </div>
 
@@ -194,15 +180,31 @@ cursor:pointer;
 
 const API="8a2de0488825903a0a4b7d0ff12a3873"
 
-let currentId=null
-let currentType="movie"
+let currentId
+let currentType
 let currentSeason=1
+let currentEpisode=1
+let serverIndex=0
+
+/* SERVIDORES */
+
+const movieServers=[
+(id)=>`https://vidsrc.to/embed/movie/${id}?lang=es&subtitle=es`,
+(id)=>`https://multiembed.mov/?video_id=${id}&tmdb=1&lang=es`,
+(id)=>`https://vidsrc.me/embed/movie?tmdb=${id}&lang=es`
+]
+
+const tvServers=[
+(id,s,e)=>`https://vidsrc.to/embed/tv/${id}/${s}/${e}?lang=es&subtitle=es`,
+(id,s,e)=>`https://multiembed.mov/?video_id=${id}&tmdb=1&s=${s}&e=${e}&lang=es`,
+(id,s,e)=>`https://vidsrc.me/embed/tv?tmdb=${id}&season=${s}&episode=${e}&lang=es`
+]
 
 /* HERO */
 
 async function loadHero(){
 
-let r=await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API}&language=es-ES`)
+let r=await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API}&language=es-ES&region=ES`)
 let d=await r.json()
 
 let movie=d.results[0]
@@ -216,23 +218,23 @@ url(https://image.tmdb.org/t/p/original${movie.backdrop_path})
 
 hero.innerHTML=`
 <h1>${movie.title}</h1>
-<button onclick="play(${movie.id},'movie')">▶ Ver ahora</button>
+<button onclick="play(${movie.id},'movie')">▶ Ver</button>
 `
 
 }
 
-/* PELICULAS */
+/* CARGAR PELICULAS */
 
 async function loadMovies(){
 
-let r=await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API}&language=es-ES`)
+let r=await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API}&language=es-ES&region=ES`)
 let d=await r.json()
 
 render(d.results,"movies","movie")
 
 }
 
-/* SERIES */
+/* CARGAR SERIES */
 
 async function loadSeries(){
 
@@ -243,11 +245,12 @@ render(d.results,"series","tv")
 
 }
 
-/* RENDER */
+/* MOSTRAR POSTERS */
 
 function render(list,container,type){
 
 let row=document.getElementById(container)
+
 row.innerHTML=""
 
 list.forEach(item=>{
@@ -255,6 +258,7 @@ list.forEach(item=>{
 if(!item.poster_path) return
 
 let div=document.createElement("div")
+
 div.className="poster"
 
 div.innerHTML=`
@@ -275,6 +279,7 @@ async function play(id,type){
 
 currentId=id
 currentType=type
+serverIndex=0
 
 document.getElementById("player").style.display="flex"
 
@@ -282,75 +287,50 @@ document.getElementById("episodes").innerHTML=""
 
 if(type==="tv"){
 
-let r=await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API}&language=es-ES`)
-let d=await r.json()
-
-let episodes=document.getElementById("episodes")
-
-for(let i=1;i<=10;i++){
+for(let i=1;i<=12;i++){
 
 let b=document.createElement("button")
+
 b.innerText="Ep "+i
 
-b.onclick=()=>playEpisode(i)
+b.onclick=()=>{
 
-episodes.appendChild(b)
+currentEpisode=i
+loadServer(serverIndex)
+
+}
+
+document.getElementById("episodes").appendChild(b)
 
 }
 
 }
 
-server1()
-
-saveContinue(id,type)
+loadServer(0)
 
 }
 
-/* EPISODIOS */
+/* CARGAR SERVIDOR */
 
-function playEpisode(ep){
+function loadServer(index){
 
-document.getElementById("video").innerHTML=`
-<iframe src="https://vidsrc.to/embed/tv/${currentId}/${currentSeason}/${ep}?lang=es"></iframe>
-`
+serverIndex=index
 
-}
-
-/* SERVIDOR 1 */
-
-function server1(){
+let url
 
 if(currentType==="movie"){
 
-document.getElementById("video").innerHTML=`
-<iframe src="https://vidsrc.to/embed/movie/${currentId}?lang=es"></iframe>
-`
+url=movieServers[index](currentId)
 
 }else{
 
-playEpisode(1)
+url=tvServers[index](currentId,currentSeason,currentEpisode)
 
 }
-
-}
-
-/* SERVIDOR 2 */
-
-function server2(){
-
-if(currentType==="movie"){
 
 document.getElementById("video").innerHTML=`
-<iframe src="https://multiembed.mov/?video_id=${currentId}&tmdb=1"></iframe>
+<iframe src="${url}" allowfullscreen></iframe>
 `
-
-}else{
-
-document.getElementById("video").innerHTML=`
-<iframe src="https://multiembed.mov/?video_id=${currentId}&tmdb=1&s=1&e=1"></iframe>
-`
-
-}
 
 }
 
@@ -359,27 +339,8 @@ document.getElementById("video").innerHTML=`
 function closePlayer(){
 
 document.getElementById("player").style.display="none"
+
 document.getElementById("video").innerHTML=""
-
-}
-
-/* FAVORITOS */
-
-function addFavorite(id,type){
-
-let fav=JSON.parse(localStorage.getItem("fav")||"[]")
-
-fav.push({id,type})
-
-localStorage.setItem("fav",JSON.stringify(fav))
-
-}
-
-/* CONTINUAR */
-
-function saveContinue(id,type){
-
-localStorage.setItem("continue",JSON.stringify({id,type}))
 
 }
 
@@ -392,6 +353,7 @@ if(e.key==="Enter"){
 let q=e.target.value
 
 let r=await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API}&language=es-ES&query=${q}`)
+
 let d=await r.json()
 
 render(d.results,"movies","movie")
