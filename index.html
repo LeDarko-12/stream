@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+<meta charset="UTF-8">
+<title>MiStream</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial;
+}
+
+body{
+background:#141414;
+color:white;
+}
+
+/* NAVBAR */
+
+.navbar{
+position:fixed;
+top:0;
+width:100%;
+height:70px;
+background:linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
+display:flex;
+align-items:center;
+padding:0 40px;
+z-index:10;
+}
+
+.logo{
+color:#e50914;
+font-size:30px;
+font-weight:bold;
+margin-right:40px;
+}
+
+.menu a{
+margin-right:20px;
+text-decoration:none;
+color:white;
+font-size:15px;
+}
+
+.menu a:hover{
+color:#bbb;
+}
+
+/* BANNER */
+
+.banner{
+height:500px;
+background-image:url("https://images.unsplash.com/photo-1489599849927-2ee91cede3ba");
+background-size:cover;
+display:flex;
+flex-direction:column;
+justify-content:center;
+padding:80px;
+}
+
+.banner h1{
+font-size:60px;
+margin-bottom:20px;
+}
+
+.banner p{
+width:500px;
+margin-bottom:20px;
+}
+
+.banner button{
+padding:12px 25px;
+margin-right:10px;
+border:none;
+font-size:16px;
+cursor:pointer;
+}
+
+.play{
+background:white;
+}
+
+.info{
+background:rgba(109,109,110,0.7);
+color:white;
+}
+
+/* FILAS */
+
+.row{
+margin-top:40px;
+padding-left:40px;
+}
+
+.row h2{
+margin-bottom:10px;
+}
+
+.row-posters{
+display:flex;
+overflow-x:auto;
+}
+
+.poster{
+width:180px;
+margin-right:10px;
+transition:transform 0.3s;
+cursor:pointer;
+}
+
+.poster:hover{
+transform:scale(1.15);
+}
+
+.poster img{
+width:100%;
+border-radius:4px;
+}
+
+.row-posters::-webkit-scrollbar{
+display:none;
+}
+
+/* REPRODUCTOR */
+
+#player{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:black;
+display:none;
+align-items:center;
+justify-content:center;
+flex-direction:column;
+z-index:100;
+}
+
+#videoPlayer{
+width:80%;
+}
+
+#cerrar{
+position:absolute;
+top:20px;
+right:30px;
+font-size:30px;
+background:none;
+border:none;
+color:white;
+cursor:pointer;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+
+<div class="navbar">
+
+<div class="logo">MiStream</div>
+
+<div class="menu">
+<a href="#">Inicio</a>
+<a href="#">Series</a>
+<a href="#">Películas</a>
+<a href="#">Mi lista</a>
+</div>
+
+</div>
+
+<!-- BANNER -->
+
+<div class="banner">
+
+<h1>Serie Destacada</h1>
+
+<p>
+Una serie increíble que domina el catálogo de tu plataforma.
+</p>
+
+<div>
+<button class="play">▶ Reproducir</button>
+<button class="info">Más información</button>
+</div>
+
+</div>
+
+<!-- FILA 1 -->
+
+<div class="row">
+
+<h2>Tendencias</h2>
+
+<div class="row-posters">
+
+<div class="poster" onclick="reproducir('pelicula1.mp4')">
+<img src="https://picsum.photos/200/300?1">
+</div>
+
+<div class="poster" onclick="reproducir('pelicula2.mp4')">
+<img src="https://picsum.photos/200/300?2">
+</div>
+
+<div class="poster" onclick="reproducir('pelicula3.mp4')">
+<img src="https://picsum.photos/200/300?3">
+</div>
+
+<div class="poster" onclick="reproducir('pelicula4.mp4')">
+<img src="https://picsum.photos/200/300?4">
+</div>
+
+<div class="poster" onclick="reproducir('pelicula5.mp4')">
+<img src="https://picsum.photos/200/300?5">
+</div>
+
+</div>
+
+</div>
+
+<!-- FILA 2 -->
+
+<div class="row">
+
+<h2>Películas populares</h2>
+
+<div class="row-posters">
+
+<div class="poster" onclick="reproducir('pelicula6.mp4')">
+<img src="https://picsum.photos/200/300?6">
+</div>
+
+<div class="poster" onclick="reproducir('pelicula7.mp4')">
+<img src="https://picsum.photos/200/300?7">
+</div>
+
+<div class="poster" onclick="reproducir('pelicula8.mp4')">
+<img src="https://picsum.photos/200/300?8">
+</div>
+
+<div class="poster" onclick="reproducir('pelicula9.mp4')">
+<img src="https://picsum.photos/200/300?9">
+</div>
+
+</div>
+
+</div>
+
+<!-- FILA 3 -->
+
+<div class="row">
+
+<h2>Series</h2>
+
+<div class="row-posters">
+
+<div class="poster" onclick="reproducir('serie1.mp4')">
+<img src="https://picsum.photos/200/300?10">
+</div>
+
+<div class="poster" onclick="reproducir('serie2.mp4')">
+<img src="https://picsum.photos/200/300?11">
+</div>
+
+<div class="poster" onclick="reproducir('serie3.mp4')">
+<img src="https://picsum.photos/200/300?12">
+</div>
+
+<div class="poster" onclick="reproducir('serie4.mp4')">
+<img src="https://picsum.photos/200/300?13">
+</div>
+
+</div>
+
+</div>
+
+<!-- REPRODUCTOR -->
+
+<div id="player">
+
+<button id="cerrar" onclick="cerrarVideo()">X</button>
+
+<video id="videoPlayer" controls></video>
+
+</div>
+
+<script>
+
+function reproducir(video){
+
+let player = document.getElementById("player")
+let videoPlayer = document.getElementById("videoPlayer")
+
+videoPlayer.src = video
+player.style.display = "flex"
+
+}
+
+function cerrarVideo(){
+
+let player = document.getElementById("player")
+let videoPlayer = document.getElementById("videoPlayer")
+
+videoPlayer.pause()
+player.style.display = "none"
+
+}
+
+</script>
+
+</body>
+</html>
