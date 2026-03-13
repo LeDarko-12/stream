@@ -76,10 +76,6 @@ margin-top:40px;
 padding-left:40px;
 }
 
-.row h2{
-margin-bottom:15px;
-}
-
 .row-posters{
 display:flex;
 overflow-x:auto;
@@ -139,13 +135,22 @@ color:white;
 cursor:pointer;
 }
 
+.episodes{
+margin-top:10px;
+}
+
+.episodes button{
+margin:4px;
+padding:6px 10px;
+border:none;
+cursor:pointer;
+}
+
 </style>
 
 </head>
 
 <body>
-
-<!-- NAVBAR -->
 
 <div class="navbar">
 
@@ -163,22 +168,20 @@ cursor:pointer;
 
 </div>
 
-<!-- BANNER -->
-
 <div class="banner" id="banner">
 
 <h1>MiStream</h1>
-<p>Películas y series ilimitadas</p>
+<p>Películas, series y anime</p>
 
 </div>
 
-<!-- TENDENCIAS -->
+<!-- PELICULAS -->
 
 <div class="row">
 
-<h2>🔥 Tendencias</h2>
+<h2>🔥 Películas</h2>
 
-<div class="row-posters" id="trending"></div>
+<div class="row-posters" id="movies"></div>
 
 </div>
 
@@ -202,15 +205,17 @@ cursor:pointer;
 
 <div id="video-container"></div>
 
+<div class="episodes" id="episodes"></div>
+
 </div>
 
 </div>
 
 <script>
 
-/* BASE DE DATOS */
+/* PELICULAS */
 
-const trending=[
+const movies=[
 
 {
 title:"Interstellar",
@@ -228,67 +233,49 @@ imdb:"tt7286456"
 title:"Avengers Endgame",
 poster:"https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg",
 imdb:"tt4154796"
-},
-
-{
-title:"The Batman",
-poster:"https://image.tmdb.org/t/p/w500/74xTEgt7R36Fpooo50r9T25onhq.jpg",
-imdb:"tt1877830"
 }
 
 ]
+
+/* ANIME */
 
 const anime=[
 
 {
-title:"Breaking Bad",
-poster:"https://image.tmdb.org/t/p/w500/ggFHVNu6YYI5L9pCfOacjizRGt.jpg",
-imdb:"tt0903747"
+title:"Naruto",
+poster:"https://image.tmdb.org/t/p/w500/x2LSRK2Cm7MZhjluni1msVJ3wDF.jpg",
+id:"naruto"
 },
 
 {
-title:"Game of Thrones",
-poster:"https://image.tmdb.org/t/p/w500/u3bZgnGQ9T01sWNhyveQz0wH0Hl.jpg",
-imdb:"tt0944947"
-},
-
-{
-title:"Stranger Things",
-poster:"https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg",
-imdb:"tt4574334"
-},
-
-{
-title:"The Walking Dead",
-poster:"https://image.tmdb.org/t/p/w500/rqeYMLryjcawh2JeRpCVUDXYM5b.jpg",
-imdb:"tt1520211"
+title:"Demon Slayer",
+poster:"https://image.tmdb.org/t/p/w500/xUfRZu2mi8jH6SzQEJGP6tjBuYj.jpg",
+id:"kimetsu-no-yaiba"
 }
 
 ]
 
-/* BANNER DINAMICO */
-
-let banner=document.getElementById("banner")
-
-let random=trending[Math.floor(Math.random()*trending.length)]
-
-banner.style.backgroundImage=`url(${random.poster})`
-
-/* CARGAR PELICULAS */
+/* CARGAR CONTENIDO */
 
 function cargar(lista,container){
 
 let cont=document.getElementById(container)
 
-lista.forEach(movie=>{
+lista.forEach(item=>{
 
 let div=document.createElement("div")
 
 div.className="poster"
 
-div.innerHTML=`<img src="${movie.poster}">`
+div.innerHTML=`<img src="${item.poster}">`
 
-div.onclick=()=>reproducir(movie.imdb)
+div.onclick=()=>{
+
+if(container==="movies") reproducirPelicula(item.imdb)
+
+if(container==="anime") abrirAnime(item.id)
+
+}
 
 cont.appendChild(div)
 
@@ -296,47 +283,68 @@ cont.appendChild(div)
 
 }
 
-cargar(trending,"trending")
+cargar(movies,"movies")
 cargar(anime,"anime")
 
-/* BUSCADOR */
+/* REPRODUCTOR PELICULA */
 
-document.getElementById("search").addEventListener("keyup",function(){
+function reproducirPelicula(imdb){
 
-let texto=this.value.toLowerCase()
-
-let resultados=[...trending,...anime].filter(m=>m.title.toLowerCase().includes(texto))
-
-document.getElementById("trending").innerHTML=""
-
-cargar(resultados,"trending")
-
-})
-
-/* REPRODUCTOR */
-
-function reproducir(imdb){
-
-let player=document.getElementById("player")
+document.getElementById("episodes").innerHTML=""
 
 let video=document.getElementById("video-container")
 
 video.innerHTML=`
-<iframe
-src="https://multiembed.mov/?video_id=${imdb}"
-allowfullscreen>
-</iframe>
+<iframe src="https://multiembed.mov/?video_id=${imdb}" allowfullscreen></iframe>
 `
 
-player.style.display="flex"
+document.getElementById("player").style.display="flex"
 
 }
+
+/* ANIME */
+
+function abrirAnime(id){
+
+let video=document.getElementById("video-container")
+
+let episodes=document.getElementById("episodes")
+
+video.innerHTML=""
+
+episodes.innerHTML=""
+
+for(let i=1;i<=12;i++){
+
+let btn=document.createElement("button")
+
+btn.innerText="Ep "+i
+
+btn.onclick=()=>{
+
+video.innerHTML=`
+<iframe src="https://gogoanime3.co/${id}-episode-${i}" allowfullscreen></iframe>
+`
+
+}
+
+episodes.appendChild(btn)
+
+}
+
+document.getElementById("player").style.display="flex"
+
+}
+
+/* CERRAR */
 
 function cerrarVideo(){
 
 document.getElementById("player").style.display="none"
 
 document.getElementById("video-container").innerHTML=""
+
+document.getElementById("episodes").innerHTML=""
 
 }
 
