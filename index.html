@@ -61,7 +61,8 @@ flex-direction:column;
 justify-content:center;
 padding:100px;
 margin-top:70px;
-background-image:linear-gradient(to top, #0f0f0f 10%, transparent), url("https://image.tmdb.org/t/p/original/9Gtg2DzBhmYamXBS1hKAhiwbBKS.jpg");
+background-image:linear-gradient(to top,#0f0f0f 10%,transparent),
+url("https://image.tmdb.org/t/p/original/9Gtg2DzBhmYamXBS1hKAhiwbBKS.jpg");
 }
 
 .hero h1{
@@ -225,7 +226,6 @@ const API_KEY="8a2de0488825903a0a4b7d0ff12a3873"
 async function loadMovies(){
 
 let res=await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&language=es`)
-
 let data=await res.json()
 
 render(data.results,"movies","movie")
@@ -237,7 +237,6 @@ render(data.results,"movies","movie")
 async function loadSeries(){
 
 let res=await fetch(`https://api.themoviedb.org/3/tv/popular?api_key=${API_KEY}&language=es`)
-
 let data=await res.json()
 
 render(data.results,"series","tv")
@@ -249,14 +248,13 @@ render(data.results,"series","tv")
 async function loadTrending(){
 
 let res=await fetch(`https://api.themoviedb.org/3/trending/all/day?api_key=${API_KEY}`)
-
 let data=await res.json()
 
 render(data.results,"trending","auto")
 
 }
 
-/* RENDER POSTERS */
+/* MOSTRAR POSTERS */
 
 function render(list,container,type){
 
@@ -269,7 +267,6 @@ list.forEach(item=>{
 if(!item.poster_path) return
 
 let poster=document.createElement("div")
-
 poster.className="poster"
 
 let img=`https://image.tmdb.org/t/p/w500${item.poster_path}`
@@ -302,21 +299,21 @@ row.appendChild(poster)
 
 }
 
-/* PELICULA */
+/* PELICULAS */
 
 function playMovie(id){
 
 document.getElementById("episodes").innerHTML=""
 
 document.getElementById("video").innerHTML=`
-<iframe src="https://multiembed.mov/?tmdb=${id}&type=movie" allowfullscreen></iframe>
+<iframe src="https://vidsrc.to/embed/movie/${id}" allowfullscreen></iframe>
 `
 
 document.getElementById("player").style.display="flex"
 
 }
 
-/* SERIE CON EPISODIOS REALES */
+/* SERIES */
 
 async function playSeries(id){
 
@@ -329,7 +326,6 @@ episodes.innerHTML=""
 let season=1
 
 let res=await fetch(`https://api.themoviedb.org/3/tv/${id}/season/${season}?api_key=${API_KEY}`)
-
 let data=await res.json()
 
 data.episodes.forEach(ep=>{
@@ -341,7 +337,7 @@ btn.innerText="Ep "+ep.episode_number
 btn.onclick=()=>{
 
 video.innerHTML=`
-<iframe src="https://multiembed.mov/?tmdb=${id}&season=${season}&episode=${ep.episode_number}" allowfullscreen></iframe>
+<iframe src="https://vidsrc.to/embed/tv/${id}/${season}/${ep.episode_number}" allowfullscreen></iframe>
 `
 
 }
@@ -354,17 +350,16 @@ document.getElementById("player").style.display="flex"
 
 }
 
-/* CERRAR */
+/* CERRAR PLAYER */
 
 function closePlayer(){
 
 document.getElementById("player").style.display="none"
-
 document.getElementById("video").innerHTML=""
 
 }
 
-/* BUSCAR */
+/* BUSCADOR */
 
 document.getElementById("search").addEventListener("keypress",async e=>{
 
@@ -373,7 +368,6 @@ if(e.key==="Enter"){
 let q=e.target.value
 
 let res=await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${q}`)
-
 let data=await res.json()
 
 render(data.results,"movies","auto")
