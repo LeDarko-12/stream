@@ -47,8 +47,16 @@ color:white;
 font-size:15px;
 }
 
-.menu a:hover{
-color:#bbb;
+/* BUSCADOR */
+
+.search-box{
+margin-left:auto;
+}
+
+.search-box input{
+padding:8px;
+border:none;
+border-radius:4px;
 }
 
 /* BANNER */
@@ -68,28 +76,6 @@ margin-bottom:40px;
 .banner h1{
 font-size:60px;
 margin-bottom:20px;
-}
-
-.banner p{
-width:500px;
-margin-bottom:20px;
-}
-
-.banner button{
-padding:12px 25px;
-margin-right:10px;
-border:none;
-font-size:16px;
-cursor:pointer;
-}
-
-.play{
-background:white;
-}
-
-.info{
-background:rgba(109,109,110,0.7);
-color:white;
 }
 
 /* FILAS */
@@ -123,10 +109,6 @@ transform:scale(1.15);
 .poster img{
 width:100%;
 border-radius:4px;
-}
-
-.row-posters::-webkit-scrollbar{
-display:none;
 }
 
 /* REPRODUCTOR */
@@ -187,7 +169,10 @@ color:#e50914;
 <a href="#">Inicio</a>
 <a href="#">Series</a>
 <a href="#">Películas</a>
-<a href="#">Mi lista</a>
+</div>
+
+<div class="search-box">
+<input type="text" id="search" placeholder="Buscar...">
 </div>
 
 </div>
@@ -195,28 +180,22 @@ color:#e50914;
 <!-- BANNER -->
 
 <div class="banner">
-
-<h1>Bienvenido a MiStream</h1>
-
-<p>
-Tu plataforma gratuita de películas y series.
-</p>
-
-<div>
-<button class="play">▶ Reproducir</button>
-<button class="info">Más información</button>
+<h1>MiStream</h1>
+<p>Películas y series ilimitadas</p>
 </div>
 
-</div>
-
-<!-- FILA PELÍCULAS -->
+<!-- PELICULAS -->
 
 <div class="row">
+<h2>Películas populares</h2>
+<div class="row-posters" id="movies"></div>
+</div>
 
-<h2>Películas</h2>
+<!-- SERIES -->
 
-<div class="row-posters" id="movies-container"></div>
-
+<div class="row">
+<h2>Series populares</h2>
+<div class="row-posters" id="series"></div>
 </div>
 
 <!-- REPRODUCTOR -->
@@ -235,57 +214,75 @@ Tu plataforma gratuita de películas y series.
 
 <script>
 
-/* PELICULAS DE EJEMPLO */
+const API_KEY="TU_API_KEY"
 
-const movies = [
+/* CARGAR PELICULAS */
 
-{
-title:"Inception",
-poster:"https://image.tmdb.org/t/p/w500/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg",
-imdb:"tt1375666"
-},
+fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&language=es`)
 
-{
-title:"The Matrix",
-poster:"https://image.tmdb.org/t/p/w500/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg",
-imdb:"tt0133093"
-},
+.then(res=>res.json())
 
-{
-title:"Interstellar",
-poster:"https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
-imdb:"tt0816692"
-},
+.then(data=>{
 
-{
-title:"Joker",
-poster:"https://image.tmdb.org/t/p/w500/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg",
-imdb:"tt7286456"
-}
+let container=document.getElementById("movies")
 
-]
+data.results.forEach(movie=>{
 
-let container = document.getElementById("movies-container")
-
-movies.forEach(movie=>{
-
-let poster = document.createElement("div")
+let poster=document.createElement("div")
 
 poster.className="poster"
 
-poster.innerHTML=`<img src="${movie.poster}">`
+poster.innerHTML=`
+<img src="https://image.tmdb.org/t/p/w500${movie.poster_path}">
+`
 
 poster.onclick=()=>{
-reproducir(movie.imdb)
+
+reproducir(movie.id,"movie")
+
 }
 
 container.appendChild(poster)
 
 })
 
-/* REPRODUCTOR */
+})
 
-function reproducir(imdb){
+/* CARGAR SERIES */
+
+fetch(`https://api.themoviedb.org/3/tv/popular?api_key=${API_KEY}&language=es`)
+
+.then(res=>res.json())
+
+.then(data=>{
+
+let container=document.getElementById("series")
+
+data.results.forEach(show=>{
+
+let poster=document.createElement("div")
+
+poster.className="poster"
+
+poster.innerHTML=`
+<img src="https://image.tmdb.org/t/p/w500${show.poster_path}">
+`
+
+poster.onclick=()=>{
+
+reproducirSerie(show.id)
+
+}
+
+container.appendChild(poster)
+
+})
+
+})
+
+/* REPRODUCTOR PELICULAS */
+
+function reproducir(id,tipo){
 
 let player=document.getElementById("player")
 
@@ -293,7 +290,29 @@ let video=document.getElementById("video-container")
 
 video.innerHTML=`
 <iframe
-src="https://multiembed.mov/?video_id=${imdb}"
+src="https://multiembed.mov/?tmdb=${id}&type=${tipo}"
+allowfullscreen>
+</iframe>
+`
+
+player.style.display="flex"
+
+}
+
+/* SERIES */
+
+function reproducirSerie(id){
+
+let season=1
+let episode=1
+
+let player=document.getElementById("player")
+
+let video=document.getElementById("video-container")
+
+video.innerHTML=`
+<iframe
+src="https://multiembed.mov/?tmdb=${id}&s=${season}&e=${episode}"
 allowfullscreen>
 </iframe>
 `
@@ -309,6 +328,48 @@ document.getElementById("player").style.display="none"
 document.getElementById("video-container").innerHTML=""
 
 }
+
+/* BUSCADOR */
+
+document.getElementById("search").addEventListener("keyup",function(){
+
+let query=this.value
+
+if(query.length<3) return
+
+fetch(`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${query}`)
+
+.then(res=>res.json())
+
+.then(data=>{
+
+let container=document.getElementById("movies")
+
+container.innerHTML=""
+
+data.results.forEach(movie=>{
+
+let poster=document.createElement("div")
+
+poster.className="poster"
+
+poster.innerHTML=`
+<img src="https://image.tmdb.org/t/p/w500${movie.poster_path}">
+`
+
+poster.onclick=()=>{
+
+reproducir(movie.id,"movie")
+
+}
+
+container.appendChild(poster)
+
+})
+
+})
+
+})
 
 </script>
 
