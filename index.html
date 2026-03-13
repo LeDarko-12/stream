@@ -37,23 +37,13 @@ z-index:10;
 color:#e50914;
 font-size:30px;
 font-weight:bold;
-margin-right:40px;
 }
 
-.menu a{
-margin-right:20px;
-text-decoration:none;
-color:white;
-font-size:15px;
-}
-
-/* BUSCADOR */
-
-.search-box{
+.search{
 margin-left:auto;
 }
 
-.search-box input{
+.search input{
 padding:8px;
 border:none;
 border-radius:4px;
@@ -63,19 +53,12 @@ border-radius:4px;
 
 .banner{
 height:500px;
-background-image:url("https://images.unsplash.com/photo-1489599849927-2ee91cede3ba");
 background-size:cover;
 background-position:center;
 display:flex;
-flex-direction:column;
-justify-content:center;
+align-items:center;
 padding:80px;
 margin-bottom:40px;
-}
-
-.banner h1{
-font-size:60px;
-margin-bottom:20px;
 }
 
 /* FILAS */
@@ -92,14 +75,14 @@ margin-bottom:10px;
 .row-posters{
 display:flex;
 overflow-x:auto;
-padding-bottom:20px;
 }
 
 .poster{
 width:180px;
 margin-right:10px;
-transition:transform 0.3s;
 cursor:pointer;
+transition:0.3s;
+position:relative;
 }
 
 .poster:hover{
@@ -109,6 +92,18 @@ transform:scale(1.15);
 .poster img{
 width:100%;
 border-radius:4px;
+}
+
+.fav{
+position:absolute;
+top:5px;
+right:5px;
+background:red;
+color:white;
+padding:4px;
+font-size:12px;
+border-radius:3px;
+cursor:pointer;
 }
 
 /* REPRODUCTOR */
@@ -149,10 +144,6 @@ color:white;
 cursor:pointer;
 }
 
-.close-btn:hover{
-color:#e50914;
-}
-
 </style>
 
 </head>
@@ -165,13 +156,7 @@ color:#e50914;
 
 <div class="logo">MiStream</div>
 
-<div class="menu">
-<a href="#">Inicio</a>
-<a href="#">Series</a>
-<a href="#">Películas</a>
-</div>
-
-<div class="search-box">
+<div class="search">
 <input type="text" id="search" placeholder="Buscar...">
 </div>
 
@@ -179,23 +164,36 @@ color:#e50914;
 
 <!-- BANNER -->
 
-<div class="banner">
-<h1>MiStream</h1>
-<p>Películas y series ilimitadas</p>
-</div>
+<div class="banner" id="banner"></div>
 
-<!-- PELICULAS -->
+<!-- TENDENCIAS -->
 
 <div class="row">
-<h2>Películas populares</h2>
-<div class="row-posters" id="movies"></div>
+
+<h2>🔥 Tendencias</h2>
+
+<div class="row-posters" id="trending"></div>
+
 </div>
 
-<!-- SERIES -->
+<!-- ANIME -->
 
 <div class="row">
-<h2>Series populares</h2>
-<div class="row-posters" id="series"></div>
+
+<h2>📺 Anime</h2>
+
+<div class="row-posters" id="anime"></div>
+
+</div>
+
+<!-- FAVORITOS -->
+
+<div class="row">
+
+<h2>⭐ Mi lista</h2>
+
+<div class="row-posters" id="favorites"></div>
+
 </div>
 
 <!-- REPRODUCTOR -->
@@ -214,75 +212,143 @@ color:#e50914;
 
 <script>
 
-const API_KEY="TU_API_KEY"
+/* BASE DE DATOS */
 
-/* CARGAR PELICULAS */
+const trending=[
 
-fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&language=es`)
+{
+title:"Interstellar",
+poster:"https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
+imdb:"tt0816692"
+},
 
-.then(res=>res.json())
+{
+title:"Joker",
+poster:"https://image.tmdb.org/t/p/w500/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg",
+imdb:"tt7286456"
+},
 
-.then(data=>{
+{
+title:"Avengers Endgame",
+poster:"https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg",
+imdb:"tt4154796"
+}
 
-let container=document.getElementById("movies")
+]
 
-data.results.forEach(movie=>{
+const anime=[
 
-let poster=document.createElement("div")
+{
+title:"Attack on Titan",
+poster:"https://image.tmdb.org/t/p/w500/hTP1DtLGFamjfu8WqjnuQdP1n4i.jpg",
+imdb:"tt2560140"
+},
 
-poster.className="poster"
+{
+title:"Death Note",
+poster:"https://image.tmdb.org/t/p/w500/8yZdv3oR3ZzO3Wg7GZsJ2xO0Y6D.jpg",
+imdb:"tt0877057"
+},
 
-poster.innerHTML=`
-<img src="https://image.tmdb.org/t/p/w500${movie.poster_path}">
+{
+title:"One Punch Man",
+poster:"https://image.tmdb.org/t/p/w500/iE3s0lG5QVdEHOEZnoAxjmMtvne.jpg",
+imdb:"tt4508902"
+}
+
+]
+
+/* BANNER DINAMICO */
+
+let banner=document.getElementById("banner")
+
+let bannerMovies=[...trending]
+
+let random=bannerMovies[Math.floor(Math.random()*bannerMovies.length)]
+
+banner.style.backgroundImage=`url(${random.poster})`
+
+/* CARGAR CONTENIDO */
+
+function cargar(lista,containerId){
+
+let container=document.getElementById(containerId)
+
+container.innerHTML=""
+
+lista.forEach(movie=>{
+
+let div=document.createElement("div")
+
+div.className="poster"
+
+div.innerHTML=`
+<img src="${movie.poster}">
+<div class="fav">★</div>
 `
 
-poster.onclick=()=>{
+div.onclick=()=>reproducir(movie.imdb)
 
-reproducir(movie.id,"movie")
+div.querySelector(".fav").onclick=(e)=>{
+
+e.stopPropagation()
+
+guardarFavorito(movie)
 
 }
 
-container.appendChild(poster)
+container.appendChild(div)
 
 })
-
-})
-
-/* CARGAR SERIES */
-
-fetch(`https://api.themoviedb.org/3/tv/popular?api_key=${API_KEY}&language=es`)
-
-.then(res=>res.json())
-
-.then(data=>{
-
-let container=document.getElementById("series")
-
-data.results.forEach(show=>{
-
-let poster=document.createElement("div")
-
-poster.className="poster"
-
-poster.innerHTML=`
-<img src="https://image.tmdb.org/t/p/w500${show.poster_path}">
-`
-
-poster.onclick=()=>{
-
-reproducirSerie(show.id)
 
 }
 
-container.appendChild(poster)
+cargar(trending,"trending")
+cargar(anime,"anime")
+
+/* FAVORITOS */
+
+function guardarFavorito(movie){
+
+let favoritos=JSON.parse(localStorage.getItem("favoritos"))||[]
+
+favoritos.push(movie)
+
+localStorage.setItem("favoritos",JSON.stringify(favoritos))
+
+cargarFavoritos()
+
+}
+
+function cargarFavoritos(){
+
+let favoritos=JSON.parse(localStorage.getItem("favoritos"))||[]
+
+cargar(favoritos,"favorites")
+
+}
+
+cargarFavoritos()
+
+/* BUSCADOR */
+
+document.getElementById("search").addEventListener("keyup",function(){
+
+let texto=this.value.toLowerCase()
+
+let resultados=[...trending,...anime].filter(m=>
+
+m.title.toLowerCase().includes(texto)
+
+)
+
+cargar(resultados,"trending")
 
 })
 
-})
+/* REPRODUCTOR */
 
-/* REPRODUCTOR PELICULAS */
-
-function reproducir(id,tipo){
+function reproducir(imdb){
 
 let player=document.getElementById("player")
 
@@ -290,29 +356,7 @@ let video=document.getElementById("video-container")
 
 video.innerHTML=`
 <iframe
-src="https://multiembed.mov/?tmdb=${id}&type=${tipo}"
-allowfullscreen>
-</iframe>
-`
-
-player.style.display="flex"
-
-}
-
-/* SERIES */
-
-function reproducirSerie(id){
-
-let season=1
-let episode=1
-
-let player=document.getElementById("player")
-
-let video=document.getElementById("video-container")
-
-video.innerHTML=`
-<iframe
-src="https://multiembed.mov/?tmdb=${id}&s=${season}&e=${episode}"
+src="https://multiembed.mov/?video_id=${imdb}"
 allowfullscreen>
 </iframe>
 `
@@ -328,48 +372,6 @@ document.getElementById("player").style.display="none"
 document.getElementById("video-container").innerHTML=""
 
 }
-
-/* BUSCADOR */
-
-document.getElementById("search").addEventListener("keyup",function(){
-
-let query=this.value
-
-if(query.length<3) return
-
-fetch(`https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${query}`)
-
-.then(res=>res.json())
-
-.then(data=>{
-
-let container=document.getElementById("movies")
-
-container.innerHTML=""
-
-data.results.forEach(movie=>{
-
-let poster=document.createElement("div")
-
-poster.className="poster"
-
-poster.innerHTML=`
-<img src="https://image.tmdb.org/t/p/w500${movie.poster_path}">
-`
-
-poster.onclick=()=>{
-
-reproducir(movie.id,"movie")
-
-}
-
-container.appendChild(poster)
-
-})
-
-})
-
-})
 
 </script>
 
