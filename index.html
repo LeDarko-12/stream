@@ -7,16 +7,11 @@
 
 <style>
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial;
-}
-
 body{
+margin:0;
 background:#141414;
 color:white;
+font-family:Arial;
 }
 
 /* NAVBAR */
@@ -30,14 +25,14 @@ background:black;
 display:flex;
 align-items:center;
 padding:0 40px;
-z-index:10;
+z-index:100;
 }
 
 .logo{
 color:#e50914;
 font-size:30px;
 font-weight:bold;
-margin-right:30px;
+margin-right:40px;
 }
 
 .menu a{
@@ -52,13 +47,13 @@ margin-left:auto;
 
 .search input{
 padding:8px;
-border:none;
 border-radius:4px;
+border:none;
 }
 
-/* BANNER */
+/* HERO */
 
-.banner{
+.hero{
 height:450px;
 background-size:cover;
 background-position:center;
@@ -69,7 +64,7 @@ padding:80px;
 margin-top:70px;
 }
 
-/* FILAS */
+/* ROWS */
 
 .row{
 margin-top:40px;
@@ -79,11 +74,12 @@ padding-left:40px;
 .row-posters{
 display:flex;
 overflow-x:auto;
+padding-top:20px;
 }
 
 .poster{
 width:180px;
-margin-right:10px;
+margin-right:12px;
 cursor:pointer;
 transition:0.3s;
 }
@@ -94,10 +90,10 @@ transform:scale(1.15);
 
 .poster img{
 width:100%;
-border-radius:4px;
+border-radius:6px;
 }
 
-/* REPRODUCTOR */
+/* PLAYER */
 
 #player{
 position:fixed;
@@ -115,25 +111,23 @@ z-index:1000;
 .player-content{
 width:90%;
 max-width:1200px;
-position:relative;
 }
 
-#video-container iframe{
+#video iframe{
 width:100%;
 height:80vh;
 border:none;
 }
 
-.close-btn{
+.close{
 position:absolute;
-top:-40px;
-right:0;
+top:20px;
+right:40px;
 font-size:30px;
-background:none;
-border:none;
-color:white;
 cursor:pointer;
 }
+
+/* EPISODES */
 
 .episodes{
 margin-top:10px;
@@ -147,7 +141,6 @@ cursor:pointer;
 }
 
 </style>
-
 </head>
 
 <body>
@@ -158,52 +151,43 @@ cursor:pointer;
 
 <div class="menu">
 <a href="#">Inicio</a>
-<a href="#">Series</a>
 <a href="#">Películas</a>
+<a href="#">Series</a>
 </div>
 
 <div class="search">
-<input type="text" id="search" placeholder="Buscar...">
+<input id="search" placeholder="Buscar...">
 </div>
 
 </div>
 
-<div class="banner" id="banner">
-
+<div class="hero">
 <h1>MiStream</h1>
-<p>Películas, series y anime</p>
-
+<p>Películas y series ilimitadas</p>
 </div>
 
-<!-- PELICULAS -->
-
 <div class="row">
-
-<h2>🔥 Películas</h2>
-
+<h2>🔥 Películas populares</h2>
 <div class="row-posters" id="movies"></div>
-
 </div>
-
-<!-- ANIME -->
 
 <div class="row">
-
-<h2>📺 Anime</h2>
-
-<div class="row-posters" id="anime"></div>
-
+<h2>📺 Series populares</h2>
+<div class="row-posters" id="series"></div>
 </div>
 
-<!-- REPRODUCTOR -->
+<div class="row">
+<h2>🍿 Tendencias</h2>
+<div class="row-posters" id="trending"></div>
+</div>
 
 <div id="player">
 
+<div class="close" onclick="closePlayer()">✕</div>
+
 <div class="player-content">
 
-<button class="close-btn" onclick="cerrarVideo()">✕</button>
-
-<div id="video-container"></div>
+<div id="video"></div>
 
 <div class="episodes" id="episodes"></div>
 
@@ -213,100 +197,111 @@ cursor:pointer;
 
 <script>
 
-/* PELICULAS */
+/* TU API DE TMDB */
 
-const movies=[
+const API_KEY="8a2de0488825903a0a4b7d0ff12a3873"
 
-{
-title:"Interstellar",
-poster:"https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
-imdb:"tt0816692"
-},
+/* CARGAR PELICULAS */
 
-{
-title:"Joker",
-poster:"https://image.tmdb.org/t/p/w500/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg",
-imdb:"tt7286456"
-},
+async function loadMovies(){
 
-{
-title:"Avengers Endgame",
-poster:"https://image.tmdb.org/t/p/w500/or06FN3Dka5tukK1e9sl16pB3iy.jpg",
-imdb:"tt4154796"
-}
+let res=await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&language=es`)
 
-]
+let data=await res.json()
 
-/* ANIME */
-
-const anime=[
-
-{
-title:"Naruto",
-poster:"https://image.tmdb.org/t/p/w500/x2LSRK2Cm7MZhjluni1msVJ3wDF.jpg",
-id:"naruto"
-},
-
-{
-title:"Demon Slayer",
-poster:"https://image.tmdb.org/t/p/w500/xUfRZu2mi8jH6SzQEJGP6tjBuYj.jpg",
-id:"kimetsu-no-yaiba"
-}
-
-]
-
-/* CARGAR CONTENIDO */
-
-function cargar(lista,container){
-
-let cont=document.getElementById(container)
-
-lista.forEach(item=>{
-
-let div=document.createElement("div")
-
-div.className="poster"
-
-div.innerHTML=`<img src="${item.poster}">`
-
-div.onclick=()=>{
-
-if(container==="movies") reproducirPelicula(item.imdb)
-
-if(container==="anime") abrirAnime(item.id)
+render(data.results,"movies","movie")
 
 }
 
-cont.appendChild(div)
+/* CARGAR SERIES */
+
+async function loadSeries(){
+
+let res=await fetch(`https://api.themoviedb.org/3/tv/popular?api_key=${API_KEY}&language=es`)
+
+let data=await res.json()
+
+render(data.results,"series","tv")
+
+}
+
+/* TENDENCIAS */
+
+async function loadTrending(){
+
+let res=await fetch(`https://api.themoviedb.org/3/trending/all/day?api_key=${API_KEY}`)
+
+let data=await res.json()
+
+render(data.results,"trending","auto")
+
+}
+
+/* MOSTRAR POSTERS */
+
+function render(list,container,type){
+
+let row=document.getElementById(container)
+
+row.innerHTML=""
+
+list.forEach(item=>{
+
+if(!item.poster_path) return
+
+let poster=document.createElement("div")
+
+poster.className="poster"
+
+let img=`https://image.tmdb.org/t/p/w500${item.poster_path}`
+
+poster.innerHTML=`<img src="${img}">`
+
+poster.onclick=()=>{
+
+if(type==="movie")
+playMovie(item.id)
+
+if(type==="tv")
+playSeries(item.id)
+
+if(type==="auto"){
+
+if(item.media_type==="movie")
+playMovie(item.id)
+
+if(item.media_type==="tv")
+playSeries(item.id)
+
+}
+
+}
+
+row.appendChild(poster)
 
 })
 
 }
 
-cargar(movies,"movies")
-cargar(anime,"anime")
+/* REPRODUCIR PELICULA */
 
-/* REPRODUCTOR PELICULA */
-
-function reproducirPelicula(imdb){
+function playMovie(id){
 
 document.getElementById("episodes").innerHTML=""
 
-let video=document.getElementById("video-container")
-
-video.innerHTML=`
-<iframe src="https://multiembed.mov/?video_id=${imdb}" allowfullscreen></iframe>
+document.getElementById("video").innerHTML=`
+<iframe src="https://multiembed.mov/?tmdb=${id}&type=movie" allowfullscreen></iframe>
 `
 
 document.getElementById("player").style.display="flex"
 
 }
 
-/* ANIME */
+/* REPRODUCIR SERIE */
 
-function abrirAnime(id){
+function playSeries(id){
 
-let video=document.getElementById("video-container")
+let video=document.getElementById("video")
 
 let episodes=document.getElementById("episodes")
 
@@ -323,7 +318,7 @@ btn.innerText="Ep "+i
 btn.onclick=()=>{
 
 video.innerHTML=`
-<iframe src="https://gogoanime3.co/${id}-episode-${i}" allowfullscreen></iframe>
+<iframe src="https://multiembed.mov/?tmdb=${id}&season=1&episode=${i}" allowfullscreen></iframe>
 `
 
 }
@@ -336,17 +331,39 @@ document.getElementById("player").style.display="flex"
 
 }
 
-/* CERRAR */
+/* CERRAR PLAYER */
 
-function cerrarVideo(){
+function closePlayer(){
 
 document.getElementById("player").style.display="none"
 
-document.getElementById("video-container").innerHTML=""
-
-document.getElementById("episodes").innerHTML=""
+document.getElementById("video").innerHTML=""
 
 }
+
+/* BUSCADOR */
+
+document.getElementById("search").addEventListener("keypress",async e=>{
+
+if(e.key==="Enter"){
+
+let q=e.target.value
+
+let res=await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&query=${q}`)
+
+let data=await res.json()
+
+render(data.results,"movies","auto")
+
+}
+
+})
+
+/* INICIAR */
+
+loadMovies()
+loadSeries()
+loadTrending()
 
 </script>
 
