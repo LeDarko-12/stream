@@ -1,10 +1,11 @@
-
 const api = "https://api.jikan.moe/v4/anime";
 
 let page = 1;
 let loading = false;
 
 const grid = document.getElementById("animeGrid");
+
+/* CATALOGO */
 
 async function loadAnime(){
 
@@ -23,13 +24,19 @@ const card = document.createElement("div");
 card.className="card";
 
 card.innerHTML=`
+
 <img loading="lazy" src="${anime.images.jpg.large_image_url}">
+
 <h3>${anime.title}</h3>
+
 <div class="rating">⭐ ${anime.score || "N/A"}</div>
+
 `;
 
 card.onclick=()=>{
+
 location.href=`anime.html?id=${anime.mal_id}`;
+
 };
 
 grid.appendChild(card);
@@ -82,9 +89,13 @@ const card = document.createElement("div");
 card.className="card";
 
 card.innerHTML=`
+
 <img src="${anime.images.jpg.image_url}">
+
 <h3>${anime.title}</h3>
+
 <div class="rating">${anime.score}</div>
+
 `;
 
 card.onclick=()=>{
@@ -104,6 +115,7 @@ grid.appendChild(card);
 /* ANIME PAGE */
 
 const params = new URLSearchParams(location.search);
+
 const id = params.get("id");
 
 const container = document.getElementById("animeContainer");
@@ -117,6 +129,7 @@ loadAnimePage();
 async function loadAnimePage(){
 
 const res = await fetch(`https://api.jikan.moe/v4/anime/${id}/full`);
+
 const data = await res.json();
 
 const anime = data.data;
@@ -141,29 +154,49 @@ container.innerHTML=`
 
 `;
 
-generateEpisodes(anime.episodes || 12);
+generateEpisodes(anime.title);
 
 }
 
-/* EPISODES */
+/* EPISODIOS */
 
-function generateEpisodes(total){
+async function generateEpisodes(title){
 
 const list = document.getElementById("episodesList");
 
-for(let i=1;i<=total;i++){
+list.innerHTML="Cargando episodios...";
+
+try{
+
+const slug = title.toLowerCase()
+.replace(/ /g,"-")
+.replace(/[^a-z0-9\-]/g,"");
+
+const res = await fetch(`https://api.consumet.org/anime/gogoanime/${slug}`);
+
+const data = await res.json();
+
+list.innerHTML="";
+
+data.episodes.forEach(ep=>{
 
 const btn=document.createElement("button");
 
-btn.textContent=i;
+btn.textContent=ep.number;
 
 btn.onclick=()=>{
 
-location.href=`player.html?id=${id}&ep=${i}`;
+location.href=`player.html?epId=${ep.id}`;
 
 };
 
 list.appendChild(btn);
+
+});
+
+}catch{
+
+list.innerHTML="No se pudieron cargar los episodios";
 
 }
 
@@ -175,34 +208,57 @@ const player=document.getElementById("videoPlayer");
 
 if(player){
 
-const ep=params.get("ep");
-
-const servers={
-
-filemoon:`https://filemoon.sx/e/${id}-${ep}`,
-streamtape:`https://streamtape.com/e/${id}${ep}`,
-dood:`https://dood.wf/e/${id}${ep}`,
-vidguard:`https://vidguard.to/e/${id}${ep}`
-
-};
-
-player.src=servers.filemoon;
-
-document.querySelectorAll(".server-selector button").forEach(btn=>{
-
-btn.onclick=()=>{
-
-const server=btn.dataset.server;
-
-player.src=servers[server];
-
-};
-
-});
+loadServers();
 
 }
 
-/* TOP BUTTON */
+async function loadServers(){
+
+const params = new URLSearchParams(location.search);
+
+const epId = params.get("epId");
+
+if(!epId) return;
+
+try{
+
+const res = await fetch(`https://api.consumet.org/anime/gogoanime/watch/${epId}`);
+
+const data = await res.json();
+
+const servers = data.sources;
+
+player.src = servers[0].url;
+
+const selector=document.querySelector(".server-selector");
+
+selector.innerHTML="";
+
+servers.forEach(server=>{
+
+const btn=document.createElement("button");
+
+btn.textContent = server.quality || "server";
+
+btn.onclick=()=>{
+
+player.src = server.url;
+
+};
+
+selector.appendChild(btn);
+
+});
+
+}catch{
+
+player.src="";
+
+}
+
+}
+
+/* BOTON SUBIR */
 
 const topBtn=document.getElementById("topBtn");
 
@@ -215,4 +271,3 @@ window.scrollTo({top:0,behavior:"smooth"});
 };
 
 }
-
