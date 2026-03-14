@@ -1,263 +1,13 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<title>MiStream ULTRA</title>
-
-<style>
-
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial;
-}
-
-body{
-background:#0b0b0b;
-color:white;
-}
-
-/* NAVBAR */
-
-.navbar{
-position:fixed;
-top:0;
-width:100%;
-height:70px;
-background:#000;
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:0 30px;
-z-index:20;
-}
-
-.logo{
-color:#e50914;
-font-size:28px;
-font-weight:bold;
-}
-
-.search{
-background:#1a1a1a;
-border:none;
-padding:10px;
-border-radius:6px;
-color:white;
-width:230px;
-}
-
-/* HERO */
-
-.hero{
-margin-top:70px;
-height:75vh;
-background-size:cover;
-background-position:center;
-display:flex;
-align-items:end;
-padding:60px;
-background-image:linear-gradient(to top,black,rgba(0,0,0,.4),transparent);
-}
-
-.hero h1{
-font-size:50px;
-margin-bottom:10px;
-}
-
-/* ROW */
-
-.row{
-padding:25px;
-}
-
-.row-posters{
-display:flex;
-gap:12px;
-overflow-x:auto;
-}
-
-.poster{
-min-width:160px;
-cursor:pointer;
-border-radius:8px;
-overflow:hidden;
-position:relative;
-transition:.3s;
-}
-
-.poster img{
-width:100%;
-}
-
-.poster span{
-position:absolute;
-bottom:0;
-width:100%;
-padding:10px;
-background:linear-gradient(transparent,rgba(0,0,0,.9));
-opacity:0;
-}
-
-.poster:hover span{
-opacity:1;
-}
-
-.poster:hover{
-transform:scale(1.12);
-}
-
-/* PLAYER */
-
-#player{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:black;
-display:none;
-flex-direction:column;
-align-items:center;
-z-index:50;
-padding-top:60px;
-}
-
-.player-box{
-width:85%;
-height:60%;
-}
-
-.player-box iframe{
-width:100%;
-height:100%;
-border:none;
-}
-
-.close{
-position:absolute;
-top:15px;
-right:25px;
-font-size:35px;
-cursor:pointer;
-}
-
-/* SERVERS */
-
-.server-selector{
-margin-top:10px;
-display:flex;
-gap:8px;
-}
-
-button{
-background:#222;
-border:none;
-padding:8px 14px;
-color:white;
-border-radius:6px;
-cursor:pointer;
-}
-
-button:hover{
-background:#e50914;
-}
-
-/* TEMPORADAS */
-
-.season-selector{
-margin-top:15px;
-display:flex;
-gap:10px;
-flex-wrap:wrap;
-}
-
-/* EPISODIOS */
-
-.episode-list{
-margin-top:10px;
-display:grid;
-grid-template-columns:repeat(auto-fill,60px);
-gap:8px;
-justify-content:center;
-}
-
-.episode-active{
-background:#e50914;
-}
-
-.footer{
-margin-top:40px;
-background:#000;
-text-align:center;
-padding:25px;
-color:#777;
-}
-
-</style>
-</head>
-
-<body>
-
-<div class="navbar">
-<div class="logo">MiStream</div>
-<input class="search" id="search" placeholder="Buscar..." onkeyup="searchContent()">
-</div>
-
-<div class="hero" id="hero">
-<h1 id="heroTitle">MiStream ULTRA</h1>
-<button onclick="playHero()">▶ Ver ahora</button>
-</div>
-
-<div class="row">
-<h2>🔥 Trending</h2>
-<div id="trending" class="row-posters"></div>
-</div>
-
-<div class="row">
-<h2>🎬 Películas populares</h2>
-<div id="moviesPopular" class="row-posters"></div>
-</div>
-
-<div class="row">
-<h2>📺 Series populares</h2>
-<div id="seriesPopular" class="row-posters"></div>
-</div>
-
-<div class="row">
-<h2>🍿 Anime</h2>
-<div id="animePopular" class="row-posters"></div>
-</div>
-
-<div id="player">
-
-<div class="close" onclick="closePlayer()">✕</div>
-
-<div class="player-box">
-<iframe id="framePlayer"></iframe>
-</div>
-
-<div id="servers" class="server-selector"></div>
-
-<div id="seasonSelector" class="season-selector"></div>
-
-<div id="episodeList" class="episode-list"></div>
-
-</div>
-
-<div class="footer">
-MiStream ULTRA © 2026
-</div>
-
 <script>
 
 const TMDB="8a2de0488825903a0a4b7d0ff12a3873"
 
-let currentId
-let currentType
+let currentId=null
+let currentType=null
 let currentSeason=1
 let currentEpisode=1
+
+const pages={}
 
 /* SERVERS */
 
@@ -277,33 +27,46 @@ tv:(id,s,e)=>`https://vidsrc.to/embed/tv/${id}/${s}/${e}`
 
 ]
 
+/* PLAYER */
+
 function openPlayer(id,type){
 
 currentId=id
 currentType=type
 
+currentSeason=1
+currentEpisode=1
+
+document.getElementById("seasonSelector").innerHTML=""
+document.getElementById("episodeList").innerHTML=""
+
 document.getElementById("player").style.display="flex"
 
 loadServers()
 
-if(type==="tv") loadSeasons()
+if(type==="tv"){
+loadSeasons()
+}
 
 }
 
+/* SERVERS */
+
 function loadServers(){
 
-let c=document.getElementById("servers")
-c.innerHTML=""
+const container=document.getElementById("servers")
+
+container.innerHTML=""
 
 servers.forEach((s,i)=>{
 
-let b=document.createElement("button")
+const b=document.createElement("button")
 
 b.innerText=s.name
 
 b.onclick=()=>playServer(i)
 
-c.appendChild(b)
+container.appendChild(b)
 
 })
 
@@ -313,28 +76,21 @@ playServer(0)
 
 function playServer(i){
 
-let s=servers[i]
+const s=servers[i]
 
-let url=currentType==="movie"
-?s.movie(currentId)
-:s.tv(currentId,currentSeason,currentEpisode)
+let url
 
-document.getElementById("framePlayer").src=url
+if(currentType==="movie"){
 
-saveProgress()
+url=s.movie(currentId)
+
+}else{
+
+url=s.tv(currentId,currentSeason,currentEpisode)
 
 }
 
-function saveProgress(){
-
-localStorage.setItem("continue",
-JSON.stringify({
-id:currentId,
-type:currentType,
-season:currentSeason,
-episode:currentEpisode
-})
-)
+document.getElementById("framePlayer").src=url
 
 }
 
@@ -345,29 +101,34 @@ document.getElementById("framePlayer").src=""
 
 }
 
-/* TEMPORADAS */
+/* SEASONS */
 
 async function loadSeasons(){
 
-let r=await fetch(`https://api.themoviedb.org/3/tv/${currentId}?api_key=${TMDB}`)
-let data=await r.json()
+const r=await fetch(`https://api.themoviedb.org/3/tv/${currentId}?api_key=${TMDB}`)
 
-let box=document.getElementById("seasonSelector")
+const data=await r.json()
+
+const box=document.getElementById("seasonSelector")
+
 box.innerHTML=""
 
 data.seasons
+.filter(s=>s.season_number>0)
 .sort((a,b)=>a.season_number-b.season_number)
 .forEach(season=>{
 
-if(season.season_number===0) return
-
-let b=document.createElement("button")
+const b=document.createElement("button")
 
 b.innerText="Temp "+season.season_number
 
 b.onclick=()=>{
+
 currentSeason=season.season_number
+currentEpisode=1
+
 loadEpisodes()
+
 }
 
 box.appendChild(b)
@@ -378,29 +139,38 @@ loadEpisodes()
 
 }
 
-/* EPISODIOS */
+/* EPISODES */
 
 async function loadEpisodes(){
 
-let r=await fetch(`https://api.themoviedb.org/3/tv/${currentId}/season/${currentSeason}?api_key=${TMDB}`)
-let data=await r.json()
+const r=await fetch(`https://api.themoviedb.org/3/tv/${currentId}/season/${currentSeason}?api_key=${TMDB}`)
 
-let list=document.getElementById("episodeList")
+const data=await r.json()
+
+const list=document.getElementById("episodeList")
+
 list.innerHTML=""
 
-data.episodes.forEach(ep=>{
+data.episodes
+.sort((a,b)=>a.episode_number-b.episode_number)
+.forEach(ep=>{
 
-let b=document.createElement("button")
+const b=document.createElement("button")
 
 b.innerText=ep.episode_number
 
-if(ep.episode_number===currentEpisode)
-b.classList.add("episode-active")
+if(ep.episode_number===currentEpisode){
+b.style.background="#e50914"
+}
 
 b.onclick=()=>{
+
 currentEpisode=ep.episode_number
+
 playServer(0)
+
 loadEpisodes()
+
 }
 
 list.appendChild(b)
@@ -409,57 +179,23 @@ list.appendChild(b)
 
 }
 
-/* ANIME */
-
-async function loadAnime(){
-
-let r=await fetch("https://api.jikan.moe/v4/top/anime")
-let data=await r.json()
-
-let row=document.getElementById("animePopular")
-
-data.data.slice(0,12).forEach(async anime=>{
-
-let div=document.createElement("div")
-div.className="poster"
-
-div.innerHTML=`
-<img src="${anime.images.jpg.image_url}">
-<span>${anime.title}</span>
-`
-
-div.onclick=async()=>{
-
-let search=await fetch(`https://api.themoviedb.org/3/search/tv?api_key=${TMDB}&query=${anime.title}`)
-
-let res=await search.json()
-
-if(res.results[0]){
-openPlayer(res.results[0].id,"tv")
-}
-
-}
-
-row.appendChild(div)
-
-})
-
-}
-
-/* CATEGORIAS */
+/* CATEGORY + INFINITE SCROLL */
 
 async function loadCategory(url,container,type){
 
-let r=await fetch(url)
-let data=await r.json()
+if(!pages[container]) pages[container]=1
 
-let row=document.getElementById(container)
+const r=await fetch(`${url}&page=${pages[container]}`)
+
+const data=await r.json()
+
+const row=document.getElementById(container)
 
 data.results.forEach(item=>{
 
 if(!item.poster_path) return
 
-let div=document.createElement("div")
+const div=document.createElement("div")
 
 div.className="poster"
 
@@ -474,16 +210,29 @@ row.appendChild(div)
 
 })
 
+pages[container]++
+
+row.onscroll=()=>{
+
+if(row.scrollLeft+row.clientWidth>=row.scrollWidth-200){
+
+loadCategory(url,container,type)
+
+}
+
+}
+
 }
 
 /* HERO */
 
 async function loadHero(){
 
-let r=await fetch(`https://api.themoviedb.org/3/trending/movie/day?api_key=${TMDB}`)
-let data=await r.json()
+const r=await fetch(`https://api.themoviedb.org/3/trending/movie/day?api_key=${TMDB}`)
 
-let m=data.results[0]
+const data=await r.json()
+
+const m=data.results[0]
 
 document.getElementById("hero").style.backgroundImage=
 `url(https://image.tmdb.org/t/p/original${m.backdrop_path})`
@@ -502,21 +251,23 @@ openPlayer(heroId,"movie")
 
 async function searchContent(){
 
-let q=document.getElementById("search").value
+const q=document.getElementById("search").value
 
 if(q.length<3) return
 
-let r=await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB}&query=${q}`)
-let data=await r.json()
+const r=await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB}&query=${q}`)
 
-let row=document.getElementById("trending")
+const data=await r.json()
+
+const row=document.getElementById("trending")
+
 row.innerHTML=""
 
 data.results.forEach(item=>{
 
 if(!item.poster_path) return
 
-let div=document.createElement("div")
+const div=document.createElement("div")
 
 div.className="poster"
 
@@ -533,16 +284,14 @@ row.appendChild(div)
 
 }
 
-/* LOAD */
+/* LOAD CONTENT */
 
 loadHero()
-loadAnime()
 
 loadCategory(`https://api.themoviedb.org/3/trending/movie/day?api_key=${TMDB}`,"trending","movie")
+
 loadCategory(`https://api.themoviedb.org/3/movie/popular?api_key=${TMDB}`,"moviesPopular","movie")
+
 loadCategory(`https://api.themoviedb.org/3/tv/popular?api_key=${TMDB}`,"seriesPopular","tv")
 
 </script>
-
-</body>
-</html>
