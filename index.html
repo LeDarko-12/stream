@@ -200,6 +200,12 @@ let currentEpisode=1
 const servers=[
 
 {
+name:"2Embed",
+movie:id=>`https://www.2embed.cc/embed/${id}`,
+tv:id=>`https://www.2embed.cc/embedtv/${id}&s=${currentSeason}&e=${currentEpisode}`
+},
+
+{
 name:"VidSrc",
 movie:id=>`https://vidsrc.to/embed/movie/${id}`,
 tv:id=>`https://vidsrc.to/embed/tv/${id}/${currentSeason}/${currentEpisode}`
@@ -237,13 +243,11 @@ loadServers()
 function loadServers(){
 
 let container=document.getElementById("servers")
-
 container.innerHTML=""
 
 servers.forEach(s=>{
 
 let btn=document.createElement("button")
-
 btn.innerText=s.name
 
 btn.onclick=()=>{
@@ -275,22 +279,17 @@ let r=await fetch(`https://api.themoviedb.org/3/tv/${currentId}/season/1?api_key
 let data=await r.json()
 
 let list=document.getElementById("episodeList")
-
 list.innerHTML=""
 
 data.episodes.forEach(ep=>{
 
 let btn=document.createElement("div")
-
 btn.className="episode"
-
 btn.innerText="Ep "+ep.episode_number
 
 btn.onclick=()=>{
-
 currentEpisode=ep.episode_number
 loadServers()
-
 }
 
 list.appendChild(btn)
@@ -302,7 +301,6 @@ list.appendChild(btn)
 function closePlayer(){
 
 document.getElementById("player").style.display="none"
-
 document.getElementById("framePlayer").src=""
 
 }
@@ -310,11 +308,9 @@ document.getElementById("framePlayer").src=""
 async function loadMovies(){
 
 let r=await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${TMDB}&language=es-ES&page=1`)
-
 let data=await r.json()
 
 let row=document.getElementById("movies")
-
 row.innerHTML=""
 
 data.results.forEach(m=>{
@@ -322,7 +318,6 @@ data.results.forEach(m=>{
 if(!m.poster_path) return
 
 let div=document.createElement("div")
-
 div.className="poster"
 
 div.innerHTML=`<img src="https://image.tmdb.org/t/p/w500${m.poster_path}">`
@@ -338,11 +333,9 @@ row.appendChild(div)
 async function loadSeries(){
 
 let r=await fetch(`https://api.themoviedb.org/3/tv/popular?api_key=${TMDB}&language=es-ES&page=1`)
-
 let data=await r.json()
 
 let row=document.getElementById("series")
-
 row.innerHTML=""
 
 data.results.forEach(s=>{
@@ -350,7 +343,6 @@ data.results.forEach(s=>{
 if(!s.poster_path) return
 
 let div=document.createElement("div")
-
 div.className="poster"
 
 div.innerHTML=`<img src="https://image.tmdb.org/t/p/w500${s.poster_path}">`
@@ -366,17 +358,14 @@ row.appendChild(div)
 async function loadAnime(){
 
 let r=await fetch("https://api.jikan.moe/v4/top/anime")
-
 let data=await r.json()
 
 let row=document.getElementById("anime")
-
 row.innerHTML=""
 
 data.data.slice(0,20).forEach(a=>{
 
 let div=document.createElement("div")
-
 div.className="poster"
 
 div.innerHTML=`<img src="${a.images.jpg.image_url}">`
@@ -384,9 +373,7 @@ div.innerHTML=`<img src="${a.images.jpg.image_url}">`
 div.onclick=()=>{
 
 document.getElementById("player").style.display="flex"
-
 document.getElementById("servers").innerHTML=""
-
 document.getElementById("episodeList").innerHTML=`<h2>${a.title}</h2>`
 
 document.getElementById("framePlayer").src=
