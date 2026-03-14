@@ -7,29 +7,123 @@
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#0f0f0f;color:white;font-family:Arial}
-.navbar{position:fixed;top:0;width:100%;height:70px;background:#000;display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:10}
-.logo{color:#e50914;font-size:26px;font-weight:bold}
-.search{background:#1f1f1f;border:none;padding:8px 12px;border-radius:6px;color:white;width:180px}
 
-.hero{height:50vh;margin-top:70px;display:flex;align-items:center;padding:20px;background:#111}
-.hero-content{background:rgba(0,0,0,.6);padding:20px;border-radius:10px;max-width:600px}
+.navbar{
+position:fixed;
+top:0;
+width:100%;
+height:70px;
+background:#000;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 20px;
+z-index:10
+}
+
+.logo{color:#e50914;font-size:26px;font-weight:bold}
+
+.search{
+background:#1f1f1f;
+border:none;
+padding:8px 12px;
+border-radius:6px;
+color:white;
+width:200px
+}
+
+.hero{
+height:50vh;
+margin-top:70px;
+display:flex;
+align-items:center;
+padding:20px;
+background:#111
+}
+
+.hero-content{
+background:rgba(0,0,0,.6);
+padding:20px;
+border-radius:10px;
+max-width:600px
+}
 
 .row{padding:20px}
 .row h2{margin-bottom:10px}
-.row-posters{display:flex;overflow-x:auto;gap:10px}
 
-.poster{min-width:130px;cursor:pointer;transition:.3s}
-.poster img{width:100%;border-radius:10px}
-.poster:hover{transform:scale(1.15)}
+.row-posters{
+display:flex;
+overflow-x:auto;
+gap:10px
+}
 
-#player{position:fixed;top:0;left:0;width:100%;height:100%;background:black;display:none;flex-direction:column;justify-content:flex-start;align-items:center;z-index:100;padding-top:50px}
+.poster{
+min-width:130px;
+cursor:pointer;
+transition:.3s
+}
 
-.player-box{width:90%;height:70%}
-.player-box iframe{width:100%;height:100%;border:none}
+.poster img{
+width:100%;
+border-radius:10px
+}
 
-.close{position:absolute;top:20px;right:30px;font-size:35px;cursor:pointer}
+.poster:hover{
+transform:scale(1.15)
+}
 
-.episode-list{margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+#player{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:black;
+display:none;
+flex-direction:column;
+align-items:center;
+z-index:100;
+padding-top:50px
+}
+
+.player-box{
+width:90%;
+height:65%
+}
+
+.player-box iframe{
+width:100%;
+height:100%;
+border:none
+}
+
+.server-selector{
+margin-top:10px;
+display:flex;
+gap:10px;
+flex-wrap:wrap
+}
+
+.server-selector button{
+background:#222;
+border:none;
+color:white;
+padding:8px 12px;
+cursor:pointer;
+border-radius:4px
+}
+
+.server-selector button:hover{
+background:#e50914
+}
+
+.episode-list{
+margin-top:10px;
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+justify-content:center
+}
 
 .episode{
 background:#222;
@@ -41,6 +135,14 @@ cursor:pointer
 .episode:hover{
 background:#e50914
 }
+
+.close{
+position:absolute;
+top:20px;
+right:30px;
+font-size:35px;
+cursor:pointer
+}
 </style>
 </head>
 
@@ -48,19 +150,29 @@ background:#e50914
 
 <div class="navbar">
 <div class="logo">MiStream PRO</div>
-<input class="search" id="search" placeholder="Buscar..." onkeyup="searchSeries()">
+<input class="search" id="search" placeholder="Buscar..." onkeyup="searchAll()">
 </div>
 
 <div class="hero">
 <div class="hero-content">
 <h1>MiStream</h1>
-<p>Catálogo cargado desde tu propio scraper.</p>
+<p>Películas, series y anime en un solo lugar.</p>
 </div>
+</div>
+
+<div class="row">
+<h2>🎬 Películas</h2>
+<div id="movies" class="row-posters"></div>
 </div>
 
 <div class="row">
 <h2>📺 Series</h2>
 <div id="series" class="row-posters"></div>
+</div>
+
+<div class="row">
+<h2>🌀 Anime</h2>
+<div id="anime" class="row-posters"></div>
 </div>
 
 <div id="player">
@@ -71,77 +183,117 @@ background:#e50914
 <iframe id="framePlayer"></iframe>
 </div>
 
+<div class="server-selector" id="servers"></div>
+
 <div class="episode-list" id="episodeList"></div>
 
 </div>
 
 <script>
 
-let seriesData=[]
+const TMDB="TU_API_KEY_AQUI"
 
-async function loadSeries(){
+let currentId
+let currentType="movie"
+let currentSeason=1
+let currentEpisode=1
 
-let res = await fetch("series.json")
+const servers=[
 
-seriesData = await res.json()
+{
+name:"VidSrc",
+movie:id=>`https://vidsrc.to/embed/movie/${id}`,
+tv:id=>`https://vidsrc.to/embed/tv/${id}/${currentSeason}/${currentEpisode}`
+},
 
-renderSeries(seriesData)
+{
+name:"AutoEmbed",
+movie:id=>`https://autoembed.cc/movie/tmdb/${id}`,
+tv:id=>`https://autoembed.cc/tv/tmdb/${id}-${currentSeason}-${currentEpisode}`
+},
 
+{
+name:"MultiEmbed",
+movie:id=>`https://multiembed.mov/?video_id=${id}&tmdb=1`,
+tv:id=>`https://multiembed.mov/?video_id=${id}&tmdb=1&s=${currentSeason}&e=${currentEpisode}`
 }
 
-function renderSeries(list){
+]
 
-let container=document.getElementById("series")
+function openPlayer(id,type){
 
-container.innerHTML=""
-
-list.forEach((serie,index)=>{
-
-let div=document.createElement("div")
-
-div.className="poster"
-
-div.innerHTML=`<img src="${serie.poster}">`
-
-div.onclick=()=>openSeries(index)
-
-container.appendChild(div)
-
-})
-
-}
-
-function openSeries(index){
-
-let serie=seriesData[index]
+currentId=id
+currentType=type
 
 document.getElementById("player").style.display="flex"
 
+if(type==="tv") loadEpisodes()
+
+loadServers()
+
+}
+
+function loadServers(){
+
+let container=document.getElementById("servers")
+
+container.innerHTML=""
+
+servers.forEach(s=>{
+
+let btn=document.createElement("button")
+
+btn.innerText=s.name
+
+btn.onclick=()=>{
+
+let url=currentType==="movie"
+?s.movie(currentId)
+:s.tv(currentId)
+
+document.getElementById("framePlayer").src=url
+
+}
+
+container.appendChild(btn)
+
+})
+
+servers[0] && (document.getElementById("framePlayer").src =
+currentType==="movie"
+?servers[0].movie(currentId)
+:servers[0].tv(currentId))
+
+}
+
+async function loadEpisodes(){
+
+let r=await fetch(`https://api.themoviedb.org/3/tv/${currentId}/season/1?api_key=${TMDB}&language=es-ES`)
+
+let data=await r.json()
+
 let list=document.getElementById("episodeList")
 
-list.innerHTML=`<h2>${serie.title}</h2>`
+list.innerHTML=""
 
-document.getElementById("framePlayer").src=""
-
-serie.episodes.forEach((ep,i)=>{
+data.episodes.forEach(ep=>{
 
 let btn=document.createElement("div")
 
 btn.className="episode"
 
-btn.innerText="Episodio "+(i+1)
+btn.innerText="Ep "+ep.episode_number
 
-btn.onclick=()=>playEpisode(ep.embed)
+btn.onclick=()=>{
+
+currentEpisode=ep.episode_number
+loadServers()
+
+}
 
 list.appendChild(btn)
 
 })
-
-}
-
-function playEpisode(url){
-
-document.getElementById("framePlayer").src=url
 
 }
 
@@ -153,17 +305,89 @@ document.getElementById("framePlayer").src=""
 
 }
 
-function searchSeries(){
+async function loadMovies(){
 
-let q=document.getElementById("search").value.toLowerCase()
+let r=await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${TMDB}&language=es-ES`)
 
-let filtered=seriesData.filter(s=>s.title.toLowerCase().includes(q))
+let data=await r.json()
 
-renderSeries(filtered)
+let row=document.getElementById("movies")
+
+data.results.forEach(m=>{
+
+let div=document.createElement("div")
+
+div.className="poster"
+
+div.innerHTML=`<img src="https://image.tmdb.org/t/p/w500${m.poster_path}">`
+
+div.onclick=()=>openPlayer(m.id,"movie")
+
+row.appendChild(div)
+
+})
 
 }
 
+async function loadSeries(){
+
+let r=await fetch(`https://api.themoviedb.org/3/tv/popular?api_key=${TMDB}&language=es-ES`)
+
+let data=await r.json()
+
+let row=document.getElementById("series")
+
+data.results.forEach(s=>{
+
+let div=document.createElement("div")
+
+div.className="poster"
+
+div.innerHTML=`<img src="https://image.tmdb.org/t/p/w500${s.poster_path}">`
+
+div.onclick=()=>openPlayer(s.id,"tv")
+
+row.appendChild(div)
+
+})
+
+}
+
+async function loadAnime(){
+
+let r=await fetch("https://api.jikan.moe/v4/top/anime")
+
+let data=await r.json()
+
+let row=document.getElementById("anime")
+
+data.data.slice(0,20).forEach(a=>{
+
+let div=document.createElement("div")
+
+div.className="poster"
+
+div.innerHTML=`<img src="${a.images.jpg.image_url}">`
+
+row.appendChild(div)
+
+})
+
+}
+
+function searchAll(){
+
+let q=document.getElementById("search").value
+
+if(q.length<3)return
+
+window.open(`https://www.google.com/search?q=${q}+serie+pelicula`)
+
+}
+
+loadMovies()
 loadSeries()
+loadAnime()
 
 </script>
 
