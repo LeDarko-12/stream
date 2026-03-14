@@ -154,7 +154,7 @@ function openPlayer(id,type){
 function loadServers(){
   let container=document.getElementById("servers")
   container.innerHTML=""
-  servers.forEach(s=>{
+  servers.forEach((s,index)=>{
     let btn=document.createElement("button")
     btn.innerText=s.name
     btn.onclick=()=>{
@@ -163,7 +163,9 @@ function loadServers(){
     }
     container.appendChild(btn)
   })
-  document.getElementById("framePlayer").src=currentType==="movie"?servers[0].movie(currentId):servers[0].tv(currentId)
+  // 2Embed siempre como inicial
+  let twoEmbed = servers.find(s=>s.name==="2Embed")
+  document.getElementById("framePlayer").src = currentType==="movie"?twoEmbed.movie(currentId):twoEmbed.tv(currentId)
 }
 
 // NUEVO SISTEMA DROPDOWN
