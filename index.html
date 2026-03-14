@@ -7,67 +7,131 @@
 
 <style>
 
+*{
+box-sizing:border-box;
+}
+
 body{
 margin:0;
-font-family:Arial;
-background:#141414;
+font-family: 'Segoe UI', Arial;
+background:#0f0f0f;
 color:white;
 }
+
+/* NAVBAR */
 
 .navbar{
 position:fixed;
 top:0;
 width:100%;
 height:70px;
-background:black;
+background:linear-gradient(to bottom, rgba(0,0,0,.9), transparent);
 display:flex;
 align-items:center;
-padding:0 40px;
+justify-content:space-between;
+padding:0 50px;
 z-index:10;
 }
 
 .logo{
 color:#e50914;
-font-size:28px;
+font-size:30px;
 font-weight:bold;
 }
 
+.search{
+background:#1f1f1f;
+border:none;
+padding:10px 15px;
+border-radius:6px;
+color:white;
+width:250px;
+}
+
+/* HERO */
+
 .hero{
-height:450px;
+height:520px;
 margin-top:70px;
 display:flex;
 align-items:center;
-padding-left:60px;
+padding-left:70px;
 background-size:cover;
 background-position:center;
+position:relative;
 }
 
-.row{
-margin-top:30px;
-padding-left:40px;
+.hero-content{
+max-width:500px;
 }
+
+.hero h1{
+font-size:50px;
+margin:0;
+}
+
+.hero p{
+color:#ccc;
+margin-top:10px;
+}
+
+.hero button{
+margin-top:20px;
+padding:12px 25px;
+font-size:16px;
+background:#e50914;
+border:none;
+border-radius:6px;
+color:white;
+cursor:pointer;
+}
+
+/* ROW */
+
+.row{
+margin-top:40px;
+padding-left:50px;
+}
+
+.row h2{
+margin-bottom:10px;
+}
+
+/* SCROLL */
 
 .row-posters{
 display:flex;
 overflow-x:auto;
-padding-top:20px;
+gap:15px;
+padding:20px 0;
+scroll-behavior:smooth;
 }
+
+.row-posters::-webkit-scrollbar{
+display:none;
+}
+
+/* POSTER */
 
 .poster{
-width:180px;
-margin-right:10px;
+min-width:180px;
 cursor:pointer;
-transition:.3s;
-}
-
-.poster:hover{
-transform:scale(1.1);
+transition:.35s;
+position:relative;
 }
 
 .poster img{
 width:100%;
-border-radius:6px;
+border-radius:10px;
+box-shadow:0 10px 25px rgba(0,0,0,.7);
 }
+
+.poster:hover{
+transform:scale(1.15);
+z-index:5;
+}
+
+/* PLAYER */
 
 #player{
 position:fixed;
@@ -75,11 +139,12 @@ top:0;
 left:0;
 width:100%;
 height:100%;
-background:black;
+background:rgba(0,0,0,.95);
 display:none;
 justify-content:center;
 align-items:center;
 z-index:100;
+flex-direction:column;
 }
 
 .player-box{
@@ -89,22 +154,58 @@ max-width:1200px;
 
 iframe{
 width:100%;
-height:80vh;
+height:70vh;
 border:none;
+border-radius:10px;
 }
 
 .close{
 position:absolute;
 top:20px;
 right:40px;
-font-size:30px;
+font-size:35px;
 cursor:pointer;
 }
 
+/* EPISODES */
+
+.episodes{
+margin-top:10px;
+display:flex;
+flex-wrap:wrap;
+gap:6px;
+}
+
 .episodes button{
-margin:3px;
-padding:5px 10px;
+padding:8px 12px;
+border:none;
+background:#222;
+color:white;
+border-radius:4px;
 cursor:pointer;
+}
+
+.episodes button:hover{
+background:#e50914;
+}
+
+/* RESPONSIVE */
+
+@media(max-width:800px){
+
+.hero{
+height:420px;
+padding-left:30px;
+}
+
+.hero h1{
+font-size:35px;
+}
+
+.poster{
+min-width:140px;
+}
+
 }
 
 </style>
@@ -113,19 +214,33 @@ cursor:pointer;
 <body>
 
 <div class="navbar">
+
 <div class="logo">MiStream</div>
+
+<input class="search" placeholder="Buscar...">
+
 </div>
 
-<div id="hero" class="hero"></div>
+<div id="hero" class="hero">
+
+<div class="hero-content" id="heroContent"></div>
+
+</div>
 
 <div class="row">
-<h2>Películas en Español</h2>
+
+<h2>🔥 Películas populares</h2>
+
 <div id="movies" class="row-posters"></div>
+
 </div>
 
 <div class="row">
-<h2>Series en Español</h2>
+
+<h2>📺 Series populares</h2>
+
 <div id="series" class="row-posters"></div>
+
 </div>
 
 <div id="player">
@@ -136,7 +251,7 @@ cursor:pointer;
 
 <div id="video"></div>
 
-<div id="episodes"></div>
+<div id="episodes" class="episodes"></div>
 
 </div>
 
@@ -154,7 +269,7 @@ let season=1
 
 async function loadHero(){
 
-let r=await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API}&language=es-ES&region=ES`)
+let r=await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API}&language=es-ES`)
 let d=await r.json()
 
 let movie=d.results[0]
@@ -162,11 +277,19 @@ let movie=d.results[0]
 let hero=document.getElementById("hero")
 
 hero.style.backgroundImage=`
-linear-gradient(to top,#141414,transparent),
+linear-gradient(to right,#0f0f0f,transparent),
 url(https://image.tmdb.org/t/p/original${movie.backdrop_path})
 `
 
-hero.innerHTML=`<h1>${movie.title}</h1>`
+document.getElementById("heroContent").innerHTML=`
+
+<h1>${movie.title}</h1>
+
+<p>${movie.overview.slice(0,150)}...</p>
+
+<button onclick="play(${movie.id},'movie')">▶ Ver ahora</button>
+
+`
 
 }
 
@@ -183,7 +306,7 @@ return d.spoken_languages.some(l=>l.iso_639_1==="es")
 
 }
 
-/* PELICULAS */
+/* MOVIES */
 
 async function loadMovies(){
 
@@ -284,7 +407,7 @@ document.getElementById("video").innerHTML=`
 
 }
 
-/* CERRAR */
+/* CLOSE */
 
 function closePlayer(){
 
