@@ -18,6 +18,8 @@ background:#0b0b0b;
 color:white;
 }
 
+/* NAVBAR */
+
 .navbar{
 position:fixed;
 top:0;
@@ -46,6 +48,8 @@ color:white;
 width:230px;
 }
 
+/* HERO */
+
 .hero{
 margin-top:70px;
 height:75vh;
@@ -57,38 +61,32 @@ padding:60px;
 background-image:linear-gradient(to top,black,rgba(0,0,0,.4),transparent);
 }
 
-.hero-content{
-max-width:500px;
-}
-
 .hero h1{
 font-size:50px;
 margin-bottom:10px;
 }
 
+/* ROW */
+
 .row{
 padding:25px;
-}
-
-.row h2{
-margin-bottom:12px;
 }
 
 .row-posters{
 display:flex;
 gap:12px;
 overflow-x:auto;
-scroll-behavior:smooth;
-padding-bottom:10px;
 }
+
+/* POSTERS */
 
 .poster{
 min-width:160px;
 cursor:pointer;
 position:relative;
-transition:.35s;
 border-radius:8px;
 overflow:hidden;
+transition:.3s;
 }
 
 .poster img{
@@ -111,9 +109,9 @@ opacity:1;
 
 .poster:hover{
 transform:scale(1.15);
-z-index:10;
-box-shadow:0 0 20px rgba(0,0,0,0.8);
 }
+
+/* PLAYER */
 
 #player{
 position:fixed;
@@ -131,7 +129,7 @@ padding-top:60px;
 
 .player-box{
 width:85%;
-height:65%;
+height:60%;
 }
 
 .player-box iframe{
@@ -148,14 +146,12 @@ font-size:35px;
 cursor:pointer;
 }
 
-.server-selector,
-.season-selector,
-.episode-list{
+/* SERVERS */
+
+.server-selector{
 margin-top:10px;
 display:flex;
 gap:8px;
-flex-wrap:wrap;
-justify-content:center;
 }
 
 button{
@@ -169,6 +165,25 @@ cursor:pointer;
 
 button:hover{
 background:#e50914;
+}
+
+/* TEMPORADAS */
+
+.season-selector{
+margin-top:15px;
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+}
+
+/* EPISODIOS */
+
+.episode-list{
+margin-top:10px;
+display:grid;
+grid-template-columns:repeat(auto-fill,60px);
+gap:8px;
+justify-content:center;
 }
 
 .footer{
@@ -190,10 +205,8 @@ color:#777;
 </div>
 
 <div class="hero" id="hero">
-<div class="hero-content">
 <h1 id="heroTitle">MiStream ULTRA</h1>
 <button onclick="playHero()">▶ Ver ahora</button>
-</div>
 </div>
 
 <div class="row">
@@ -212,17 +225,7 @@ color:#777;
 </div>
 
 <div class="row">
-<h2>🏆 Películas mejor valoradas</h2>
-<div id="moviesTop" class="row-posters"></div>
-</div>
-
-<div class="row">
-<h2>🏆 Series mejor valoradas</h2>
-<div id="seriesTop" class="row-posters"></div>
-</div>
-
-<div class="row">
-<h2>🍿 Anime popular</h2>
+<h2>🍿 Anime</h2>
 <div id="animePopular" class="row-posters"></div>
 </div>
 
@@ -234,9 +237,11 @@ color:#777;
 <iframe id="framePlayer"></iframe>
 </div>
 
-<div class="server-selector" id="servers"></div>
-<div class="season-selector" id="seasonSelector"></div>
-<div class="episode-list" id="episodeList"></div>
+<div id="servers" class="server-selector"></div>
+
+<div id="seasonSelector" class="season-selector"></div>
+
+<div id="episodeList" class="episode-list"></div>
 
 </div>
 
@@ -247,30 +252,31 @@ MiStream ULTRA © 2026
 <script>
 
 const TMDB="8a2de0488825903a0a4b7d0ff12a3873"
-const TRAKT="6ad19c53baea6af57b902daa5d094b60833913e5cd6bb09554a162602b1bb98c"
 
 let currentId
 let currentType
 let currentSeason=1
 let currentEpisode=1
 
-const pages={}
+/* SERVERS */
 
 const servers=[
 
 {
 name:"2Embed",
 movie:id=>`https://www.2embed.cc/embed/${id}`,
-tv:id=>`https://www.2embed.cc/embedtv/${id}?s=${currentSeason}&e=${currentEpisode}`
+tv:(id,s,e)=>`https://www.2embed.cc/embedtv/${id}?s=${s}&e=${e}`
 },
 
 {
 name:"VidSrc",
 movie:id=>`https://vidsrc.to/embed/movie/${id}`,
-tv:id=>`https://vidsrc.to/embed/tv/${id}/${currentSeason}/${currentEpisode}`
+tv:(id,s,e)=>`https://vidsrc.to/embed/tv/${id}/${s}/${e}`
 }
 
 ]
+
+/* PLAYER */
 
 function openPlayer(id,type){
 
@@ -288,24 +294,18 @@ if(type==="tv") loadSeasons()
 
 }
 
-function closePlayer(){
-
-document.getElementById("player").style.display="none"
-document.getElementById("framePlayer").src=""
-
-}
+/* SERVERS */
 
 function loadServers(){
 
 let c=document.getElementById("servers")
+
 c.innerHTML=""
 
 servers.forEach((s,i)=>{
 
 let b=document.createElement("button")
-
 b.innerText=s.name
-
 b.onclick=()=>playServer(i)
 
 c.appendChild(b)
@@ -322,19 +322,31 @@ let s=servers[i]
 
 let url=currentType==="movie"
 ?s.movie(currentId)
-:s.tv(currentId)
+:s.tv(currentId,currentSeason,currentEpisode)
 
 document.getElementById("framePlayer").src=url
 
 }
 
+function closePlayer(){
+
+document.getElementById("player").style.display="none"
+document.getElementById("framePlayer").src=""
+
+}
+
+/* TEMPORADAS */
+
 async function loadSeasons(){
 
-let r=await fetch(`https://api.themoviedb.org/3/tv/${currentId}?api_key=${TMDB}&language=es`)
+let r=await fetch(`https://api.themoviedb.org/3/tv/${currentId}?api_key=${TMDB}`)
 let data=await r.json()
 
 let box=document.getElementById("seasonSelector")
+
 box.innerHTML=""
+
+data.seasons.sort((a,b)=>a.season_number-b.season_number)
 
 data.seasons.forEach(season=>{
 
@@ -358,23 +370,27 @@ loadEpisodes()
 
 }
 
+/* EPISODIOS */
+
 async function loadEpisodes(){
 
-let r=await fetch(`https://api.themoviedb.org/3/tv/${currentId}/season/${currentSeason}?api_key=${TMDB}&language=es`)
+let r=await fetch(`https://api.themoviedb.org/3/tv/${currentId}/season/${currentSeason}?api_key=${TMDB}`)
 let data=await r.json()
 
 let list=document.getElementById("episodeList")
+
 list.innerHTML=""
 
 data.episodes.forEach(ep=>{
 
 let b=document.createElement("button")
 
-b.innerText="E"+ep.episode_number
+b.innerText=ep.episode_number
 
 b.onclick=()=>{
 
 currentEpisode=ep.episode_number
+
 playServer(0)
 
 }
@@ -385,11 +401,49 @@ list.appendChild(b)
 
 }
 
+/* ANIME */
+
+async function loadAnime(){
+
+let r=await fetch("https://api.jikan.moe/v4/top/anime")
+let data=await r.json()
+
+let row=document.getElementById("animePopular")
+
+data.data.slice(0,12).forEach(async anime=>{
+
+let div=document.createElement("div")
+div.className="poster"
+
+div.innerHTML=`
+<img src="${anime.images.jpg.image_url}">
+<span>${anime.title}</span>
+`
+
+div.onclick=async()=>{
+
+let search=await fetch(`https://api.themoviedb.org/3/search/tv?api_key=${TMDB}&query=${anime.title}`)
+let res=await search.json()
+
+if(res.results[0]){
+
+openPlayer(res.results[0].id,"tv")
+
+}
+
+}
+
+row.appendChild(div)
+
+})
+
+}
+
+/* CARGAR CONTENIDO */
+
 async function loadCategory(url,container,type){
 
-if(!pages[container]) pages[container]=1
-
-let r=await fetch(`${url}&language=es&page=${pages[container]}`)
+let r=await fetch(url)
 let data=await r.json()
 
 let row=document.getElementById(container)
@@ -413,90 +467,13 @@ row.appendChild(div)
 
 })
 
-pages[container]++
-
-row.onscroll=()=>{
-
-if(row.scrollLeft + row.clientWidth >= row.scrollWidth-300){
-
-loadCategory(url,container,type)
-
 }
 
-}
-
-}
-
-async function loadTrakt(){
-
-let r=await fetch("https://api.trakt.tv/movies/trending",{
-headers:{
-"Content-Type":"application/json",
-"trakt-api-version":"2",
-"trakt-api-key":TRAKT
-}
-})
-
-let data=await r.json()
-
-data.slice(0,10).forEach(async m=>{
-
-let tmdb=await fetch(`https://api.themoviedb.org/3/find/${m.movie.ids.imdb}?api_key=${TMDB}&external_source=imdb_id`)
-
-let info=await tmdb.json()
-
-if(!info.movie_results[0]) return
-
-let movie=info.movie_results[0]
-
-let row=document.getElementById("trending")
-
-let div=document.createElement("div")
-
-div.className="poster"
-
-div.innerHTML=`
-<img src="https://image.tmdb.org/t/p/w500${movie.poster_path}">
-<span>${movie.title}</span>
-`
-
-div.onclick=()=>openPlayer(movie.id,"movie")
-
-row.appendChild(div)
-
-})
-
-}
-
-async function loadAnime(){
-
-let r=await fetch("https://api.jikan.moe/v4/top/anime")
-
-let data=await r.json()
-
-let row=document.getElementById("animePopular")
-
-data.data.slice(0,12).forEach(anime=>{
-
-let div=document.createElement("div")
-
-div.className="poster"
-
-div.innerHTML=`
-<img src="${anime.images.jpg.image_url}">
-<span>${anime.title}</span>
-`
-
-row.appendChild(div)
-
-})
-
-}
+/* HERO */
 
 async function loadHero(){
 
-let r=await fetch(`https://api.themoviedb.org/3/trending/movie/day?api_key=${TMDB}&language=es`)
-
+let r=await fetch(`https://api.themoviedb.org/3/trending/movie/day?api_key=${TMDB}`)
 let data=await r.json()
 
 let m=data.results[0]
@@ -514,16 +491,19 @@ function playHero(){
 openPlayer(heroId,"movie")
 }
 
+/* SEARCH */
+
 async function searchContent(){
 
 let q=document.getElementById("search").value
 
 if(q.length<3) return
 
-let r=await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB}&language=es&query=${q}`)
+let r=await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB}&query=${q}`)
 let data=await r.json()
 
 let row=document.getElementById("trending")
+
 row.innerHTML=""
 
 data.results.forEach(item=>{
@@ -547,14 +527,17 @@ row.appendChild(div)
 
 }
 
+/* LOAD */
+
 loadHero()
-loadTrakt()
+
 loadAnime()
 
+loadCategory(`https://api.themoviedb.org/3/trending/movie/day?api_key=${TMDB}`,"trending","movie")
+
 loadCategory(`https://api.themoviedb.org/3/movie/popular?api_key=${TMDB}`,"moviesPopular","movie")
+
 loadCategory(`https://api.themoviedb.org/3/tv/popular?api_key=${TMDB}`,"seriesPopular","tv")
-loadCategory(`https://api.themoviedb.org/3/movie/top_rated?api_key=${TMDB}`,"moviesTop","movie")
-loadCategory(`https://api.themoviedb.org/3/tv/top_rated?api_key=${TMDB}`,"seriesTop","tv")
 
 </script>
 
