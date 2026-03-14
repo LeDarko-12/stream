@@ -76,16 +76,15 @@ padding:25px;
 display:flex;
 gap:12px;
 overflow-x:auto;
+padding-bottom:10px;
 }
-
-/* POSTERS */
 
 .poster{
 min-width:160px;
 cursor:pointer;
-position:relative;
 border-radius:8px;
 overflow:hidden;
+position:relative;
 transition:.3s;
 }
 
@@ -186,6 +185,24 @@ gap:8px;
 justify-content:center;
 }
 
+.episode-active{
+background:#e50914;
+}
+
+/* FAVORITOS */
+
+.fav{
+position:absolute;
+top:5px;
+right:5px;
+background:black;
+padding:5px;
+border-radius:50%;
+cursor:pointer;
+}
+
+/* FOOTER */
+
 .footer{
 margin-top:40px;
 background:#000;
@@ -238,9 +255,7 @@ color:#777;
 </div>
 
 <div id="servers" class="server-selector"></div>
-
 <div id="seasonSelector" class="season-selector"></div>
-
 <div id="episodeList" class="episode-list"></div>
 
 </div>
@@ -294,12 +309,9 @@ if(type==="tv") loadSeasons()
 
 }
 
-/* SERVERS */
-
 function loadServers(){
 
 let c=document.getElementById("servers")
-
 c.innerHTML=""
 
 servers.forEach((s,i)=>{
@@ -328,10 +340,13 @@ document.getElementById("framePlayer").src=url
 
 }
 
-function closePlayer(){
+/* AUTOPLAY SIGUIENTE EPISODIO */
 
-document.getElementById("player").style.display="none"
-document.getElementById("framePlayer").src=""
+function nextEpisode(){
+
+currentEpisode++
+
+playServer(0)
 
 }
 
@@ -343,7 +358,6 @@ let r=await fetch(`https://api.themoviedb.org/3/tv/${currentId}?api_key=${TMDB}`
 let data=await r.json()
 
 let box=document.getElementById("seasonSelector")
-
 box.innerHTML=""
 
 data.seasons.sort((a,b)=>a.season_number-b.season_number)
@@ -378,7 +392,6 @@ let r=await fetch(`https://api.themoviedb.org/3/tv/${currentId}/season/${current
 let data=await r.json()
 
 let list=document.getElementById("episodeList")
-
 list.innerHTML=""
 
 data.episodes.forEach(ep=>{
@@ -387,11 +400,14 @@ let b=document.createElement("button")
 
 b.innerText=ep.episode_number
 
+if(ep.episode_number===currentEpisode)
+b.classList.add("episode-active")
+
 b.onclick=()=>{
 
 currentEpisode=ep.episode_number
-
 playServer(0)
+loadEpisodes()
 
 }
 
@@ -410,7 +426,7 @@ let data=await r.json()
 
 let row=document.getElementById("animePopular")
 
-data.data.slice(0,12).forEach(async anime=>{
+data.data.slice(0,12).forEach(anime=>{
 
 let div=document.createElement("div")
 div.className="poster"
@@ -453,7 +469,6 @@ data.results.forEach(item=>{
 if(!item.poster_path) return
 
 let div=document.createElement("div")
-
 div.className="poster"
 
 div.innerHTML=`
@@ -491,7 +506,7 @@ function playHero(){
 openPlayer(heroId,"movie")
 }
 
-/* SEARCH */
+/* BUSCADOR */
 
 async function searchContent(){
 
@@ -503,7 +518,6 @@ let r=await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB}&que
 let data=await r.json()
 
 let row=document.getElementById("trending")
-
 row.innerHTML=""
 
 data.results.forEach(item=>{
@@ -530,13 +544,10 @@ row.appendChild(div)
 /* LOAD */
 
 loadHero()
-
 loadAnime()
 
 loadCategory(`https://api.themoviedb.org/3/trending/movie/day?api_key=${TMDB}`,"trending","movie")
-
 loadCategory(`https://api.themoviedb.org/3/movie/popular?api_key=${TMDB}`,"moviesPopular","movie")
-
 loadCategory(`https://api.themoviedb.org/3/tv/popular?api_key=${TMDB}`,"seriesPopular","tv")
 
 </script>
