@@ -53,13 +53,13 @@ width:230px;
 
 .hero{
 margin-top:70px;
-height:70vh;
+height:75vh;
 background-size:cover;
 background-position:center;
 display:flex;
 align-items:end;
-padding:50px;
-background-image:linear-gradient(to top,black,transparent);
+padding:60px;
+background-image:linear-gradient(to top,black,rgba(0,0,0,.4),transparent);
 }
 
 .hero-content{
@@ -95,6 +95,7 @@ margin-bottom:12px;
 display:flex;
 gap:12px;
 overflow-x:auto;
+scroll-behavior:smooth;
 }
 
 .row-posters::-webkit-scrollbar{
@@ -106,13 +107,15 @@ background:#e50914;
 border-radius:6px;
 }
 
-/* POSTER */
+/* POSTERS */
 
 .poster{
 min-width:160px;
 cursor:pointer;
 position:relative;
-transition:.3s;
+transition:.35s;
+border-radius:8px;
+overflow:hidden;
 }
 
 .poster img{
@@ -135,7 +138,9 @@ opacity:1;
 }
 
 .poster:hover{
-transform:scale(1.1);
+transform:scale(1.15);
+z-index:10;
+box-shadow:0 0 20px rgba(0,0,0,0.8);
 }
 
 /* PLAYER */
@@ -222,8 +227,6 @@ padding:25px;
 color:#777;
 }
 
-/* MOBILE */
-
 @media(max-width:700px){
 
 .hero h1{
@@ -266,6 +269,46 @@ min-width:120px;
 <div class="row">
 <h2>📺 Series populares</h2>
 <div id="seriesPopular" class="row-posters"></div>
+</div>
+
+<div class="row">
+<h2>🔥 Series Trending</h2>
+<div id="seriesTrending" class="row-posters"></div>
+</div>
+
+<div class="row">
+<h2>🏆 Películas mejor valoradas</h2>
+<div id="moviesTop" class="row-posters"></div>
+</div>
+
+<div class="row">
+<h2>🏆 Series mejor valoradas</h2>
+<div id="seriesTop" class="row-posters"></div>
+</div>
+
+<div class="row">
+<h2>🍿 Películas en cine</h2>
+<div id="moviesTheater" class="row-posters"></div>
+</div>
+
+<div class="row">
+<h2>🎬 Estrenos</h2>
+<div id="moviesNew" class="row-posters"></div>
+</div>
+
+<div class="row">
+<h2>😂 Comedia</h2>
+<div id="comedyMovies" class="row-posters"></div>
+</div>
+
+<div class="row">
+<h2>👻 Terror</h2>
+<div id="horrorMovies" class="row-posters"></div>
+</div>
+
+<div class="row">
+<h2>⚡ Acción</h2>
+<div id="actionMovies" class="row-posters"></div>
 </div>
 
 <div class="row">
@@ -457,7 +500,7 @@ list.appendChild(b)
 
 }
 
-/* LOAD CONTENT */
+/* LOAD CATEGORY */
 
 async function loadCategory(url,container,type){
 
@@ -481,14 +524,6 @@ div.innerHTML=`
 `
 
 div.onclick=()=>openPlayer(item.id,type)
-
-div.oncontextmenu=(e)=>{
-
-e.preventDefault()
-
-addFavorite(item)
-
-}
 
 row.appendChild(div)
 
@@ -572,7 +607,9 @@ let r=await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB}&que
 
 let data=await r.json()
 
-document.getElementById("moviesPopular").innerHTML=""
+let row=document.getElementById("moviesPopular")
+
+row.innerHTML=""
 
 data.results.forEach(item=>{
 
@@ -589,7 +626,7 @@ div.innerHTML=`
 
 div.onclick=()=>openPlayer(item.id,item.media_type)
 
-document.getElementById("moviesPopular").appendChild(div)
+row.appendChild(div)
 
 })
 
@@ -602,13 +639,9 @@ window.onscroll=()=>{
 let btn=document.querySelector(".topBtn")
 
 if(document.documentElement.scrollTop>400){
-
 btn.style.display="block"
-
 }else{
-
 btn.style.display="none"
-
 }
 
 }
@@ -619,7 +652,7 @@ window.scrollTo({top:0,behavior:"smooth"})
 
 }
 
-/* INIT */
+/* LOAD CONTENT */
 
 loadHero()
 
@@ -628,6 +661,22 @@ loadCategory(`https://api.themoviedb.org/3/trending/movie/day?api_key=${TMDB}`,"
 loadCategory(`https://api.themoviedb.org/3/movie/popular?api_key=${TMDB}`,"moviesPopular","movie")
 
 loadCategory(`https://api.themoviedb.org/3/tv/popular?api_key=${TMDB}`,"seriesPopular","tv")
+
+loadCategory(`https://api.themoviedb.org/3/trending/tv/day?api_key=${TMDB}`,"seriesTrending","tv")
+
+loadCategory(`https://api.themoviedb.org/3/movie/top_rated?api_key=${TMDB}`,"moviesTop","movie")
+
+loadCategory(`https://api.themoviedb.org/3/tv/top_rated?api_key=${TMDB}`,"seriesTop","tv")
+
+loadCategory(`https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB}`,"moviesTheater","movie")
+
+loadCategory(`https://api.themoviedb.org/3/movie/upcoming?api_key=${TMDB}`,"moviesNew","movie")
+
+loadCategory(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB}&with_genres=35`,"comedyMovies","movie")
+
+loadCategory(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB}&with_genres=27`,"horrorMovies","movie")
+
+loadCategory(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB}&with_genres=28`,"actionMovies","movie")
 
 loadFavorites()
 
