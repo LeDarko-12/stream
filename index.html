@@ -76,7 +76,6 @@ padding:25px;
 display:flex;
 gap:12px;
 overflow-x:auto;
-padding-bottom:10px;
 }
 
 .poster{
@@ -99,7 +98,6 @@ width:100%;
 padding:10px;
 background:linear-gradient(transparent,rgba(0,0,0,.9));
 opacity:0;
-font-size:13px;
 }
 
 .poster:hover span{
@@ -107,7 +105,7 @@ opacity:1;
 }
 
 .poster:hover{
-transform:scale(1.15);
+transform:scale(1.12);
 }
 
 /* PLAYER */
@@ -189,20 +187,6 @@ justify-content:center;
 background:#e50914;
 }
 
-/* FAVORITOS */
-
-.fav{
-position:absolute;
-top:5px;
-right:5px;
-background:black;
-padding:5px;
-border-radius:50%;
-cursor:pointer;
-}
-
-/* FOOTER */
-
 .footer{
 margin-top:40px;
 background:#000;
@@ -255,7 +239,9 @@ color:#777;
 </div>
 
 <div id="servers" class="server-selector"></div>
+
 <div id="seasonSelector" class="season-selector"></div>
+
 <div id="episodeList" class="episode-list"></div>
 
 </div>
@@ -291,15 +277,10 @@ tv:(id,s,e)=>`https://vidsrc.to/embed/tv/${id}/${s}/${e}`
 
 ]
 
-/* PLAYER */
-
 function openPlayer(id,type){
 
 currentId=id
 currentType=type
-
-currentSeason=1
-currentEpisode=1
 
 document.getElementById("player").style.display="flex"
 
@@ -317,7 +298,9 @@ c.innerHTML=""
 servers.forEach((s,i)=>{
 
 let b=document.createElement("button")
+
 b.innerText=s.name
+
 b.onclick=()=>playServer(i)
 
 c.appendChild(b)
@@ -338,15 +321,27 @@ let url=currentType==="movie"
 
 document.getElementById("framePlayer").src=url
 
+saveProgress()
+
 }
 
-/* AUTOPLAY SIGUIENTE EPISODIO */
+function saveProgress(){
 
-function nextEpisode(){
+localStorage.setItem("continue",
+JSON.stringify({
+id:currentId,
+type:currentType,
+season:currentSeason,
+episode:currentEpisode
+})
+)
 
-currentEpisode++
+}
 
-playServer(0)
+function closePlayer(){
+
+document.getElementById("player").style.display="none"
+document.getElementById("framePlayer").src=""
 
 }
 
@@ -360,20 +355,19 @@ let data=await r.json()
 let box=document.getElementById("seasonSelector")
 box.innerHTML=""
 
-data.seasons.sort((a,b)=>a.season_number-b.season_number)
-
-data.seasons.forEach(season=>{
+data.seasons
+.sort((a,b)=>a.season_number-b.season_number)
+.forEach(season=>{
 
 if(season.season_number===0) return
 
 let b=document.createElement("button")
+
 b.innerText="Temp "+season.season_number
 
 b.onclick=()=>{
-
 currentSeason=season.season_number
 loadEpisodes()
-
 }
 
 box.appendChild(b)
@@ -404,11 +398,9 @@ if(ep.episode_number===currentEpisode)
 b.classList.add("episode-active")
 
 b.onclick=()=>{
-
 currentEpisode=ep.episode_number
 playServer(0)
 loadEpisodes()
-
 }
 
 list.appendChild(b)
@@ -426,7 +418,7 @@ let data=await r.json()
 
 let row=document.getElementById("animePopular")
 
-data.data.slice(0,12).forEach(anime=>{
+data.data.slice(0,12).forEach(async anime=>{
 
 let div=document.createElement("div")
 div.className="poster"
@@ -439,12 +431,11 @@ div.innerHTML=`
 div.onclick=async()=>{
 
 let search=await fetch(`https://api.themoviedb.org/3/search/tv?api_key=${TMDB}&query=${anime.title}`)
+
 let res=await search.json()
 
 if(res.results[0]){
-
 openPlayer(res.results[0].id,"tv")
-
 }
 
 }
@@ -455,7 +446,7 @@ row.appendChild(div)
 
 }
 
-/* CARGAR CONTENIDO */
+/* CATEGORIAS */
 
 async function loadCategory(url,container,type){
 
@@ -469,6 +460,7 @@ data.results.forEach(item=>{
 if(!item.poster_path) return
 
 let div=document.createElement("div")
+
 div.className="poster"
 
 div.innerHTML=`
@@ -506,7 +498,7 @@ function playHero(){
 openPlayer(heroId,"movie")
 }
 
-/* BUSCADOR */
+/* SEARCH */
 
 async function searchContent(){
 
