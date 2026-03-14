@@ -6,7 +6,12 @@
 
 <style>
 
-*{box-sizing:border-box;margin:0;padding:0;font-family:Arial}
+*{
+box-sizing:border-box;
+margin:0;
+padding:0;
+font-family:Arial
+}
 
 body{
 background:#0b0b0b;
@@ -75,12 +80,20 @@ overflow-x:auto
 }
 
 .row-posters::-webkit-scrollbar{
-display:none
+height:8px
 }
+
+.row-posters::-webkit-scrollbar-thumb{
+background:#e50914;
+border-radius:10px
+}
+
+/* POSTERS */
 
 .poster{
 min-width:150px;
 cursor:pointer;
+position:relative;
 transition:.25s
 }
 
@@ -89,8 +102,25 @@ width:100%;
 border-radius:8px
 }
 
+.poster span{
+position:absolute;
+bottom:0;
+left:0;
+width:100%;
+background:linear-gradient(transparent,rgba(0,0,0,0.9));
+padding:10px;
+font-size:13px;
+opacity:0;
+transition:.3s
+}
+
+.poster:hover span{
+opacity:1
+}
+
 .poster:hover{
-transform:scale(1.1)
+transform:scale(1.1);
+box-shadow:0 0 15px rgba(229,9,20,0.6)
 }
 
 /* PLAYER */
@@ -173,10 +203,62 @@ font-size:35px;
 cursor:pointer
 }
 
+/* LOADER */
+
+.loader{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#000;
+display:flex;
+align-items:center;
+justify-content:center;
+z-index:50;
+font-size:22px
+}
+
+/* BOTON VOLVER ARRIBA */
+
+.topBtn{
+position:fixed;
+bottom:30px;
+right:30px;
+background:#e50914;
+border:none;
+color:white;
+padding:12px 16px;
+border-radius:50%;
+font-size:18px;
+cursor:pointer;
+display:none;
+z-index:15
+}
+
+.topBtn:hover{
+background:#ff1f2a
+}
+
+/* FOOTER */
+
+.footer{
+margin-top:40px;
+padding:30px;
+text-align:center;
+background:#000;
+color:#777;
+font-size:14px
+}
+
 </style>
 </head>
 
 <body>
+
+<div class="loader" id="loader">
+Cargando contenido...
+</div>
 
 <div class="navbar">
 <div class="logo">MiStream</div>
@@ -210,6 +292,8 @@ cursor:pointer
 <div id="seriesPopular" class="row-posters"></div>
 </div>
 
+<button class="topBtn" onclick="scrollToTop()">↑</button>
+
 <div id="player">
 
 <div class="close" onclick="closePlayer()">✕</div>
@@ -224,6 +308,10 @@ cursor:pointer
 
 <div class="episode-list" id="episodeList"></div>
 
+</div>
+
+<div class="footer">
+MiStream PRO © 2026 • Streaming UI Demo
 </div>
 
 <script>
@@ -258,6 +346,8 @@ tv:id=>`https://multiembed.mov/?video_id=${id}&tmdb=1&s=${currentSeason}&e=${cur
 ]
 
 function openPlayer(id,type){
+
+localStorage.setItem("lastContent",JSON.stringify({id,type}))
 
 currentId=id
 currentType=type
@@ -382,7 +472,10 @@ if(!item.poster_path)return
 let div=document.createElement("div")
 div.className="poster"
 
-div.innerHTML=`<img src="https://image.tmdb.org/t/p/w500${item.poster_path}">`
+div.innerHTML=`
+<img src="https://image.tmdb.org/t/p/w500${item.poster_path}">
+<span>${item.title || item.name}</span>
+`
 
 div.onclick=()=>openPlayer(item.id,type)
 
@@ -411,7 +504,10 @@ if(!item.poster_path)return
 let div=document.createElement("div")
 div.className="poster"
 
-div.innerHTML=`<img src="https://image.tmdb.org/t/p/w500${item.poster_path}">`
+div.innerHTML=`
+<img src="https://image.tmdb.org/t/p/w500${item.poster_path}">
+<span>${item.title || item.name}</span>
+`
 
 if(item.media_type==="movie"){
 
@@ -431,6 +527,24 @@ document.getElementById("seriesPopular").appendChild(div)
 
 }
 
+/* BOTON VOLVER ARRIBA */
+
+window.onscroll=()=>{
+
+let btn=document.querySelector(".topBtn")
+
+if(document.documentElement.scrollTop>400){
+btn.style.display="block"
+}else{
+btn.style.display="none"
+}
+
+}
+
+function scrollToTop(){
+window.scrollTo({top:0,behavior:"smooth"})
+}
+
 /* LOAD CATEGORIES */
 
 loadCategory(`https://api.themoviedb.org/3/movie/popular?api_key=${TMDB}&language=es&page=1`,"moviesPopular","movie")
@@ -440,6 +554,10 @@ loadCategory(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB}&with_g
 loadCategory(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB}&with_genres=27&language=es`,"moviesHorror","movie")
 
 loadCategory(`https://api.themoviedb.org/3/tv/popular?api_key=${TMDB}&language=es`,"seriesPopular","tv")
+
+window.onload=()=>{
+document.getElementById("loader").style.display="none"
+}
 
 </script>
 
