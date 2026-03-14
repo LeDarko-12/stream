@@ -1,427 +1,230 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
 <meta charset="UTF-8">
-<title>MiStream</title>
+<title>MiStream PRO</title>
+
+<!-- Video.js CSS y JS -->
+<link href="https://vjs.zencdn.net/8.10.0/video-js.css" rel="stylesheet">
+<script src="https://vjs.zencdn.net/8.10.0/video.min.js"></script>
 
 <style>
-
-*{
-box-sizing:border-box;
-}
-
-body{
-margin:0;
-font-family: 'Segoe UI', Arial;
-background:#0f0f0f;
-color:white;
-}
+*{ box-sizing:border-box; }
+body{ margin:0; font-family: 'Segoe UI', Arial; background:#0f0f0f; color:white; }
 
 /* NAVBAR */
-
 .navbar{
-position:fixed;
-top:0;
-width:100%;
-height:70px;
-background:linear-gradient(to bottom, rgba(0,0,0,.9), transparent);
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:0 50px;
-z-index:10;
+position:fixed; top:0; width:100%; height:70px; background:linear-gradient(to bottom, rgba(0,0,0,.9), transparent);
+display:flex; align-items:center; justify-content:space-between; padding:0 50px; z-index:10;
 }
-
-.logo{
-color:#e50914;
-font-size:30px;
-font-weight:bold;
-}
-
-.search{
-background:#1f1f1f;
-border:none;
-padding:10px 15px;
-border-radius:6px;
-color:white;
-width:250px;
-}
+.logo{ color:#e50914; font-size:30px; font-weight:bold; }
+.search{ background:#1f1f1f; border:none; padding:10px 15px; border-radius:6px; color:white; width:250px; }
 
 /* HERO */
-
-.hero{
-height:520px;
-margin-top:70px;
-display:flex;
-align-items:center;
-padding-left:70px;
-background-size:cover;
-background-position:center;
-position:relative;
-}
-
-.hero-content{
-max-width:500px;
-}
-
-.hero h1{
-font-size:50px;
-margin:0;
-}
-
-.hero p{
-color:#ccc;
-margin-top:10px;
-}
-
-.hero button{
-margin-top:20px;
-padding:12px 25px;
-font-size:16px;
-background:#e50914;
-border:none;
-border-radius:6px;
-color:white;
-cursor:pointer;
-}
+.hero{ height:520px; margin-top:70px; display:flex; align-items:center; padding-left:70px; background-size:cover; background-position:center; position:relative; }
+.hero-content{ max-width:500px; }
+.hero h1{ font-size:50px; margin:0; }
+.hero p{ color:#ccc; margin-top:10px; }
+.hero button{ margin-top:20px; padding:12px 25px; font-size:16px; background:#e50914; border:none; border-radius:6px; color:white; cursor:pointer; }
 
 /* ROW */
-
-.row{
-margin-top:40px;
-padding-left:50px;
-}
-
-.row h2{
-margin-bottom:10px;
-}
-
-/* SCROLL */
-
-.row-posters{
-display:flex;
-overflow-x:auto;
-gap:15px;
-padding:20px 0;
-scroll-behavior:smooth;
-}
-
-.row-posters::-webkit-scrollbar{
-display:none;
-}
+.row{ margin-top:40px; padding-left:50px; }
+.row h2{ margin-bottom:10px; }
+.row-posters{ display:flex; overflow-x:auto; gap:15px; padding:20px 0; scroll-behavior:smooth; }
+.row-posters::-webkit-scrollbar{ display:none; }
 
 /* POSTER */
-
-.poster{
-min-width:180px;
-cursor:pointer;
-transition:.35s;
-position:relative;
-}
-
-.poster img{
-width:100%;
-border-radius:10px;
-box-shadow:0 10px 25px rgba(0,0,0,.7);
-}
-
-.poster:hover{
-transform:scale(1.15);
-z-index:5;
-}
+.poster{ min-width:180px; cursor:pointer; transition:.35s; position:relative; }
+.poster img{ width:100%; border-radius:10px; box-shadow:0 10px 25px rgba(0,0,0,.7); }
+.poster:hover{ transform:scale(1.15); z-index:5; }
 
 /* PLAYER */
-
 #player{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,.95);
-display:none;
-justify-content:center;
-align-items:center;
-z-index:100;
-flex-direction:column;
+position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.95); display:none; justify-content:center; align-items:center; z-index:100; flex-direction:column;
 }
-
-.player-box{
-width:90%;
-max-width:1200px;
-}
-
-iframe{
-width:100%;
-height:70vh;
-border:none;
-border-radius:10px;
-}
-
-.close{
-position:absolute;
-top:20px;
-right:40px;
-font-size:35px;
-cursor:pointer;
-}
-
-/* EPISODES */
-
-.episodes{
-margin-top:10px;
-display:flex;
-flex-wrap:wrap;
-gap:6px;
-}
-
-.episodes button{
-padding:8px 12px;
-border:none;
-background:#222;
-color:white;
-border-radius:4px;
-cursor:pointer;
-}
-
-.episodes button:hover{
-background:#e50914;
-}
+.player-box{ width:90%; max-width:1200px; }
+.episodes{ margin-top:10px; display:flex; flex-wrap:wrap; gap:6px; }
+.episodes button{ padding:8px 12px; border:none; background:#222; color:white; border-radius:4px; cursor:pointer; }
+.episodes button:hover{ background:#e50914; }
+.close{ position:absolute; top:20px; right:40px; font-size:35px; cursor:pointer; }
 
 /* RESPONSIVE */
-
 @media(max-width:800px){
-
-.hero{
-height:420px;
-padding-left:30px;
+.hero{ height:420px; padding-left:30px; }
+.hero h1{ font-size:35px; }
+.poster{ min-width:140px; }
 }
-
-.hero h1{
-font-size:35px;
-}
-
-.poster{
-min-width:140px;
-}
-
-}
-
 </style>
 </head>
-
 <body>
 
+<!-- NAVBAR -->
 <div class="navbar">
-
-<div class="logo">MiStream</div>
-
-<input class="search" placeholder="Buscar...">
-
+<div class="logo">MiStream PRO</div>
+<input class="search" id="search" placeholder="Buscar películas o series..." onkeyup="searchContent()">
 </div>
 
+<!-- HERO -->
 <div id="hero" class="hero">
-
 <div class="hero-content" id="heroContent"></div>
-
 </div>
 
+<!-- FILAS DE CONTENIDO -->
 <div class="row">
-
 <h2>🔥 Películas populares</h2>
-
 <div id="movies" class="row-posters"></div>
-
 </div>
 
 <div class="row">
+<h2>⭐ Mejores Películas</h2>
+<div id="topmovies" class="row-posters"></div>
+</div>
 
+<div class="row">
 <h2>📺 Series populares</h2>
-
 <div id="series" class="row-posters"></div>
-
 </div>
 
+<!-- PLAYER -->
 <div id="player">
-
 <div class="close" onclick="closePlayer()">✕</div>
-
 <div class="player-box">
-
-<div id="video"></div>
-
+<video
+id="videoPlayer"
+class="video-js vjs-big-play-centered"
+controls preload="auto"
+width="100%" height="600"
+data-setup="{}">
+<source id="videoSource" src="" type="video/mp4">
+</video>
 <div id="episodes" class="episodes"></div>
-
 </div>
-
 </div>
 
 <script>
-
+// API TMDB
 const API="8a2de0488825903a0a4b7d0ff12a3873"
+let currentId, currentType, currentEpisode=1, season=1
 
-let currentId
-let currentType
-let season=1
+// Video.js
+let player = videojs('videoPlayer')
 
-/* HERO */
-
+// CARGA HERO
 async function loadHero(){
-
 let r=await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API}&language=es-ES`)
 let d=await r.json()
-
 let movie=d.results[0]
-
-let hero=document.getElementById("hero")
-
-hero.style.backgroundImage=`
-linear-gradient(to right,#0f0f0f,transparent),
-url(https://image.tmdb.org/t/p/original${movie.backdrop_path})
-`
-
+document.getElementById("hero").style.backgroundImage=
+`linear-gradient(to right,#0f0f0f,transparent), url(https://image.tmdb.org/t/p/original${movie.backdrop_path})`
 document.getElementById("heroContent").innerHTML=`
-
 <h1>${movie.title}</h1>
-
 <p>${movie.overview.slice(0,150)}...</p>
-
-<button onclick="play(${movie.id},'movie')">▶ Ver ahora</button>
-
+<button onclick="openDetails(${movie.id},'movie')">▶ Ver ahora</button>
 `
-
 }
 
-/* FILTRO ESPAÑOL */
-
+// FILTRO ESPAÑOL
 async function tieneEspanol(id,tipo){
-
 let r=await fetch(`https://api.themoviedb.org/3/${tipo}/${id}?api_key=${API}`)
 let d=await r.json()
-
 if(!d.spoken_languages) return false
-
 return d.spoken_languages.some(l=>l.iso_639_1==="es")
-
 }
 
-/* MOVIES */
-
-async function loadMovies(){
-
-let r=await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API}&language=es-ES`)
-let d=await r.json()
-
-render(d.results,"movies","movie")
-
+// CARGA CATEGORIAS
+async function loadCategory(url,container,type){
+let r = await fetch(url)
+let d = await r.json()
+render(d.results,container,type)
 }
 
-/* SERIES */
-
-async function loadSeries(){
-
-let r=await fetch(`https://api.themoviedb.org/3/tv/popular?api_key=${API}&language=es-ES`)
-let d=await r.json()
-
-render(d.results,"series","tv")
-
-}
-
-/* RENDER */
-
+// RENDER POSTERS
 async function render(list,container,type){
-
 let row=document.getElementById(container)
-
 row.innerHTML=""
-
 for(let item of list){
-
 if(!item.poster_path) continue
-
 let esp=await tieneEspanol(item.id,type)
-
 if(!esp) continue
-
 let div=document.createElement("div")
-
 div.className="poster"
-
-div.innerHTML=`
-<img src="https://image.tmdb.org/t/p/w500${item.poster_path}">
-`
-
-div.onclick=()=>play(item.id,type)
-
+div.innerHTML=`<img src="https://image.tmdb.org/t/p/w500${item.poster_path}">`
+div.onclick=()=>openDetails(item.id,type)
 row.appendChild(div)
-
+}
 }
 
-}
-
-/* PLAY */
-
-async function play(id,type){
-
+// PAGINA INDIVIDUAL
+async function openDetails(id,type){
 currentId=id
 currentType=type
+currentEpisode=1
+let r = await fetch(`https://api.themoviedb.org/3/${type}/${id}?api_key=${API}&language=es-ES`)
+let d = await r.json()
+document.getElementById("hero").style.backgroundImage=`url(https://image.tmdb.org/t/p/original${d.backdrop_path})`
+document.getElementById("heroContent").innerHTML=`
+<h1>${d.title || d.name}</h1>
+<p>${d.overview}</p>
+<button onclick="play(${id},'${type}')">▶ Ver ahora</button>
+`
+}
 
+// REPRODUCTOR
+function play(id,type){
+currentId=id
+currentType=type
 document.getElementById("player").style.display="flex"
-
 document.getElementById("episodes").innerHTML=""
-
 if(type==="movie"){
-
-document.getElementById("video").innerHTML=`
-<iframe src="https://vidsrc.to/embed/movie/${id}?lang=es&subtitle=es"></iframe>
-`
-
+loadVideo(`https://www.example.com/video/${id}.mp4`) // reemplaza con tu fuente legal
 }else{
-
 for(let i=1;i<=10;i++){
-
 let b=document.createElement("button")
-
 b.innerText="Ep "+i
-
 b.onclick=()=>playEpisode(i)
-
 document.getElementById("episodes").appendChild(b)
-
 }
-
 playEpisode(1)
-
+player.on("ended",()=>{
+currentEpisode++
+playEpisode(currentEpisode)
+})
+}
 }
 
-}
-
-/* EPISODIO */
-
+// REPRODUCCION EPISODIO
 function playEpisode(ep){
-
-document.getElementById("video").innerHTML=`
-<iframe src="https://vidsrc.to/embed/tv/${currentId}/${season}/${ep}?lang=es&subtitle=es"></iframe>
-`
-
+currentEpisode=ep
+loadVideo(`https://www.example.com/tv/${currentId}/s${season}e${ep}.mp4`) // reemplaza con tu fuente legal
 }
 
-/* CLOSE */
+// CARGA VIDEO EN VIDEO.JS
+function loadVideo(url){
+player.src({src:url,type:"video/mp4"})
+player.play()
+}
 
+// BUSCADOR
+async function searchContent(){
+let q=document.getElementById("search").value
+if(q.length<3) return
+let r = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API}&language=es-ES&query=${q}`)
+let d = await r.json()
+render(d.results,"movies","movie")
+}
+
+// CERRAR PLAYER
 function closePlayer(){
-
 document.getElementById("player").style.display="none"
-
-document.getElementById("video").innerHTML=""
-
+player.pause()
+player.currentTime(0)
 }
 
+// CARGA INICIAL
 loadHero()
-loadMovies()
-loadSeries()
-
+loadCategory(`https://api.themoviedb.org/3/movie/popular?api_key=${API}&language=es-ES`,"movies","movie")
+loadCategory(`https://api.themoviedb.org/3/movie/top_rated?api_key=${API}&language=es-ES`,"topmovies","movie")
+loadCategory(`https://api.themoviedb.org/3/tv/popular?api_key=${API}&language=es-ES`,"series","tv")
 </script>
-
 </body>
 </html>
