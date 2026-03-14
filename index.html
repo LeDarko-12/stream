@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -283,7 +284,9 @@ min-width:120px;
 </div>
 
 <div class="server-selector" id="servers"></div>
+
 <div class="season-selector" id="seasonSelector"></div>
+
 <div class="episode-list" id="episodeList"></div>
 
 </div>
@@ -301,44 +304,61 @@ let currentType
 let currentSeason=1
 let currentEpisode=1
 
-const servers=[
+/* SERVERS */
 
-{
-name:"VidSrc",
-movie:id=>`https://vidsrc.to/embed/movie/${id}`,
-tv:id=>`https://vidsrc.to/embed/tv/${id}/${currentSeason}/${currentEpisode}`
-},
+const servers=[
 
 {
 name:"2Embed",
 movie:id=>`https://www.2embed.cc/embed/${id}`,
 tv:id=>`https://www.2embed.cc/embedtv/${id}?s=${currentSeason}&e=${currentEpisode}`
+},
+
+{
+name:"VidSrc",
+movie:id=>`https://vidsrc.to/embed/movie/${id}`,
+tv:id=>`https://vidsrc.to/embed/tv/${id}/${currentSeason}/${currentEpisode}`
 }
 
 ]
 
-function openPlayer(id,type){
+/* PLAYER */
 
-localStorage.setItem("lastContent",JSON.stringify({id,type}))
+function openPlayer(id,type){
 
 currentId=id
 currentType=type
+
+currentSeason=1
+currentEpisode=1
 
 document.getElementById("player").style.display="flex"
 
 loadServers()
 
+if(type==="tv"){
+loadSeasons()
+}else{
+document.getElementById("seasonSelector").innerHTML=""
+document.getElementById("episodeList").innerHTML=""
 }
+
+}
+
+/* SERVERS */
 
 function loadServers(){
 
 let c=document.getElementById("servers")
+
 c.innerHTML=""
 
 servers.forEach((s,i)=>{
 
 let b=document.createElement("button")
+
 b.innerText=s.name
+
 b.onclick=()=>playServer(i)
 
 c.appendChild(b)
@@ -364,13 +384,85 @@ document.getElementById("framePlayer").src=url
 function closePlayer(){
 
 document.getElementById("player").style.display="none"
+
 document.getElementById("framePlayer").src=""
 
 }
 
+/* SEASONS */
+
+async function loadSeasons(){
+
+let r=await fetch(`https://api.themoviedb.org/3/tv/${currentId}?api_key=${TMDB}`)
+
+let data=await r.json()
+
+let box=document.getElementById("seasonSelector")
+
+box.innerHTML=""
+
+data.seasons.forEach(season=>{
+
+if(season.season_number===0)return
+
+let b=document.createElement("button")
+
+b.innerText="Temp "+season.season_number
+
+b.onclick=()=>{
+
+currentSeason=season.season_number
+
+loadEpisodes()
+
+}
+
+box.appendChild(b)
+
+})
+
+loadEpisodes()
+
+}
+
+/* EPISODES */
+
+async function loadEpisodes(){
+
+let r=await fetch(`https://api.themoviedb.org/3/tv/${currentId}/season/${currentSeason}?api_key=${TMDB}`)
+
+let data=await r.json()
+
+let list=document.getElementById("episodeList")
+
+list.innerHTML=""
+
+data.episodes.forEach(ep=>{
+
+let b=document.createElement("button")
+
+b.innerText="E"+ep.episode_number
+
+b.onclick=()=>{
+
+currentEpisode=ep.episode_number
+
+playServer(0)
+
+}
+
+list.appendChild(b)
+
+})
+
+}
+
+/* LOAD CONTENT */
+
 async function loadCategory(url,container,type){
 
 let r=await fetch(url)
+
 let data=await r.json()
 
 let row=document.getElementById(container)
@@ -380,6 +472,7 @@ data.results.forEach(item=>{
 if(!item.poster_path)return
 
 let div=document.createElement("div")
+
 div.className="poster"
 
 div.innerHTML=`
@@ -390,8 +483,11 @@ div.innerHTML=`
 div.onclick=()=>openPlayer(item.id,type)
 
 div.oncontextmenu=(e)=>{
+
 e.preventDefault()
+
 addFavorite(item)
+
 }
 
 row.appendChild(div)
@@ -399,6 +495,8 @@ row.appendChild(div)
 })
 
 }
+
+/* FAVORITES */
 
 function addFavorite(item){
 
@@ -423,6 +521,7 @@ row.innerHTML=""
 fav.forEach(item=>{
 
 let div=document.createElement("div")
+
 div.className="poster"
 
 div.innerHTML=`
@@ -435,6 +534,8 @@ row.appendChild(div)
 })
 
 }
+
+/* HERO */
 
 async function loadHero(){
 
@@ -454,8 +555,12 @@ window.heroId=m.id
 }
 
 function playHero(){
+
 openPlayer(heroId,"movie")
+
 }
+
+/* SEARCH */
 
 async function searchContent(){
 
@@ -464,6 +569,7 @@ let q=document.getElementById("search").value
 if(q.length<3)return
 
 let r=await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB}&query=${q}`)
+
 let data=await r.json()
 
 document.getElementById("moviesPopular").innerHTML=""
@@ -473,6 +579,7 @@ data.results.forEach(item=>{
 if(!item.poster_path)return
 
 let div=document.createElement("div")
+
 div.className="poster"
 
 div.innerHTML=`
@@ -495,18 +602,24 @@ window.onscroll=()=>{
 let btn=document.querySelector(".topBtn")
 
 if(document.documentElement.scrollTop>400){
+
 btn.style.display="block"
+
 }else{
+
 btn.style.display="none"
+
 }
 
 }
 
 function scrollTopPage(){
+
 window.scrollTo({top:0,behavior:"smooth"})
+
 }
 
-/* LOAD CONTENT */
+/* INIT */
 
 loadHero()
 
@@ -522,3 +635,4 @@ loadFavorites()
 
 </body>
 </html>
+```
