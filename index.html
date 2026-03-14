@@ -5,8 +5,15 @@
 <title>MiStream PRO</title>
 
 <style>
+
 *{box-sizing:border-box}
-body{margin:0;background:#0f0f0f;color:white;font-family:Arial}
+
+body{
+margin:0;
+background:#0f0f0f;
+color:white;
+font-family:Arial
+}
 
 .navbar{
 position:fixed;
@@ -21,7 +28,11 @@ padding:0 20px;
 z-index:10
 }
 
-.logo{color:#e50914;font-size:26px;font-weight:bold}
+.logo{
+color:#e50914;
+font-size:26px;
+font-weight:bold
+}
 
 .search{
 background:#1f1f1f;
@@ -58,7 +69,9 @@ color:white;
 cursor:pointer
 }
 
-.row{padding:20px}
+.row{
+padding:20px
+}
 
 .row-posters{
 display:flex;
@@ -89,6 +102,7 @@ width:100%;
 height:100%;
 background:black;
 display:none;
+flex-direction:column;
 justify-content:center;
 align-items:center;
 z-index:100
@@ -96,13 +110,33 @@ z-index:100
 
 .player-box{
 width:90%;
-height:80%;
+height:70%
 }
 
 .player-box iframe{
 width:100%;
 height:100%;
 border:none
+}
+
+.server-selector{
+margin-top:10px;
+display:flex;
+gap:10px;
+flex-wrap:wrap
+}
+
+.server-selector button{
+background:#222;
+border:none;
+color:white;
+padding:8px 12px;
+cursor:pointer;
+border-radius:4px
+}
+
+.server-selector button:hover{
+background:#e50914
 }
 
 .close{
@@ -112,6 +146,7 @@ right:30px;
 font-size:35px;
 cursor:pointer
 }
+
 </style>
 </head>
 
@@ -137,16 +172,51 @@ cursor:pointer
 </div>
 
 <div id="player">
+
 <div class="close" onclick="closePlayer()">✕</div>
+
 <div class="player-box">
 <iframe id="framePlayer"></iframe>
 </div>
+
+<div class="server-selector" id="servers"></div>
+
 </div>
 
 <script>
 
 const API="8a2de0488825903a0a4b7d0ff12a3873"
-let currentId,currentType
+
+let currentId
+let currentType
+
+const servers = [
+
+{
+name:"VidSrc",
+movie:id=>`https://vidsrc.to/embed/movie/${id}?lang=es`,
+tv:id=>`https://vidsrc.to/embed/tv/${id}/1/1?lang=es`
+},
+
+{
+name:"VidLink",
+movie:id=>`https://vidlink.pro/movie/${id}`,
+tv:id=>`https://vidlink.pro/tv/${id}/1/1`
+},
+
+{
+name:"MultiEmbed",
+movie:id=>`https://multiembed.mov/?video_id=${id}&tmdb=1`,
+tv:id=>`https://multiembed.mov/?video_id=${id}&tmdb=1&s=1&e=1`
+},
+
+{
+name:"2Embed",
+movie:id=>`https://www.2embed.cc/embed/${id}`,
+tv:id=>`https://www.2embed.cc/embedtv/${id}&s=1&e=1`
+}
+
+]
 
 async function loadHero(){
 
@@ -161,7 +231,7 @@ document.getElementById("hero").style.backgroundImage=
 document.getElementById("heroContent").innerHTML=
 `<h1>${movie.title}</h1>
 <p>${movie.overview.slice(0,150)}...</p>
-<button onclick="play(${movie.id},'movie')">▶ Ver ahora</button>`
+<button onclick="openPlayer(${movie.id},'movie')">▶ Ver ahora</button>`
 }
 
 async function loadCategory(url,container,type){
@@ -170,6 +240,7 @@ let r=await fetch(url)
 let d=await r.json()
 
 let row=document.getElementById(container)
+
 row.innerHTML=""
 
 for(let item of d.results){
@@ -177,39 +248,65 @@ for(let item of d.results){
 if(!item.poster_path) continue
 
 let div=document.createElement("div")
+
 div.className="poster"
 
-div.innerHTML=
-`<img src="https://image.tmdb.org/t/p/w500${item.poster_path}">`
+div.innerHTML=`<img src="https://image.tmdb.org/t/p/w500${item.poster_path}">`
 
-div.onclick=()=>play(item.id,type)
+div.onclick=()=>openPlayer(item.id,type)
 
 row.appendChild(div)
-}
+
 }
 
-function play(id,type){
+}
+
+function openPlayer(id,type){
 
 currentId=id
 currentType=type
 
 document.getElementById("player").style.display="flex"
 
-let url
+loadServers()
 
-if(type==="movie"){
-url=`https://vidsrc.to/embed/movie/${id}?lang=es`
-}else{
-url=`https://vidsrc.to/embed/tv/${id}/1/1?lang=es`
 }
 
+function loadServers(){
+
+let container=document.getElementById("servers")
+
+container.innerHTML=""
+
+servers.forEach((s,i)=>{
+
+let btn=document.createElement("button")
+
+btn.innerText=s.name
+
+btn.onclick=()=>{
+
+let url=currentType==="movie"?s.movie(currentId):s.tv(currentId)
+
 document.getElementById("framePlayer").src=url
+
+}
+
+container.appendChild(btn)
+
+})
+
+document.getElementById("framePlayer").src=
+currentType==="movie"?servers[0].movie(currentId):servers[0].tv(currentId)
+
 }
 
 function closePlayer(){
 
 document.getElementById("player").style.display="none"
+
 document.getElementById("framePlayer").src=""
+
 }
 
 async function searchContent(){
@@ -223,24 +320,27 @@ let r=await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API}&lang
 let d=await r.json()
 
 let row=document.getElementById("movies")
+
 row.innerHTML=""
 
 for(let item of d.results){
 
 if(!item.poster_path) continue
 
-let type=item.media_type
+let type=item.media_type==="tv"?"tv":"movie"
 
 let div=document.createElement("div")
+
 div.className="poster"
 
-div.innerHTML=
-`<img src="https://image.tmdb.org/t/p/w500${item.poster_path}">`
+div.innerHTML=`<img src="https://image.tmdb.org/t/p/w500${item.poster_path}">`
 
-div.onclick=()=>play(item.id,type==="tv"?"tv":"movie")
+div.onclick=()=>openPlayer(item.id,type)
 
 row.appendChild(div)
+
 }
+
 }
 
 loadHero()
