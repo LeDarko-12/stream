@@ -71,16 +71,6 @@ font-size:50px;
 margin-bottom:10px;
 }
 
-.hero button{
-background:#e50914;
-border:none;
-padding:12px 20px;
-color:white;
-border-radius:6px;
-cursor:pointer;
-font-size:16px;
-}
-
 /* ROW */
 
 .row{
@@ -96,15 +86,7 @@ display:flex;
 gap:12px;
 overflow-x:auto;
 scroll-behavior:smooth;
-}
-
-.row-posters::-webkit-scrollbar{
-height:6px;
-}
-
-.row-posters::-webkit-scrollbar-thumb{
-background:#e50914;
-border-radius:6px;
+padding-bottom:10px;
 }
 
 /* POSTERS */
@@ -120,7 +102,6 @@ overflow:hidden;
 
 .poster img{
 width:100%;
-border-radius:8px;
 }
 
 .poster span{
@@ -203,40 +184,12 @@ button:hover{
 background:#e50914;
 }
 
-/* TOP BUTTON */
-
-.topBtn{
-position:fixed;
-bottom:25px;
-right:25px;
-background:#e50914;
-border:none;
-padding:12px 16px;
-border-radius:50%;
-cursor:pointer;
-display:none;
-}
-
-/* FOOTER */
-
 .footer{
 margin-top:40px;
 background:#000;
 text-align:center;
 padding:25px;
 color:#777;
-}
-
-@media(max-width:700px){
-
-.hero h1{
-font-size:35px;
-}
-
-.poster{
-min-width:120px;
-}
-
 }
 
 </style>
@@ -257,7 +210,7 @@ min-width:120px;
 </div>
 
 <div class="row">
-<h2>🔥 Trending hoy</h2>
+<h2>🔥 Trending</h2>
 <div id="trending" class="row-posters"></div>
 </div>
 
@@ -272,11 +225,6 @@ min-width:120px;
 </div>
 
 <div class="row">
-<h2>🔥 Series Trending</h2>
-<div id="seriesTrending" class="row-posters"></div>
-</div>
-
-<div class="row">
 <h2>🏆 Películas mejor valoradas</h2>
 <div id="moviesTop" class="row-posters"></div>
 </div>
@@ -285,38 +233,6 @@ min-width:120px;
 <h2>🏆 Series mejor valoradas</h2>
 <div id="seriesTop" class="row-posters"></div>
 </div>
-
-<div class="row">
-<h2>🍿 Películas en cine</h2>
-<div id="moviesTheater" class="row-posters"></div>
-</div>
-
-<div class="row">
-<h2>🎬 Estrenos</h2>
-<div id="moviesNew" class="row-posters"></div>
-</div>
-
-<div class="row">
-<h2>😂 Comedia</h2>
-<div id="comedyMovies" class="row-posters"></div>
-</div>
-
-<div class="row">
-<h2>👻 Terror</h2>
-<div id="horrorMovies" class="row-posters"></div>
-</div>
-
-<div class="row">
-<h2>⚡ Acción</h2>
-<div id="actionMovies" class="row-posters"></div>
-</div>
-
-<div class="row">
-<h2>⭐ Favoritos</h2>
-<div id="favorites" class="row-posters"></div>
-</div>
-
-<button class="topBtn" onclick="scrollTopPage()">↑</button>
 
 <div id="player">
 
@@ -327,9 +243,7 @@ min-width:120px;
 </div>
 
 <div class="server-selector" id="servers"></div>
-
 <div class="season-selector" id="seasonSelector"></div>
-
 <div class="episode-list" id="episodeList"></div>
 
 </div>
@@ -346,6 +260,8 @@ let currentId
 let currentType
 let currentSeason=1
 let currentEpisode=1
+
+const pages={}
 
 /* SERVERS */
 
@@ -379,12 +295,7 @@ document.getElementById("player").style.display="flex"
 
 loadServers()
 
-if(type==="tv"){
-loadSeasons()
-}else{
-document.getElementById("seasonSelector").innerHTML=""
-document.getElementById("episodeList").innerHTML=""
-}
+if(type==="tv") loadSeasons()
 
 }
 
@@ -399,9 +310,7 @@ c.innerHTML=""
 servers.forEach((s,i)=>{
 
 let b=document.createElement("button")
-
 b.innerText=s.name
-
 b.onclick=()=>playServer(i)
 
 c.appendChild(b)
@@ -427,7 +336,6 @@ document.getElementById("framePlayer").src=url
 function closePlayer(){
 
 document.getElementById("player").style.display="none"
-
 document.getElementById("framePlayer").src=""
 
 }
@@ -437,7 +345,6 @@ document.getElementById("framePlayer").src=""
 async function loadSeasons(){
 
 let r=await fetch(`https://api.themoviedb.org/3/tv/${currentId}?api_key=${TMDB}`)
-
 let data=await r.json()
 
 let box=document.getElementById("seasonSelector")
@@ -446,16 +353,14 @@ box.innerHTML=""
 
 data.seasons.forEach(season=>{
 
-if(season.season_number===0)return
+if(season.season_number===0) return
 
 let b=document.createElement("button")
-
 b.innerText="Temp "+season.season_number
 
 b.onclick=()=>{
 
 currentSeason=season.season_number
-
 loadEpisodes()
 
 }
@@ -473,23 +378,19 @@ loadEpisodes()
 async function loadEpisodes(){
 
 let r=await fetch(`https://api.themoviedb.org/3/tv/${currentId}/season/${currentSeason}?api_key=${TMDB}`)
-
 let data=await r.json()
 
 let list=document.getElementById("episodeList")
-
 list.innerHTML=""
 
 data.episodes.forEach(ep=>{
 
 let b=document.createElement("button")
-
 b.innerText="E"+ep.episode_number
 
 b.onclick=()=>{
 
 currentEpisode=ep.episode_number
-
 playServer(0)
 
 }
@@ -500,19 +401,20 @@ list.appendChild(b)
 
 }
 
-/* LOAD CATEGORY */
+/* LOAD CATEGORY WITH INFINITE SCROLL */
 
 async function loadCategory(url,container,type){
 
-let r=await fetch(url)
+if(!pages[container]) pages[container]=1
 
+let r=await fetch(`${url}&page=${pages[container]}`)
 let data=await r.json()
 
 let row=document.getElementById(container)
 
 data.results.forEach(item=>{
 
-if(!item.poster_path)return
+if(!item.poster_path) return
 
 let div=document.createElement("div")
 
@@ -529,44 +431,17 @@ row.appendChild(div)
 
 })
 
-}
+pages[container]++
 
-/* FAVORITES */
+row.onscroll=()=>{
 
-function addFavorite(item){
+if(row.scrollLeft + row.clientWidth >= row.scrollWidth-300){
 
-let fav=JSON.parse(localStorage.getItem("favorites")||"[]")
-
-fav.push(item)
-
-localStorage.setItem("favorites",JSON.stringify(fav))
-
-loadFavorites()
+loadCategory(url,container,type)
 
 }
 
-function loadFavorites(){
-
-let fav=JSON.parse(localStorage.getItem("favorites")||"[]")
-
-let row=document.getElementById("favorites")
-
-row.innerHTML=""
-
-fav.forEach(item=>{
-
-let div=document.createElement("div")
-
-div.className="poster"
-
-div.innerHTML=`
-<img src="https://image.tmdb.org/t/p/w500${item.poster_path}">
-<span>${item.title||item.name}</span>
-`
-
-row.appendChild(div)
-
-})
+}
 
 }
 
@@ -575,7 +450,6 @@ row.appendChild(div)
 async function loadHero(){
 
 let r=await fetch(`https://api.themoviedb.org/3/trending/movie/day?api_key=${TMDB}`)
-
 let data=await r.json()
 
 let m=data.results[0]
@@ -590,9 +464,7 @@ window.heroId=m.id
 }
 
 function playHero(){
-
 openPlayer(heroId,"movie")
-
 }
 
 /* SEARCH */
@@ -601,19 +473,18 @@ async function searchContent(){
 
 let q=document.getElementById("search").value
 
-if(q.length<3)return
+if(q.length<3) return
 
 let r=await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB}&query=${q}`)
-
 let data=await r.json()
 
-let row=document.getElementById("moviesPopular")
+let row=document.getElementById("trending")
 
 row.innerHTML=""
 
 data.results.forEach(item=>{
 
-if(!item.poster_path)return
+if(!item.poster_path) return
 
 let div=document.createElement("div")
 
@@ -632,26 +503,6 @@ row.appendChild(div)
 
 }
 
-/* TOP BUTTON */
-
-window.onscroll=()=>{
-
-let btn=document.querySelector(".topBtn")
-
-if(document.documentElement.scrollTop>400){
-btn.style.display="block"
-}else{
-btn.style.display="none"
-}
-
-}
-
-function scrollTopPage(){
-
-window.scrollTo({top:0,behavior:"smooth"})
-
-}
-
 /* LOAD CONTENT */
 
 loadHero()
@@ -662,23 +513,9 @@ loadCategory(`https://api.themoviedb.org/3/movie/popular?api_key=${TMDB}`,"movie
 
 loadCategory(`https://api.themoviedb.org/3/tv/popular?api_key=${TMDB}`,"seriesPopular","tv")
 
-loadCategory(`https://api.themoviedb.org/3/trending/tv/day?api_key=${TMDB}`,"seriesTrending","tv")
-
 loadCategory(`https://api.themoviedb.org/3/movie/top_rated?api_key=${TMDB}`,"moviesTop","movie")
 
 loadCategory(`https://api.themoviedb.org/3/tv/top_rated?api_key=${TMDB}`,"seriesTop","tv")
-
-loadCategory(`https://api.themoviedb.org/3/movie/now_playing?api_key=${TMDB}`,"moviesTheater","movie")
-
-loadCategory(`https://api.themoviedb.org/3/movie/upcoming?api_key=${TMDB}`,"moviesNew","movie")
-
-loadCategory(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB}&with_genres=35`,"comedyMovies","movie")
-
-loadCategory(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB}&with_genres=27`,"horrorMovies","movie")
-
-loadCategory(`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB}&with_genres=28`,"actionMovies","movie")
-
-loadFavorites()
 
 </script>
 
