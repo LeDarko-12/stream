@@ -119,6 +119,7 @@ background:black;
 margin-top:15px;
 display:flex;
 gap:10px;
+flex-wrap:wrap;
 }
 
 .server-selector button{
@@ -139,4 +140,3 @@ padding:10px;
 color:white;
 cursor:pointer;
 }
-
