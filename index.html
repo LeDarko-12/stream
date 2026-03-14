@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>MiStream </title>
+<title>MiStream PRO</title>
 
 <style>
 *{box-sizing:border-box}
@@ -14,6 +14,7 @@ body{margin:0;background:#0f0f0f;color:white;font-family:Arial}
 .hero-content{background:rgba(0,0,0,.6);padding:20px;border-radius:10px;max-width:600px}
 .hero button{margin-top:10px;padding:10px 20px;background:#e50914;border:none;color:white;cursor:pointer}
 .row{padding:20px}
+.row h2{margin-bottom:10px}
 .row-posters{display:flex;overflow-x:auto;gap:10px}
 .poster{min-width:130px;cursor:pointer;transition:.3s}
 .poster img{width:100%;border-radius:10px}
@@ -25,6 +26,10 @@ body{margin:0;background:#0f0f0f;color:white;font-family:Arial}
 .server-selector button{background:#222;border:none;color:white;padding:8px 12px;cursor:pointer;border-radius:4px}
 .server-selector button:hover{background:#e50914}
 .close{position:absolute;top:20px;right:30px;font-size:35px;cursor:pointer}
+@media(max-width:768px){
+  .poster{min-width:100px}
+  .hero-content{max-width:90%}
+}
 </style>
 </head>
 
@@ -45,8 +50,28 @@ body{margin:0;background:#0f0f0f;color:white;font-family:Arial}
 </div>
 
 <div class="row">
+<h2>🎬 Próximas películas</h2>
+<div id="upcomingMovies" class="row-posters"></div>
+</div>
+
+<div class="row">
+<h2>⭐ Mejores películas</h2>
+<div id="topMovies" class="row-posters"></div>
+</div>
+
+<div class="row">
 <h2>📺 Series populares</h2>
 <div id="series" class="row-posters"></div>
+</div>
+
+<div class="row">
+<h2>⭐ Mejores series</h2>
+<div id="topSeries" class="row-posters"></div>
+</div>
+
+<div class="row">
+<h2>📺 Series en emisión</h2>
+<div id="onAirSeries" class="row-posters"></div>
 </div>
 
 <div id="player">
@@ -70,6 +95,30 @@ const servers = [
   {name:"2Embed", movie:id=>`https://www.2embed.cc/embed/${id}`, tv:id=>`https://www.2embed.cc/embedtv/${id}&s=${currentSeason}&e=${currentEpisode}`}
 ]
 
+async function tieneEspanol(id, tipo) {
+    let r = await fetch(`https://api.themoviedb.org/3/${tipo}/${id}?api_key=${API}&language=es-ES`)
+    let d = await r.json()
+    if (!d.spoken_languages) return false
+    return d.spoken_languages.some(l => l.iso_639_1 === "es")
+}
+
+async function loadCategory(url, container, type) {
+    let r=await fetch(url)
+    let d=await r.json()
+    let row=document.getElementById(container)
+    row.innerHTML=""
+    for(let item of d.results){
+        if(!item.poster_path) continue
+        let esp = await tieneEspanol(item.id, type)
+        if(!esp) continue
+        let div=document.createElement("div")
+        div.className="poster"
+        div.innerHTML=`<img src="https://image.tmdb.org/t/p/w500${item.poster_path}">`
+        div.onclick=()=>openPlayer(item.id,type)
+        row.appendChild(div)
+    }
+}
+
 async function loadHero(){
   let r=await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API}&language=es-ES`)
   let d=await r.json()
@@ -80,21 +129,6 @@ async function loadHero(){
     `<h1>${movie.title}</h1>
      <p>${movie.overview.slice(0,150)}...</p>
      <button onclick="openPlayer(${movie.id},'movie')">▶ Ver ahora</button>`
-}
-
-async function loadCategory(url,container,type){
-  let r=await fetch(url)
-  let d=await r.json()
-  let row=document.getElementById(container)
-  row.innerHTML=""
-  for(let item of d.results){
-    if(!item.poster_path) continue
-    let div=document.createElement("div")
-    div.className="poster"
-    div.innerHTML=`<img src="https://image.tmdb.org/t/p/w500${item.poster_path}">`
-    div.onclick=()=>openPlayer(item.id,type)
-    row.appendChild(div)
-  }
 }
 
 function openPlayer(id,type){
@@ -119,7 +153,6 @@ function loadServers(){
     }
     container.appendChild(btn)
   })
-  // cargar primer servidor por defecto
   document.getElementById("framePlayer").src=currentType==="movie"?servers[0].movie(currentId):servers[0].tv(currentId)
 }
 
@@ -172,6 +205,8 @@ async function searchContent(){
   for(let item of d.results){
     if(!item.poster_path) continue
     let type=item.media_type==="tv"?"tv":"movie"
+    let esp=await tieneEspanol(item.id,type)
+    if(!esp) continue
     let div=document.createElement("div")
     div.className="poster"
     div.innerHTML=`<img src="https://image.tmdb.org/t/p/w500${item.poster_path}">`
@@ -183,7 +218,11 @@ async function searchContent(){
 // CARGA INICIAL
 loadHero()
 loadCategory(`https://api.themoviedb.org/3/movie/popular?api_key=${API}&language=es-ES`,"movies","movie")
+loadCategory(`https://api.themoviedb.org/3/movie/top_rated?api_key=${API}&language=es-ES`,"topMovies","movie")
+loadCategory(`https://api.themoviedb.org/3/movie/upcoming?api_key=${API}&language=es-ES`,"upcomingMovies","movie")
 loadCategory(`https://api.themoviedb.org/3/tv/popular?api_key=${API}&language=es-ES`,"series","tv")
+loadCategory(`https://api.themoviedb.org/3/tv/top_rated?api_key=${API}&language=es-ES`,"topSeries","tv")
+loadCategory(`https://api.themoviedb.org/3/tv/on_the_air?api_key=${API}&language=es-ES`,"onAirSeries","tv")
 </script>
 </body>
 </html>
