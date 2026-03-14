@@ -39,13 +39,31 @@ font-size:28px;
 font-weight:bold;
 }
 
+.search-area{
+display:flex;
+gap:10px;
+}
+
 .search{
 background:#1a1a1a;
 border:none;
 padding:10px;
 border-radius:6px;
 color:white;
-width:230px;
+width:220px;
+}
+
+.reset{
+background:#444;
+border:none;
+padding:10px 14px;
+border-radius:6px;
+cursor:pointer;
+color:white;
+}
+
+.reset:hover{
+background:#e50914;
 }
 
 /* HERO */
@@ -100,7 +118,7 @@ overflow-x:auto;
 padding-bottom:10px;
 }
 
-/* POSTER */
+/* POSTERS */
 
 .poster{
 min-width:160px;
@@ -220,8 +238,17 @@ color:#777;
 <body>
 
 <div class="navbar">
+
 <div class="logo">MiStream</div>
+
+<div class="search-area">
+
 <input class="search" id="search" placeholder="Buscar..." onkeyup="searchContent()">
+
+<button class="reset" onclick="resetFilters()">Reset filtros</button>
+
+</div>
+
 </div>
 
 <div class="hero" id="hero">
@@ -230,11 +257,6 @@ color:#777;
 </div>
 
 <div class="genres" id="genres"></div>
-
-<div class="row">
-<h2>🔥 Tendencias</h2>
-<div id="trending" class="row-posters"></div>
-</div>
 
 <div class="row">
 <h2>🎬 Catálogo</h2>
@@ -263,159 +285,20 @@ MiStream ULTRA © 2026
 
 const TMDB="8a2de0488825903a0a4b7d0ff12a3873"
 
-let currentId
-let currentType
-let currentSeason=1
-let currentEpisode=1
-let catalogPage=1
 let currentGenre=null
+let catalogPage=1
 
-/* SERVERS */
+/* RESET FILTROS */
 
-const servers=[
+function resetFilters(){
 
-{
-name:"2Embed",
-movie:id=>`https://www.2embed.cc/embed/${id}`,
-tv:(id,s,e)=>`https://www.2embed.cc/embedtv/${id}?s=${s}&e=${e}`
-},
+currentGenre=null
+catalogPage=1
 
-{
-name:"VidSrc",
-movie:id=>`https://vidsrc.to/embed/movie/${id}`,
-tv:(id,s,e)=>`https://vidsrc.to/embed/tv/${id}/${s}/${e}`
-}
+document.getElementById("search").value=""
+document.getElementById("catalog").innerHTML=""
 
-]
-
-/* PLAYER */
-
-function openPlayer(id,type){
-
-currentId=id
-currentType=type
-
-currentSeason=1
-currentEpisode=1
-
-document.getElementById("seasonSelector").innerHTML=""
-document.getElementById("episodeList").innerHTML=""
-
-document.getElementById("player").style.display="flex"
-
-loadServers()
-
-if(type==="tv") loadSeasons()
-
-}
-
-function loadServers(){
-
-let c=document.getElementById("servers")
-c.innerHTML=""
-
-servers.forEach((s,i)=>{
-
-let b=document.createElement("button")
-
-b.innerText=s.name
-
-b.onclick=()=>playServer(i)
-
-c.appendChild(b)
-
-})
-
-playServer(0)
-
-}
-
-function playServer(i){
-
-let s=servers[i]
-
-let url=currentType==="movie"
-?s.movie(currentId)
-:s.tv(currentId,currentSeason,currentEpisode)
-
-document.getElementById("framePlayer").src=url
-
-}
-
-function closePlayer(){
-
-document.getElementById("player").style.display="none"
-document.getElementById("framePlayer").src=""
-
-}
-
-/* SEASONS */
-
-async function loadSeasons(){
-
-let r=await fetch(`https://api.themoviedb.org/3/tv/${currentId}?api_key=${TMDB}&language=es-ES`)
-
-let data=await r.json()
-
-let box=document.getElementById("seasonSelector")
-box.innerHTML=""
-
-data.seasons
-.filter(s=>s.season_number>0)
-.forEach(season=>{
-
-let b=document.createElement("button")
-
-b.innerText="Temp "+season.season_number
-
-b.onclick=()=>{
-
-currentSeason=season.season_number
-currentEpisode=1
-
-loadEpisodes()
-
-}
-
-box.appendChild(b)
-
-})
-
-loadEpisodes()
-
-}
-
-/* EPISODES */
-
-async function loadEpisodes(){
-
-let r=await fetch(`https://api.themoviedb.org/3/tv/${currentId}/season/${currentSeason}?api_key=${TMDB}&language=es-ES`)
-
-let data=await r.json()
-
-let list=document.getElementById("episodeList")
-list.innerHTML=""
-
-data.episodes.forEach(ep=>{
-
-let b=document.createElement("button")
-
-b.innerText=ep.episode_number
-
-if(ep.episode_number===currentEpisode)
-b.classList.add("episode-active")
-
-b.onclick=()=>{
-
-currentEpisode=ep.episode_number
-playServer(0)
-loadEpisodes()
-
-}
-
-list.appendChild(b)
-
-})
+loadCatalog()
 
 }
 
@@ -433,7 +316,6 @@ data.genres.forEach(g=>{
 let div=document.createElement("div")
 
 div.className="genre"
-
 div.innerText=g.name
 
 div.onclick=()=>{
@@ -453,7 +335,7 @@ container.appendChild(div)
 
 }
 
-/* CATALOGO MASIVO */
+/* CATALOGO */
 
 async function loadCatalog(){
 
@@ -482,37 +364,12 @@ div.innerHTML=`
 <span>${item.title}</span>
 `
 
-div.onclick=()=>openPlayer(item.id,"movie")
-
 row.appendChild(div)
 
 })
 
 catalogPage++
 
-}
-
-/* HERO */
-
-async function loadHero(){
-
-let r=await fetch(`https://api.themoviedb.org/3/trending/movie/day?api_key=${TMDB}&language=es-ES`)
-
-let data=await r.json()
-
-let m=data.results[0]
-
-document.getElementById("hero").style.backgroundImage=
-`url(https://image.tmdb.org/t/p/original${m.backdrop_path})`
-
-document.getElementById("heroTitle").innerText=m.title
-
-window.heroId=m.id
-
-}
-
-function playHero(){
-openPlayer(heroId,"movie")
 }
 
 /* SEARCH */
@@ -523,7 +380,7 @@ let q=document.getElementById("search").value
 
 if(q.length<3) return
 
-let r=await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB}&language=es-ES&query=${q}`)
+let r=await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB}&language=es-ES&query=${q}`)
 
 let data=await r.json()
 
@@ -541,14 +398,29 @@ div.className="poster"
 
 div.innerHTML=`
 <img src="https://image.tmdb.org/t/p/w500${item.poster_path}">
-<span>${item.title||item.name}</span>
+<span>${item.title}</span>
 `
-
-div.onclick=()=>openPlayer(item.id,item.media_type)
 
 row.appendChild(div)
 
 })
+
+}
+
+/* HERO */
+
+async function loadHero(){
+
+let r=await fetch(`https://api.themoviedb.org/3/trending/movie/day?api_key=${TMDB}&language=es-ES`)
+
+let data=await r.json()
+
+let m=data.results[0]
+
+document.getElementById("hero").style.backgroundImage=
+`url(https://image.tmdb.org/t/p/original${m.backdrop_path})`
+
+document.getElementById("heroTitle").innerText=m.title
 
 }
 
