@@ -87,7 +87,7 @@ padding-top:50px
 
 .player-box{
 width:90%;
-height:65%
+height:60%
 }
 
 .player-box iframe{
@@ -114,6 +114,10 @@ border-radius:4px
 
 .server-selector button:hover{
 background:#e50914
+}
+
+.season-selector{
+margin-top:10px
 }
 
 .episode-list{
@@ -155,7 +159,7 @@ cursor:pointer
 <div class="hero">
 <div class="hero-content">
 <h1>MiStream</h1>
-<p>Películas, series y anime en un solo lugar.</p>
+<p>Películas, series y anime.</p>
 </div>
 </div>
 
@@ -183,6 +187,8 @@ cursor:pointer
 </div>
 
 <div class="server-selector" id="servers"></div>
+
+<div class="season-selector" id="seasonSelector"></div>
 
 <div class="episode-list" id="episodeList"></div>
 
@@ -215,12 +221,6 @@ tv:id=>`https://vidsrc.to/embed/tv/${id}/${currentSeason}/${currentEpisode}`
 name:"AutoEmbed",
 movie:id=>`https://autoembed.cc/movie/tmdb/${id}`,
 tv:id=>`https://autoembed.cc/tv/tmdb/${id}-${currentSeason}-${currentEpisode}`
-},
-
-{
-name:"MultiEmbed",
-movie:id=>`https://multiembed.mov/?video_id=${id}&tmdb=1`,
-tv:id=>`https://multiembed.mov/?video_id=${id}&tmdb=1&s=${currentSeason}&e=${currentEpisode}`
 }
 
 ]
@@ -234,7 +234,12 @@ currentEpisode=1
 
 document.getElementById("player").style.display="flex"
 
-if(type==="tv") loadEpisodes()
+if(type==="tv"){
+loadSeasons()
+}else{
+document.getElementById("seasonSelector").innerHTML=""
+document.getElementById("episodeList").innerHTML=""
+}
 
 loadServers()
 
@@ -273,9 +278,40 @@ currentType==="movie"
 
 }
 
+async function loadSeasons(){
+
+let r=await fetch(`https://api.themoviedb.org/3/tv/${currentId}?api_key=${TMDB}&language=es-ES`)
+let data=await r.json()
+
+let selector=document.getElementById("seasonSelector")
+
+selector.innerHTML=""
+
+data.seasons.forEach(season=>{
+
+if(season.season_number===0) return
+
+let btn=document.createElement("button")
+btn.innerText="Temporada "+season.season_number
+
+btn.onclick=()=>{
+
+currentSeason=season.season_number
+loadEpisodes()
+
+}
+
+selector.appendChild(btn)
+
+})
+
+loadEpisodes()
+
+}
+
 async function loadEpisodes(){
 
-let r=await fetch(`https://api.themoviedb.org/3/tv/${currentId}/season/1?api_key=${TMDB}&language=es-ES`)
+let r=await fetch(`https://api.themoviedb.org/3/tv/${currentId}/season/${currentSeason}?api_key=${TMDB}&language=es-ES`)
 let data=await r.json()
 
 let list=document.getElementById("episodeList")
@@ -285,11 +321,14 @@ data.episodes.forEach(ep=>{
 
 let btn=document.createElement("div")
 btn.className="episode"
-btn.innerText="Ep "+ep.episode_number
+
+btn.innerText="Episodio "+ep.episode_number
 
 btn.onclick=()=>{
+
 currentEpisode=ep.episode_number
 loadServers()
+
 }
 
 list.appendChild(btn)
@@ -373,8 +412,10 @@ div.innerHTML=`<img src="${a.images.jpg.image_url}">`
 div.onclick=()=>{
 
 document.getElementById("player").style.display="flex"
+
 document.getElementById("servers").innerHTML=""
-document.getElementById("episodeList").innerHTML=`<h2>${a.title}</h2>`
+document.getElementById("seasonSelector").innerHTML=""
+document.getElementById("episodeList").innerHTML=""
 
 document.getElementById("framePlayer").src=
 `https://autoembed.cc/anime/mal/${a.mal_id}`
@@ -393,9 +434,7 @@ let q=document.getElementById("search").value.toLowerCase()
 
 document.querySelectorAll(".poster").forEach(p=>{
 
-let alt=p.innerText.toLowerCase()
-
-p.style.display=alt.includes(q)?"block":"none"
+p.style.display=p.innerHTML.toLowerCase().includes(q)?"block":"none"
 
 })
 
