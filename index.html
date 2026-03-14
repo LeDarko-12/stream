@@ -215,12 +215,6 @@ tv:id=>`https://www.2embed.cc/embedtv/${id}&s=${currentSeason}&e=${currentEpisod
 name:"VidSrc",
 movie:id=>`https://vidsrc.to/embed/movie/${id}`,
 tv:id=>`https://vidsrc.to/embed/tv/${id}/${currentSeason}/${currentEpisode}`
-},
-
-{
-name:"AutoEmbed",
-movie:id=>`https://autoembed.cc/movie/tmdb/${id}`,
-tv:id=>`https://autoembed.cc/tv/tmdb/${id}-${currentSeason}-${currentEpisode}`
 }
 
 ]
@@ -284,7 +278,6 @@ let r=await fetch(`https://api.themoviedb.org/3/tv/${currentId}?api_key=${TMDB}&
 let data=await r.json()
 
 let selector=document.getElementById("seasonSelector")
-
 selector.innerHTML=""
 
 data.seasons.forEach(season=>{
@@ -295,10 +288,8 @@ let btn=document.createElement("button")
 btn.innerText="Temporada "+season.season_number
 
 btn.onclick=()=>{
-
 currentSeason=season.season_number
 loadEpisodes()
-
 }
 
 selector.appendChild(btn)
@@ -321,14 +312,11 @@ data.episodes.forEach(ep=>{
 
 let btn=document.createElement("div")
 btn.className="episode"
-
 btn.innerText="Episodio "+ep.episode_number
 
 btn.onclick=()=>{
-
 currentEpisode=ep.episode_number
 loadServers()
-
 }
 
 list.appendChild(btn)
@@ -412,13 +400,12 @@ div.innerHTML=`<img src="${a.images.jpg.image_url}">`
 div.onclick=()=>{
 
 document.getElementById("player").style.display="flex"
-
 document.getElementById("servers").innerHTML=""
 document.getElementById("seasonSelector").innerHTML=""
 document.getElementById("episodeList").innerHTML=""
 
 document.getElementById("framePlayer").src=
-`https://autoembed.cc/anime/mal/${a.mal_id}`
+`https://api.consumet.org/meta/anilist/watch/${a.mal_id}`
 
 }
 
@@ -433,9 +420,7 @@ function searchAll(){
 let q=document.getElementById("search").value.toLowerCase()
 
 document.querySelectorAll(".poster").forEach(p=>{
-
 p.style.display=p.innerHTML.toLowerCase().includes(q)?"block":"none"
-
 })
 
 }
