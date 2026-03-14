@@ -11,38 +11,26 @@
 <style>
 *{ box-sizing:border-box; }
 body{ margin:0; font-family: 'Segoe UI', Arial; background:#0f0f0f; color:white; }
-
-/* NAVBAR */
-.navbar{
-position:fixed; top:0; width:100%; height:70px; background:linear-gradient(to bottom, rgba(0,0,0,.9), transparent);
-display:flex; align-items:center; justify-content:space-between; padding:0 20px; z-index:10;
-}
+.navbar{position:fixed; top:0; width:100%; height:70px; background:linear-gradient(to bottom, rgba(0,0,0,.9), transparent); display:flex; align-items:center; justify-content:space-between; padding:0 20px; z-index:10;}
 .logo{ color:#e50914; font-size:26px; font-weight:bold; }
 .search{ background:#1f1f1f; border:none; padding:8px 12px; border-radius:6px; color:white; width:180px; }
 
-/* HERO */
 .hero{ height:50vh; margin-top:70px; display:flex; align-items:center; justify-content:center; padding:20px; background-size:cover; background-position:center; position:relative; text-align:left; }
 .hero-content{ max-width:600px; background:rgba(0,0,0,0.5); padding:20px; border-radius:10px; }
 .hero h1{ font-size:2rem; margin:0; }
 .hero p{ color:#ccc; margin-top:10px; font-size:0.9rem; }
 .hero button{ margin-top:15px; padding:10px 20px; font-size:14px; background:#e50914; border:none; border-radius:6px; color:white; cursor:pointer; }
 
-/* ROW */
 .row{ margin-top:40px; padding:20px; }
 .row h2{ margin-bottom:10px; font-size:1.2rem; }
 .row-posters{ display:flex; overflow-x:auto; gap:10px; padding:10px 0; scroll-behavior:smooth; }
 .row-posters::-webkit-scrollbar{ display:none; }
 
-/* POSTER */
 .poster{ min-width:120px; cursor:pointer; transition:.35s; position:relative; }
 .poster img{ width:100%; border-radius:10px; box-shadow:0 5px 15px rgba(0,0,0,.7); }
 .poster:hover{ transform:scale(1.15); z-index:5; }
 
-/* PLAYER */
-#player{
-position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.95); display:none; justify-content:center; align-items:center; z-index:100; flex-direction:column;
-padding:10px;
-}
+#player{position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.95); display:none; justify-content:center; align-items:center; z-index:100; flex-direction:column; padding:10px;}
 .player-box{ width:100%; max-width:1000px; height:80vh; display:flex; flex-direction:column; justify-content:flex-start; }
 #videoPlayer{ width:100%; height:100%; }
 .episodes, .servers{ margin-top:10px; display:flex; flex-wrap:wrap; gap:6px; justify-content:center; }
@@ -50,20 +38,8 @@ padding:10px;
 .episodes button:hover, .servers button:hover{ background:#e50914; }
 .close{ position:absolute; top:10px; right:10px; font-size:30px; cursor:pointer; z-index:101; }
 
-/* RESPONSIVE */
-@media(max-width:1024px){
-.hero{ height:40vh; padding:15px; }
-.hero h1{ font-size:1.5rem; }
-.poster{ min-width:100px; }
-}
-@media(max-width:600px){
-.hero{ height:35vh; }
-.hero-content{ padding:10px; }
-.hero h1{ font-size:1.2rem; }
-.hero p{ font-size:0.8rem; }
-.poster{ min-width:80px; }
-.search{ width:120px; padding:6px; }
-}
+@media(max-width:1024px){.hero{ height:40vh; padding:15px; }.hero h1{ font-size:1.5rem; }.poster{ min-width:100px; }}
+@media(max-width:600px){.hero{ height:35vh; }.hero-content{ padding:10px; }.hero h1{ font-size:1.2rem; }.hero p{ font-size:0.8rem; }.poster{ min-width:80px; }.search{ width:120px; padding:6px; }}
 </style>
 </head>
 <body>
@@ -108,134 +84,149 @@ const API="8a2de0488825903a0a4b7d0ff12a3873"
 let currentId, currentType, currentEpisode=1, season=1
 let player = videojs('videoPlayer')
 
-// Ejemplo de servidores por contenido (en la práctica puedes generar dinámicamente)
-const serversList = {
-  movie: [
-    {name:"Streamtape", url:"https://streamtape.com/v/example.mp4"},
-    {name:"Filemoon", url:"https://filemoon.com/v/example.mp4"},
-    {name:"Upstream", url:"https://upstream.to/v/example.mp4"}
-  ],
-  tv: [
-    {name:"Streamtape", url:"https://streamtape.com/v/example_tv.mp4"},
-    {name:"Filemoon", url:"https://filemoon.com/v/example_tv.mp4"},
-    {name:"Upstream", url:"https://upstream.to/v/example_tv.mp4"}
+// Función para obtener enlaces directos de Streamtape, Filemoon, Upstream
+async function getDirectLink(url){
+  try{
+    let r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`) // Evita CORS
+    let text = await r.text()
+    // Streamtape
+    if(url.includes("streamtape")){
+      let match = text.match(/videoSrc\s*=\s*["'](https?:\/\/[^"']+)["']/)
+      if(match) return match[1]
+    }
+    // Filemoon
+    if(url.includes("filemoon")){
+      let match = text.match(/src:\s*"(https?:\/\/[^"]+)"/)
+      if(match) return match[1]
+    }
+    // Upstream
+    if(url.includes("upstream")){
+      let match = text.match(/src="(https?:\/\/[^"]+)"/)
+      if(match) return match[1]
+    }
+  }catch(e){ console.error(e) }
+  return url // fallback
+}
+
+// Función para reproducir video
+async function loadVideo(url){
+  const direct = await getDirectLink(url)
+  player.src({src:direct,type:"video/mp4"})
+  player.play()
+}
+
+// Ejemplo de servidores dinámicos
+function loadServers(type){
+  const serversDiv=document.getElementById("servers")
+  serversDiv.innerHTML=""
+  // En práctica, aquí podrías traer los enlaces reales del contenido
+  const urls = type==="movie" ? [
+    "https://streamtape.com/v/example.mp4",
+    "https://filemoon.com/v/example.mp4",
+    "https://upstream.to/v/example.mp4"
+  ] : [
+    "https://streamtape.com/v/example_tv.mp4",
+    "https://filemoon.com/v/example_tv.mp4",
+    "https://upstream.to/v/example_tv.mp4"
   ]
+  urls.forEach(url=>{
+    let b=document.createElement("button")
+    b.innerText = url.includes("streamtape") ? "Streamtape" : url.includes("filemoon") ? "Filemoon" : "Upstream"
+    b.onclick=()=>loadVideo(url)
+    serversDiv.appendChild(b)
+  })
+  loadVideo(urls[0])
 }
 
-async function loadHero(){
-let r=await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API}&language=es-ES`)
-let d=await r.json()
-let movie=d.results[0]
-document.getElementById("hero").style.backgroundImage=`linear-gradient(to right,#0f0f0f,transparent), url(https://image.tmdb.org/t/p/original${movie.backdrop_path})`
-document.getElementById("heroContent").innerHTML=`<h1>${movie.title}</h1><p>${movie.overview.slice(0,150)}...</p><button onclick="play(${movie.id},'movie')">▶ Ver ahora</button>`
-}
-
+// Solo contenido en español latino
 async function tieneEspanol(id,tipo){
-let r=await fetch(`https://api.themoviedb.org/3/${tipo}/${id}?api_key=${API}`)
-let d=await r.json()
-if(!d.spoken_languages) return false
-return d.spoken_languages.some(l=>l.iso_639_1==="es")
+  let r=await fetch(`https://api.themoviedb.org/3/${tipo}/${id}?api_key=${API}&language=es-ES`)
+  let d=await r.json()
+  if(!d.spoken_languages) return false
+  return d.spoken_languages.some(l=>l.iso_639_1==="es")
 }
 
-async function loadCategory(url,container,type){
-let r=await fetch(url)
-let d=await r.json()
-render(d.results,container,type)
-}
-
+// Renderizado y carga de categorías
 async function render(list,container,type){
-let row=document.getElementById(container)
-row.innerHTML=""
-for(let item of list){
-if(!item.poster_path) continue
-let esp=await tieneEspanol(item.id,type)
-if(!esp) continue
-let div=document.createElement("div")
-div.className="poster"
-div.innerHTML=`<img src="https://image.tmdb.org/t/p/w500${item.poster_path}">`
-div.onclick=()=>openDetails(item.id,type)
-row.appendChild(div)
-}
+  let row=document.getElementById(container)
+  row.innerHTML=""
+  for(let item of list){
+    if(!item.poster_path) continue
+    let esp = await tieneEspanol(item.id,type)
+    if(!esp) continue
+    let div=document.createElement("div")
+    div.className="poster"
+    div.innerHTML=`<img src="https://image.tmdb.org/t/p/w500${item.poster_path}">`
+    div.onclick=()=>openDetails(item.id,type)
+    row.appendChild(div)
+  }
 }
 
 async function openDetails(id,type){
-currentId=id
-currentType=type
-currentEpisode=1
-let r=await fetch(`https://api.themoviedb.org/3/${type}/${id}?api_key=${API}&language=es-ES`)
-let d=await r.json()
-document.getElementById("hero").style.backgroundImage=`url(https://image.tmdb.org/t/p/original${d.backdrop_path})`
-document.getElementById("heroContent").innerHTML=`<h1>${d.title || d.name}</h1><p>${d.overview}</p><button onclick="play(${id},'${type}')">▶ Ver ahora</button>`
+  currentId=id
+  currentType=type
+  currentEpisode=1
+  let r=await fetch(`https://api.themoviedb.org/3/${type}/${id}?api_key=${API}&language=es-ES`)
+  let d=await r.json()
+  document.getElementById("hero").style.backgroundImage=`url(https://image.tmdb.org/t/p/original${d.backdrop_path})`
+  document.getElementById("heroContent").innerHTML=`<h1>${d.title||d.name}</h1><p>${d.overview}</p><button onclick="play(${id},'${type}')">▶ Ver ahora</button>`
 }
 
 function play(id,type){
-currentId=id
-currentType=type
-currentEpisode=1
-document.getElementById("player").style.display="flex"
+  currentId=id
+  currentType=type
+  currentEpisode=1
+  document.getElementById("player").style.display="flex"
+  document.getElementById("episodes").innerHTML=""
+  document.getElementById("servers").innerHTML=""
 
-// Limpiamos episodios y servidores
-document.getElementById("episodes").innerHTML=""
-document.getElementById("servers").innerHTML=""
-
-// Cargamos episodios si es serie
-if(type==="tv"){
-for(let i=1;i<=10;i++){
-let b=document.createElement("button")
-b.innerText="Ep "+i
-b.onclick=()=>playEpisode(i)
-document.getElementById("episodes").appendChild(b)
-}
-playEpisode(1)
-player.on("ended",()=>{currentEpisode++;playEpisode(currentEpisode)})
-}else{
-loadServers(type)
-}
-}
-
-function loadServers(type){
-let serversDiv=document.getElementById("servers")
-serversDiv.innerHTML=""
-serversList[type].forEach(s=>{
-  let b=document.createElement("button")
-  b.innerText=s.name
-  b.onclick=()=>loadVideo(s.url)
-  serversDiv.appendChild(b)
-})
-// Cargar primer servidor por defecto
-if(serversList[type].length>0) loadVideo(serversList[type][0].url)
+  if(type==="tv"){
+    for(let i=1;i<=10;i++){
+      let b=document.createElement("button")
+      b.innerText="Ep "+i
+      b.onclick=()=>playEpisode(i)
+      document.getElementById("episodes").appendChild(b)
+    }
+    playEpisode(1)
+    player.on("ended",()=>{currentEpisode++;playEpisode(currentEpisode)})
+  }else{
+    loadServers("movie")
+  }
 }
 
 function playEpisode(ep){
-currentEpisode=ep
-// Para cada episodio puedes tener distintos servidores
-loadServers("tv")
-}
-
-function loadVideo(url){
-player.src({src:url,type:"video/mp4"})
-player.play()
+  currentEpisode=ep
+  loadServers("tv")
 }
 
 async function searchContent(){
-let q=document.getElementById("search").value
-if(q.length<3) return
-let r=await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API}&language=es-ES&query=${q}`)
-let d=await r.json()
-render(d.results,"movies","movie")
+  let q=document.getElementById("search").value
+  if(q.length<3) return
+  let r=await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API}&language=es-ES&query=${q}`)
+  let d=await r.json()
+  render(d.results,"movies","movie")
 }
 
 function closePlayer(){
-document.getElementById("player").style.display="none"
-player.pause()
-player.currentTime(0)
+  document.getElementById("player").style.display="none"
+  player.pause()
+  player.currentTime(0)
 }
 
 // CARGA INICIAL
-loadHero()
-loadCategory(`https://api.themoviedb.org/3/movie/popular?api_key=${API}&language=es-ES`,"movies","movie")
-loadCategory(`https://api.themoviedb.org/3/movie/top_rated?api_key=${API}&language=es-ES`,"topmovies","movie")
-loadCategory(`https://api.themoviedb.org/3/tv/popular?api_key=${API}&language=es-ES`,"series","tv")
+async function init(){
+  let heroR = await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API}&language=es-ES`)
+  let heroD = await heroR.json()
+  let movie = heroD.results[0]
+  document.getElementById("hero").style.backgroundImage=`linear-gradient(to right,#0f0f0f,transparent), url(https://image.tmdb.org/t/p/original${movie.backdrop_path})`
+  document.getElementById("heroContent").innerHTML=`<h1>${movie.title}</h1><p>${movie.overview.slice(0,150)}...</p><button onclick="play(${movie.id},'movie')">▶ Ver ahora</button>`
+  
+  render((await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API}&language=es-ES`).then(r=>r.json())).results,"movies","movie")
+  render((await fetch(`https://api.themoviedb.org/3/movie/top_rated?api_key=${API}&language=es-ES`).then(r=>r.json())).results,"topmovies","movie")
+  render((await fetch(`https://api.themoviedb.org/3/tv/popular?api_key=${API}&language=es-ES`).then(r=>r.json())).results,"series","tv")
+}
+
+init()
 </script>
 </body>
 </html>
