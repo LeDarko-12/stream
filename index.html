@@ -2,447 +2,50 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>MiStream ULTRA</title>
-
-<style>
-
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial;
-}
-
-body{
-background:#0b0b0b;
-color:white;
-}
-
-/* NAVBAR */
-
-.navbar{
-position:fixed;
-top:0;
-width:100%;
-height:70px;
-background:#000;
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:0 30px;
-z-index:20;
-}
-
-.logo{
-color:#e50914;
-font-size:28px;
-font-weight:bold;
-}
-
-.search-area{
-display:flex;
-gap:10px;
-}
-
-.search{
-background:#1a1a1a;
-border:none;
-padding:10px;
-border-radius:6px;
-color:white;
-width:220px;
-}
-
-.reset{
-background:#444;
-border:none;
-padding:10px 14px;
-border-radius:6px;
-cursor:pointer;
-color:white;
-}
-
-.reset:hover{
-background:#e50914;
-}
-
-/* HERO */
-
-.hero{
-margin-top:70px;
-height:70vh;
-background-size:cover;
-background-position:center;
-display:flex;
-align-items:end;
-padding:60px;
-background-image:linear-gradient(to top,black,rgba(0,0,0,.4),transparent);
-}
-
-.hero h1{
-font-size:50px;
-margin-bottom:10px;
-}
-
-/* GENEROS */
-
-.genres{
-display:flex;
-gap:10px;
-overflow-x:auto;
-padding:15px 25px;
-}
-
-.genre{
-background:#1a1a1a;
-padding:8px 14px;
-border-radius:20px;
-cursor:pointer;
-white-space:nowrap;
-}
-
-.genre:hover{
-background:#e50914;
-}
-
-/* ROW */
-
-.row{
-padding:25px;
-}
-
-.row-posters{
-display:flex;
-gap:12px;
-overflow-x:auto;
-padding-bottom:10px;
-}
-
-/* POSTERS */
-
-.poster{
-min-width:160px;
-cursor:pointer;
-position:relative;
-border-radius:8px;
-overflow:hidden;
-transition:.3s;
-}
-
-.poster img{
-width:100%;
-}
-
-.poster span{
-position:absolute;
-bottom:0;
-width:100%;
-padding:10px;
-background:linear-gradient(transparent,rgba(0,0,0,.9));
-opacity:0;
-font-size:13px;
-}
-
-.poster:hover span{
-opacity:1;
-}
-
-.poster:hover{
-transform:scale(1.15);
-}
-
-/* PLAYER */
-
-#player{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:black;
-display:none;
-flex-direction:column;
-align-items:center;
-z-index:50;
-padding-top:60px;
-}
-
-.player-box{
-width:85%;
-height:60%;
-}
-
-.player-box iframe{
-width:100%;
-height:100%;
-border:none;
-}
-
-.close{
-position:absolute;
-top:15px;
-right:25px;
-font-size:35px;
-cursor:pointer;
-}
-
-button{
-background:#222;
-border:none;
-padding:8px 14px;
-color:white;
-border-radius:6px;
-cursor:pointer;
-}
-
-button:hover{
-background:#e50914;
-}
-
-.server-selector{
-margin-top:10px;
-display:flex;
-gap:8px;
-}
-
-.season-selector{
-margin-top:15px;
-display:flex;
-gap:8px;
-flex-wrap:wrap;
-}
-
-.episode-list{
-margin-top:10px;
-display:grid;
-grid-template-columns:repeat(auto-fill,60px);
-gap:8px;
-justify-content:center;
-}
-
-.episode-active{
-background:#e50914;
-}
-
-.footer{
-margin-top:40px;
-background:#000;
-text-align:center;
-padding:25px;
-color:#777;
-}
-
-</style>
+<title>AnimeStream</title>
+<link rel="stylesheet" href="style.css">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 
 <body>
 
-<div class="navbar">
+<header class="navbar">
+<h1 class="logo">AnimeStream</h1>
 
-<div class="logo">MiStream</div>
+<input id="searchInput" type="text" placeholder="Buscar anime...">
 
-<div class="search-area">
+<select id="genreFilter">
+<option value="">Genero</option>
+<option value="1">Acción</option>
+<option value="2">Aventura</option>
+<option value="4">Comedia</option>
+<option value="10">Fantasia</option>
+<option value="22">Romance</option>
+</select>
 
-<input class="search" id="search" placeholder="Buscar..." onkeyup="searchContent()">
+<select id="yearFilter">
+<option value="">Año</option>
+<option>2024</option>
+<option>2023</option>
+<option>2022</option>
+<option>2021</option>
+</select>
 
-<button class="reset" onclick="resetFilters()">Reset filtros</button>
+</header>
 
+<main>
+
+<div id="animeGrid" class="anime-grid"></div>
+
+<div id="loading" class="loading">
+Cargando anime...
 </div>
 
-</div>
+</main>
 
-<div class="hero" id="hero">
-<h1 id="heroTitle">MiStream ULTRA</h1>
-<button onclick="playHero()">▶ Ver ahora</button>
-</div>
+<button id="topBtn">⬆</button>
 
-<div class="genres" id="genres"></div>
-
-<div class="row">
-<h2>🎬 Catálogo</h2>
-<div id="catalog" class="row-posters"></div>
-</div>
-
-<div id="player">
-
-<div class="close" onclick="closePlayer()">✕</div>
-
-<div class="player-box">
-<iframe id="framePlayer"></iframe>
-</div>
-
-<div id="servers" class="server-selector"></div>
-<div id="seasonSelector" class="season-selector"></div>
-<div id="episodeList" class="episode-list"></div>
-
-</div>
-
-<div class="footer">
-MiStream ULTRA © 2026
-</div>
-
-<script>
-
-const TMDB="8a2de0488825903a0a4b7d0ff12a3873"
-
-let currentGenre=null
-let catalogPage=1
-
-/* RESET FILTROS */
-
-function resetFilters(){
-
-currentGenre=null
-catalogPage=1
-
-document.getElementById("search").value=""
-document.getElementById("catalog").innerHTML=""
-
-loadCatalog()
-
-}
-
-/* GENEROS */
-
-async function loadGenres(){
-
-let r=await fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${TMDB}&language=es-ES`)
-let data=await r.json()
-
-let container=document.getElementById("genres")
-
-data.genres.forEach(g=>{
-
-let div=document.createElement("div")
-
-div.className="genre"
-div.innerText=g.name
-
-div.onclick=()=>{
-
-currentGenre=g.id
-catalogPage=1
-
-document.getElementById("catalog").innerHTML=""
-
-loadCatalog()
-
-}
-
-container.appendChild(div)
-
-})
-
-}
-
-/* CATALOGO */
-
-async function loadCatalog(){
-
-let url=`https://api.themoviedb.org/3/discover/movie?api_key=${TMDB}&language=es-ES&sort_by=popularity.desc&page=${catalogPage}`
-
-if(currentGenre){
-url+=`&with_genres=${currentGenre}`
-}
-
-let r=await fetch(url)
-
-let data=await r.json()
-
-let row=document.getElementById("catalog")
-
-data.results.forEach(item=>{
-
-if(!item.poster_path) return
-
-let div=document.createElement("div")
-
-div.className="poster"
-
-div.innerHTML=`
-<img src="https://image.tmdb.org/t/p/w500${item.poster_path}">
-<span>${item.title}</span>
-`
-
-row.appendChild(div)
-
-})
-
-catalogPage++
-
-}
-
-/* SEARCH */
-
-async function searchContent(){
-
-let q=document.getElementById("search").value
-
-if(q.length<3) return
-
-let r=await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${TMDB}&language=es-ES&query=${q}`)
-
-let data=await r.json()
-
-let row=document.getElementById("catalog")
-
-row.innerHTML=""
-
-data.results.forEach(item=>{
-
-if(!item.poster_path) return
-
-let div=document.createElement("div")
-
-div.className="poster"
-
-div.innerHTML=`
-<img src="https://image.tmdb.org/t/p/w500${item.poster_path}">
-<span>${item.title}</span>
-`
-
-row.appendChild(div)
-
-})
-
-}
-
-/* HERO */
-
-async function loadHero(){
-
-let r=await fetch(`https://api.themoviedb.org/3/trending/movie/day?api_key=${TMDB}&language=es-ES`)
-
-let data=await r.json()
-
-let m=data.results[0]
-
-document.getElementById("hero").style.backgroundImage=
-`url(https://image.tmdb.org/t/p/original${m.backdrop_path})`
-
-document.getElementById("heroTitle").innerText=m.title
-
-}
-
-/* SCROLL INFINITO */
-
-document.getElementById("catalog").addEventListener("scroll",function(){
-
-if(this.scrollLeft+this.clientWidth>=this.scrollWidth-200){
-
-loadCatalog()
-
-}
-
-})
-
-/* LOAD */
-
-loadHero()
-loadGenres()
-loadCatalog()
-
-</script>
+<script src="script.js"></script>
 
 </body>
 </html>
