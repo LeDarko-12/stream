@@ -45,9 +45,9 @@ padding:10px;
 }
 .player-box{ width:100%; max-width:1000px; height:80vh; display:flex; flex-direction:column; justify-content:flex-start; }
 #videoPlayer{ width:100%; height:100%; }
-.episodes{ margin-top:10px; display:flex; flex-wrap:wrap; gap:6px; justify-content:center; }
-.episodes button{ padding:6px 10px; border:none; background:#222; color:white; border-radius:4px; cursor:pointer; font-size:0.8rem; }
-.episodes button:hover{ background:#e50914; }
+.episodes, .servers{ margin-top:10px; display:flex; flex-wrap:wrap; gap:6px; justify-content:center; }
+.episodes button, .servers button{ padding:6px 10px; border:none; background:#222; color:white; border-radius:4px; cursor:pointer; font-size:0.8rem; }
+.episodes button:hover, .servers button:hover{ background:#e50914; }
 .close{ position:absolute; top:10px; right:10px; font-size:30px; cursor:pointer; z-index:101; }
 
 /* RESPONSIVE */
@@ -99,6 +99,7 @@ padding:10px;
 <source id="videoSource" src="" type="video/mp4">
 </video>
 <div id="episodes" class="episodes"></div>
+<div id="servers" class="servers"></div>
 </div>
 </div>
 
@@ -106,6 +107,20 @@ padding:10px;
 const API="8a2de0488825903a0a4b7d0ff12a3873"
 let currentId, currentType, currentEpisode=1, season=1
 let player = videojs('videoPlayer')
+
+// Ejemplo de servidores por contenido (en la práctica puedes generar dinámicamente)
+const serversList = {
+  movie: [
+    {name:"Streamtape", url:"https://streamtape.com/v/example.mp4"},
+    {name:"Filemoon", url:"https://filemoon.com/v/example.mp4"},
+    {name:"Upstream", url:"https://upstream.to/v/example.mp4"}
+  ],
+  tv: [
+    {name:"Streamtape", url:"https://streamtape.com/v/example_tv.mp4"},
+    {name:"Filemoon", url:"https://filemoon.com/v/example_tv.mp4"},
+    {name:"Upstream", url:"https://upstream.to/v/example_tv.mp4"}
+  ]
+}
 
 async function loadHero(){
 let r=await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API}&language=es-ES`)
@@ -148,19 +163,23 @@ currentId=id
 currentType=type
 currentEpisode=1
 let r=await fetch(`https://api.themoviedb.org/3/${type}/${id}?api_key=${API}&language=es-ES`)
-let d=r.json()
-document.getElementById("hero").style.backgroundImage=`url(https://image.tmdb.org/t/p/original${(await d).backdrop_path})`
-document.getElementById("heroContent").innerHTML=`<h1>${(await d).title || (await d).name}</h1><p>${(await d).overview}</p><button onclick="play(${id},'${type}')">▶ Ver ahora</button>`
+let d=await r.json()
+document.getElementById("hero").style.backgroundImage=`url(https://image.tmdb.org/t/p/original${d.backdrop_path})`
+document.getElementById("heroContent").innerHTML=`<h1>${d.title || d.name}</h1><p>${d.overview}</p><button onclick="play(${id},'${type}')">▶ Ver ahora</button>`
 }
 
 function play(id,type){
 currentId=id
 currentType=type
+currentEpisode=1
 document.getElementById("player").style.display="flex"
+
+// Limpiamos episodios y servidores
 document.getElementById("episodes").innerHTML=""
-if(type==="movie"){
-loadVideo("https://www.w3schools.com/html/mov_bbb.mp4")
-}else{
+document.getElementById("servers").innerHTML=""
+
+// Cargamos episodios si es serie
+if(type==="tv"){
 for(let i=1;i<=10;i++){
 let b=document.createElement("button")
 b.innerText="Ep "+i
@@ -169,12 +188,28 @@ document.getElementById("episodes").appendChild(b)
 }
 playEpisode(1)
 player.on("ended",()=>{currentEpisode++;playEpisode(currentEpisode)})
+}else{
+loadServers(type)
 }
+}
+
+function loadServers(type){
+let serversDiv=document.getElementById("servers")
+serversDiv.innerHTML=""
+serversList[type].forEach(s=>{
+  let b=document.createElement("button")
+  b.innerText=s.name
+  b.onclick=()=>loadVideo(s.url)
+  serversDiv.appendChild(b)
+})
+// Cargar primer servidor por defecto
+if(serversList[type].length>0) loadVideo(serversList[type][0].url)
 }
 
 function playEpisode(ep){
 currentEpisode=ep
-loadVideo("https://www.w3schools.com/html/mov_bbb.mp4")
+// Para cada episodio puedes tener distintos servidores
+loadServers("tv")
 }
 
 function loadVideo(url){
