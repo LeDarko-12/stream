@@ -165,7 +165,6 @@ function loadServers(){
     }
     container.appendChild(btn)
   })
-  // 2Embed como inicial
   let twoEmbed = servers.find(s=>s.name==="2Embed")
   document.getElementById("framePlayer").src = currentType==="movie"?twoEmbed.movie(currentId):twoEmbed.tv(currentId)
 }
@@ -233,51 +232,39 @@ async function searchContent(){
 }
 
 // --- PLUTO TV INTEGRACIÓN ---
-const PLUTO_API = 'https://catalog.pluto.tv/v2/channels?device_type=web&platform=web';
-
 async function loadPlutoContent() {
     try {
-        let r = await fetch(PLUTO_API);
+        let r = await fetch('https://tv.pluto.tv/api/v3/catalog?limit=50&offset=0&language=es');
         let d = await r.json();
+        let items = d.items;
 
-        for(let channel of d){
-            // Series
-            if(channel.series){
-                for(let show of channel.series){
-                    let div=document.createElement("div");
-                    div.className="poster";
-                    div.innerHTML=`<img src="${show.images?.poster?.url || ''}">`;
-                    div.onclick=()=>openPlutoPlayer(show.id,'tv');
-                    document.getElementById("series").appendChild(div);
+        for(let item of items){
+            if(item.type === "show"){ // series
+                let div = document.createElement("div");
+                div.className = "poster";
+                div.innerHTML = `<img src="${item.images?.poster?.url || ''}">`;
+                div.onclick = () => openPlutoPlayer(item.id,'tv');
+                document.getElementById("series").appendChild(div);
+            } else if(item.type === "movie"){ // películas
+                let div = document.createElement("div");
+                div.className = "poster";
+                div.innerHTML = `<img src="${item.images?.poster?.url || ''}">`;
+                div.onclick = () => openPlutoPlayer(item.id,'movie');
+                document.getElementById("movies").appendChild(div);
+            } else if(item.type === "anime"){ // animes
+                let row=document.getElementById("animeRow");
+                if(!row){
+                    let container=document.createElement("div");
+                    container.className="row";
+                    container.innerHTML=`<h2>🌀 Animes Pluto TV</h2><div id="animeRow" class="row-posters"></div>`;
+                    document.body.appendChild(container);
+                    row=document.getElementById("animeRow");
                 }
-            }
-            // Películas
-            if(channel.movies){
-                for(let movie of channel.movies){
-                    let div=document.createElement("div");
-                    div.className="poster";
-                    div.innerHTML=`<img src="${movie.images?.poster?.url || ''}">`;
-                    div.onclick=()=>openPlutoPlayer(movie.id,'movie');
-                    document.getElementById("movies").appendChild(div);
-                }
-            }
-            // Animes
-            if(channel.animes){
-                for(let anime of channel.animes){
-                    let row=document.getElementById("animeRow");
-                    if(!row) {
-                        let container=document.createElement("div");
-                        container.className="row";
-                        container.innerHTML=`<h2>🌀 Animes Pluto TV</h2><div id="animeRow" class="row-posters"></div>`;
-                        document.body.appendChild(container);
-                        row=document.getElementById("animeRow");
-                    }
-                    let div=document.createElement("div");
-                    div.className="poster";
-                    div.innerHTML=`<img src="${anime.images?.poster?.url || ''}">`;
-                    div.onclick=()=>openPlutoPlayer(anime.id,'tv');
-                    row.appendChild(div);
-                }
+                let div=document.createElement("div");
+                div.className="poster";
+                div.innerHTML=`<img src="${item.images?.poster?.url || ''}">`;
+                div.onclick=()=>openPlutoPlayer(item.id,'tv');
+                row.appendChild(div);
             }
         }
     } catch(e){
