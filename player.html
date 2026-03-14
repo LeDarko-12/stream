@@ -4,33 +4,127 @@
 <head>
 
 <meta charset="UTF-8">
-
 <title>Reproductor</title>
 
-<link rel="stylesheet" href="style.css">
+<style>
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
+body{
+background:#0f0f0f;
+color:white;
+font-family:Arial;
+margin:0;
+padding:0;
+}
+
+.player-container{
+max-width:900px;
+margin:auto;
+padding:20px;
+}
+
+video{
+width:100%;
+background:black;
+border-radius:8px;
+}
+
+.servers{
+margin-top:15px;
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+}
+
+button{
+padding:10px;
+background:#222;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+}
+
+button:hover{
+background:#ff0055;
+}
+
+</style>
 
 </head>
 
 <body>
 
-<header class="navbar">
-
-<a href="index.html" class="logo">AnimeStream</a>
-
-</header>
-
 <div class="player-container">
 
-<iframe id="videoPlayer" allowfullscreen></iframe>
+<h2 id="title">Reproduciendo episodio...</h2>
 
-<div class="server-selector"></div>
+<video id="player" controls></video>
+
+<div class="servers" id="servers"></div>
 
 </div>
 
-<script src="script.js"></script>
+<script>
+
+/* obtener id del episodio desde la URL */
+
+const params = new URLSearchParams(window.location.search)
+
+const episodeId = params.get("ep")
+
+loadEpisode(episodeId)
+
+
+async function loadEpisode(id){
+
+try{
+
+const res = await fetch(`http://localhost:3000/watch/${id}`)
+
+const data = await res.json()
+
+const player = document.getElementById("player")
+
+/* cargar primer servidor */
+
+player.src = data[0].url
+
+createServerButtons(data)
+
+}catch(err){
+
+console.error(err)
+
+}
+
+}
+
+
+function createServerButtons(servers){
+
+const container = document.getElementById("servers")
+
+container.innerHTML=""
+
+servers.forEach(server=>{
+
+const btn = document.createElement("button")
+
+btn.textContent = server.quality || "server"
+
+btn.onclick = ()=>{
+
+document.getElementById("player").src = server.url
+
+}
+
+container.appendChild(btn)
+
+})
+
+}
+
+</script>
 
 </body>
-
 </html>
