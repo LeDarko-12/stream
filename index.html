@@ -1,9 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>MiStream ULTRA</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial;
+}
+
+body{
+background:#0b0b0b;
+color:white;
+}
+
+/* NAVBAR */
+
+.navbar{
+position:fixed;
+top:0;
+width:100%;
+height:70px;
+background:#000;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:0 30px;
+z-index:20;
+}
+
+.logo{
+color:#e50914;
+font-size:28px;
+font-weight:bold;
+}
+
+.search{
+background:#1a1a1a;
+border:none;
+padding:10px;
+border-radius:6px;
+color:white;
+width:230px;
+}
+
+/* HERO */
+
+.hero{
+margin-top:70px;
+height:75vh;
+background-size:cover;
+background-position:center;
+display:flex;
+align-items:end;
+padding:60px;
+background-image:linear-gradient(to top,black,rgba(0,0,0,.4),transparent);
+}
+
+.hero h1{
+font-size:50px;
+margin-bottom:10px;
+}
+
+/* ROW */
+
+.row{
+padding:25px;
+}
+
+.row h2{
+margin-bottom:12px;
+}
+
+.row-posters{
+display:flex;
+gap:12px;
+overflow-x:auto;
+scroll-behavior:smooth;
+padding-bottom:10px;
+}
+
+/* POSTERS */
+
+.poster{
+min-width:160px;
+cursor:pointer;
+position:relative;
+transition:.35s;
+border-radius:8px;
+overflow:hidden;
+}
+
+.poster img{
+width:100%;
+}
+
+.poster span{
+position:absolute;
+bottom:0;
+width:100%;
+padding:10px;
+background:linear-gradient(transparent,rgba(0,0,0,.9));
+opacity:0;
+font-size:13px;
+}
+
+.poster:hover span{
+opacity:1;
+}
+
+.poster:hover{
+transform:scale(1.15);
+z-index:10;
+}
+
+/* PLAYER */
+
+#player{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:black;
+display:none;
+flex-direction:column;
+align-items:center;
+z-index:50;
+padding-top:60px;
+}
+
+.player-box{
+width:85%;
+height:60%;
+}
+
+.player-box iframe{
+width:100%;
+height:100%;
+border:none;
+}
+
+.close{
+position:absolute;
+top:15px;
+right:25px;
+font-size:35px;
+cursor:pointer;
+}
+
+/* BUTTONS */
+
+button{
+background:#222;
+border:none;
+padding:8px 14px;
+color:white;
+border-radius:6px;
+cursor:pointer;
+}
+
+button:hover{
+background:#e50914;
+}
+
+/* SERVERS */
+
+.server-selector{
+margin-top:10px;
+display:flex;
+gap:8px;
+}
+
+/* SEASONS */
+
+.season-selector{
+margin-top:15px;
+display:flex;
+gap:8px;
+flex-wrap:wrap;
+}
+
+/* EPISODES */
+
+.episode-list{
+margin-top:10px;
+display:grid;
+grid-template-columns:repeat(auto-fill,60px);
+gap:8px;
+justify-content:center;
+}
+
+.episode-active{
+background:#e50914;
+}
+
+/* FOOTER */
+
+.footer{
+margin-top:40px;
+background:#000;
+text-align:center;
+padding:25px;
+color:#777;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="navbar">
+<div class="logo">MiStream</div>
+<input class="search" id="search" placeholder="Buscar..." onkeyup="searchContent()">
+</div>
+
+<div class="hero" id="hero">
+<h1 id="heroTitle">MiStream ULTRA</h1>
+<button onclick="playHero()">▶ Ver ahora</button>
+</div>
+
+<div class="row">
+<h2>🔥 Trending</h2>
+<div id="trending" class="row-posters"></div>
+</div>
+
+<div class="row">
+<h2>🎬 Películas populares</h2>
+<div id="moviesPopular" class="row-posters"></div>
+</div>
+
+<div class="row">
+<h2>📺 Series populares</h2>
+<div id="seriesPopular" class="row-posters"></div>
+</div>
+
+<div id="player">
+
+<div class="close" onclick="closePlayer()">✕</div>
+
+<div class="player-box">
+<iframe id="framePlayer"></iframe>
+</div>
+
+<div id="servers" class="server-selector"></div>
+<div id="seasonSelector" class="season-selector"></div>
+<div id="episodeList" class="episode-list"></div>
+
+</div>
+
+<div class="footer">
+MiStream ULTRA © 2026
+</div>
+
 <script>
 
 const TMDB="8a2de0488825903a0a4b7d0ff12a3873"
 
-let currentId=null
-let currentType=null
+let currentId
+let currentType
 let currentSeason=1
 let currentEpisode=1
 
@@ -44,29 +303,25 @@ document.getElementById("player").style.display="flex"
 
 loadServers()
 
-if(type==="tv"){
-loadSeasons()
-}
+if(type==="tv") loadSeasons()
 
 }
-
-/* SERVERS */
 
 function loadServers(){
 
-const container=document.getElementById("servers")
+let c=document.getElementById("servers")
 
-container.innerHTML=""
+c.innerHTML=""
 
 servers.forEach((s,i)=>{
 
-const b=document.createElement("button")
+let b=document.createElement("button")
 
 b.innerText=s.name
 
 b.onclick=()=>playServer(i)
 
-container.appendChild(b)
+c.appendChild(b)
 
 })
 
@@ -76,18 +331,14 @@ playServer(0)
 
 function playServer(i){
 
-const s=servers[i]
+let s=servers[i]
 
 let url
 
 if(currentType==="movie"){
-
 url=s.movie(currentId)
-
 }else{
-
 url=s.tv(currentId,currentSeason,currentEpisode)
-
 }
 
 document.getElementById("framePlayer").src=url
@@ -105,11 +356,11 @@ document.getElementById("framePlayer").src=""
 
 async function loadSeasons(){
 
-const r=await fetch(`https://api.themoviedb.org/3/tv/${currentId}?api_key=${TMDB}`)
+let r=await fetch(`https://api.themoviedb.org/3/tv/${currentId}?api_key=${TMDB}`)
 
-const data=await r.json()
+let data=await r.json()
 
-const box=document.getElementById("seasonSelector")
+let box=document.getElementById("seasonSelector")
 
 box.innerHTML=""
 
@@ -118,7 +369,7 @@ data.seasons
 .sort((a,b)=>a.season_number-b.season_number)
 .forEach(season=>{
 
-const b=document.createElement("button")
+let b=document.createElement("button")
 
 b.innerText="Temp "+season.season_number
 
@@ -143,11 +394,11 @@ loadEpisodes()
 
 async function loadEpisodes(){
 
-const r=await fetch(`https://api.themoviedb.org/3/tv/${currentId}/season/${currentSeason}?api_key=${TMDB}`)
+let r=await fetch(`https://api.themoviedb.org/3/tv/${currentId}/season/${currentSeason}?api_key=${TMDB}`)
 
-const data=await r.json()
+let data=await r.json()
 
-const list=document.getElementById("episodeList")
+let list=document.getElementById("episodeList")
 
 list.innerHTML=""
 
@@ -155,12 +406,12 @@ data.episodes
 .sort((a,b)=>a.episode_number-b.episode_number)
 .forEach(ep=>{
 
-const b=document.createElement("button")
+let b=document.createElement("button")
 
 b.innerText=ep.episode_number
 
 if(ep.episode_number===currentEpisode){
-b.style.background="#e50914"
+b.classList.add("episode-active")
 }
 
 b.onclick=()=>{
@@ -179,23 +430,23 @@ list.appendChild(b)
 
 }
 
-/* CATEGORY + INFINITE SCROLL */
+/* INFINITE CATALOG */
 
 async function loadCategory(url,container,type){
 
 if(!pages[container]) pages[container]=1
 
-const r=await fetch(`${url}&page=${pages[container]}`)
+let r=await fetch(`${url}&page=${pages[container]}`)
 
-const data=await r.json()
+let data=await r.json()
 
-const row=document.getElementById(container)
+let row=document.getElementById(container)
 
 data.results.forEach(item=>{
 
 if(!item.poster_path) return
 
-const div=document.createElement("div")
+let div=document.createElement("div")
 
 div.className="poster"
 
@@ -214,7 +465,7 @@ pages[container]++
 
 row.onscroll=()=>{
 
-if(row.scrollLeft+row.clientWidth>=row.scrollWidth-200){
+if(row.scrollLeft + row.clientWidth >= row.scrollWidth-200){
 
 loadCategory(url,container,type)
 
@@ -228,11 +479,11 @@ loadCategory(url,container,type)
 
 async function loadHero(){
 
-const r=await fetch(`https://api.themoviedb.org/3/trending/movie/day?api_key=${TMDB}`)
+let r=await fetch(`https://api.themoviedb.org/3/trending/movie/day?api_key=${TMDB}`)
 
-const data=await r.json()
+let data=await r.json()
 
-const m=data.results[0]
+let m=data.results[0]
 
 document.getElementById("hero").style.backgroundImage=
 `url(https://image.tmdb.org/t/p/original${m.backdrop_path})`
@@ -251,15 +502,15 @@ openPlayer(heroId,"movie")
 
 async function searchContent(){
 
-const q=document.getElementById("search").value
+let q=document.getElementById("search").value
 
 if(q.length<3) return
 
-const r=await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB}&query=${q}`)
+let r=await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${TMDB}&query=${q}`)
 
-const data=await r.json()
+let data=await r.json()
 
-const row=document.getElementById("trending")
+let row=document.getElementById("trending")
 
 row.innerHTML=""
 
@@ -267,7 +518,7 @@ data.results.forEach(item=>{
 
 if(!item.poster_path) return
 
-const div=document.createElement("div")
+let div=document.createElement("div")
 
 div.className="poster"
 
@@ -295,3 +546,6 @@ loadCategory(`https://api.themoviedb.org/3/movie/popular?api_key=${TMDB}`,"movie
 loadCategory(`https://api.themoviedb.org/3/tv/popular?api_key=${TMDB}`,"seriesPopular","tv")
 
 </script>
+
+</body>
+</html>
