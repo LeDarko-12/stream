@@ -2,151 +2,29 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>MiStream PRO</title>
+<title>MiStream </title>
 
 <style>
-
 *{box-sizing:border-box}
-
-body{
-margin:0;
-background:#0f0f0f;
-color:white;
-font-family:Arial
-}
-
-.navbar{
-position:fixed;
-top:0;
-width:100%;
-height:70px;
-background:#000;
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:0 20px;
-z-index:10
-}
-
-.logo{
-color:#e50914;
-font-size:26px;
-font-weight:bold
-}
-
-.search{
-background:#1f1f1f;
-border:none;
-padding:8px 12px;
-border-radius:6px;
-color:white;
-width:180px
-}
-
-.hero{
-height:50vh;
-margin-top:70px;
-display:flex;
-align-items:center;
-padding:20px;
-background-size:cover;
-background-position:center
-}
-
-.hero-content{
-background:rgba(0,0,0,.6);
-padding:20px;
-border-radius:10px;
-max-width:600px
-}
-
-.hero button{
-margin-top:10px;
-padding:10px 20px;
-background:#e50914;
-border:none;
-color:white;
-cursor:pointer
-}
-
-.row{
-padding:20px
-}
-
-.row-posters{
-display:flex;
-overflow-x:auto;
-gap:10px
-}
-
-.poster{
-min-width:130px;
-cursor:pointer;
-transition:.3s
-}
-
-.poster img{
-width:100%;
-border-radius:10px
-}
-
-.poster:hover{
-transform:scale(1.15)
-}
-
-#player{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:black;
-display:none;
-flex-direction:column;
-justify-content:center;
-align-items:center;
-z-index:100
-}
-
-.player-box{
-width:90%;
-height:70%
-}
-
-.player-box iframe{
-width:100%;
-height:100%;
-border:none
-}
-
-.server-selector{
-margin-top:10px;
-display:flex;
-gap:10px;
-flex-wrap:wrap
-}
-
-.server-selector button{
-background:#222;
-border:none;
-color:white;
-padding:8px 12px;
-cursor:pointer;
-border-radius:4px
-}
-
-.server-selector button:hover{
-background:#e50914
-}
-
-.close{
-position:absolute;
-top:20px;
-right:30px;
-font-size:35px;
-cursor:pointer
-}
-
+body{margin:0;background:#0f0f0f;color:white;font-family:Arial}
+.navbar{position:fixed;top:0;width:100%;height:70px;background:#000;display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:10}
+.logo{color:#e50914;font-size:26px;font-weight:bold}
+.search{background:#1f1f1f;border:none;padding:8px 12px;border-radius:6px;color:white;width:180px}
+.hero{height:50vh;margin-top:70px;display:flex;align-items:center;padding:20px;background-size:cover;background-position:center}
+.hero-content{background:rgba(0,0,0,.6);padding:20px;border-radius:10px;max-width:600px}
+.hero button{margin-top:10px;padding:10px 20px;background:#e50914;border:none;color:white;cursor:pointer}
+.row{padding:20px}
+.row-posters{display:flex;overflow-x:auto;gap:10px}
+.poster{min-width:130px;cursor:pointer;transition:.3s}
+.poster img{width:100%;border-radius:10px}
+.poster:hover{transform:scale(1.15)}
+#player{position:fixed;top:0;left:0;width:100%;height:100%;background:black;display:none;flex-direction:column;justify-content:center;align-items:center;z-index:100}
+.player-box{width:90%;height:70%}
+.player-box iframe{width:100%;height:100%;border:none}
+.server-selector{margin-top:10px;display:flex;gap:10px;flex-wrap:wrap}
+.server-selector button{background:#222;border:none;color:white;padding:8px 12px;cursor:pointer;border-radius:4px}
+.server-selector button:hover{background:#e50914}
+.close{position:absolute;top:20px;right:30px;font-size:35px;cursor:pointer}
 </style>
 </head>
 
@@ -172,192 +50,140 @@ cursor:pointer
 </div>
 
 <div id="player">
-
 <div class="close" onclick="closePlayer()">✕</div>
-
 <div class="player-box">
 <iframe id="framePlayer"></iframe>
 </div>
-
 <div class="server-selector" id="servers"></div>
-
+<div class="server-selector" id="seasonSelector"></div>
+<div class="server-selector" id="episodeSelector"></div>
 </div>
 
 <script>
-
 const API="8a2de0488825903a0a4b7d0ff12a3873"
-
-let currentId
-let currentType
+let currentId, currentType, currentSeason=1, currentEpisode=1
 
 const servers = [
-
-{
-name:"VidSrc",
-movie:id=>`https://vidsrc.to/embed/movie/${id}?lang=es`,
-tv:id=>`https://vidsrc.to/embed/tv/${id}/1/1?lang=es`
-},
-
-{
-name:"VidLink",
-movie:id=>`https://vidlink.pro/movie/${id}`,
-tv:id=>`https://vidlink.pro/tv/${id}/1/1`
-},
-
-{
-name:"MultiEmbed",
-movie:id=>`https://multiembed.mov/?video_id=${id}&tmdb=1`,
-tv:id=>`https://multiembed.mov/?video_id=${id}&tmdb=1&s=1&e=1`
-},
-
-{
-name:"2Embed",
-movie:id=>`https://www.2embed.cc/embed/${id}`,
-tv:id=>`https://www.2embed.cc/embedtv/${id}&s=1&e=1`
-}
-
+  {name:"VidSrc", movie:id=>`https://vidsrc.to/embed/movie/${id}?lang=es`, tv:id=>`https://vidsrc.to/embed/tv/${id}/${currentSeason}/${currentEpisode}?lang=es`},
+  {name:"VidLink", movie:id=>`https://vidlink.pro/movie/${id}`, tv:id=>`https://vidlink.pro/tv/${id}/${currentSeason}/${currentEpisode}`},
+  {name:"MultiEmbed", movie:id=>`https://multiembed.mov/?video_id=${id}&tmdb=1`, tv:id=>`https://multiembed.mov/?video_id=${id}&tmdb=1&s=${currentSeason}&e=${currentEpisode}`},
+  {name:"2Embed", movie:id=>`https://www.2embed.cc/embed/${id}`, tv:id=>`https://www.2embed.cc/embedtv/${id}&s=${currentSeason}&e=${currentEpisode}`}
 ]
 
 async function loadHero(){
-
-let r=await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API}&language=es-ES`)
-let d=await r.json()
-
-let movie=d.results[0]
-
-document.getElementById("hero").style.backgroundImage=
-`linear-gradient(to right,#0f0f0f,transparent),url(https://image.tmdb.org/t/p/original${movie.backdrop_path})`
-
-document.getElementById("heroContent").innerHTML=
-`<h1>${movie.title}</h1>
-<p>${movie.overview.slice(0,150)}...</p>
-<button onclick="openPlayer(${movie.id},'movie')">▶ Ver ahora</button>`
+  let r=await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API}&language=es-ES`)
+  let d=await r.json()
+  let movie=d.results[0]
+  document.getElementById("hero").style.backgroundImage=
+    `linear-gradient(to right,#0f0f0f,transparent),url(https://image.tmdb.org/t/p/original${movie.backdrop_path})`
+  document.getElementById("heroContent").innerHTML=
+    `<h1>${movie.title}</h1>
+     <p>${movie.overview.slice(0,150)}...</p>
+     <button onclick="openPlayer(${movie.id},'movie')">▶ Ver ahora</button>`
 }
 
 async function loadCategory(url,container,type){
-
-let r=await fetch(url)
-let d=await r.json()
-
-let row=document.getElementById(container)
-
-row.innerHTML=""
-
-for(let item of d.results){
-
-if(!item.poster_path) continue
-
-let div=document.createElement("div")
-
-div.className="poster"
-
-div.innerHTML=`<img src="https://image.tmdb.org/t/p/w500${item.poster_path}">`
-
-div.onclick=()=>openPlayer(item.id,type)
-
-row.appendChild(div)
-
-}
-
+  let r=await fetch(url)
+  let d=await r.json()
+  let row=document.getElementById(container)
+  row.innerHTML=""
+  for(let item of d.results){
+    if(!item.poster_path) continue
+    let div=document.createElement("div")
+    div.className="poster"
+    div.innerHTML=`<img src="https://image.tmdb.org/t/p/w500${item.poster_path}">`
+    div.onclick=()=>openPlayer(item.id,type)
+    row.appendChild(div)
+  }
 }
 
 function openPlayer(id,type){
-
-currentId=id
-currentType=type
-
-document.getElementById("player").style.display="flex"
-
-loadServers()
-
+  currentId=id
+  currentType=type
+  currentSeason=1
+  currentEpisode=1
+  document.getElementById("player").style.display="flex"
+  if(type==="tv") loadSeasons(id)
+  loadServers()
 }
 
 function loadServers(){
-
-let container=document.getElementById("servers")
-
-container.innerHTML=""
-
-servers.forEach((s,i)=>{
-
-let btn=document.createElement("button")
-
-btn.innerText=s.name
-
-btn.onclick=()=>{
-
-let url=currentType==="movie"?s.movie(currentId):s.tv(currentId)
-
-document.getElementById("framePlayer").src=url
-
+  let container=document.getElementById("servers")
+  container.innerHTML=""
+  servers.forEach(s=>{
+    let btn=document.createElement("button")
+    btn.innerText=s.name
+    btn.onclick=()=>{
+      let url=currentType==="movie"?s.movie(currentId):s.tv(currentId)
+      document.getElementById("framePlayer").src=url
+    }
+    container.appendChild(btn)
+  })
+  // cargar primer servidor por defecto
+  document.getElementById("framePlayer").src=currentType==="movie"?servers[0].movie(currentId):servers[0].tv(currentId)
 }
 
-container.appendChild(btn)
+async function loadSeasons(id){
+  let r = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API}&language=es-ES`)
+  let data = await r.json()
+  let container = document.getElementById("seasonSelector")
+  container.innerHTML=""
+  data.seasons.forEach(season=>{
+    if(season.season_number===0) return
+    let btn=document.createElement("button")
+    btn.innerText="Temp "+season.season_number
+    btn.onclick=()=>{
+      currentSeason=season.season_number
+      loadEpisodes(id,season.season_number)
+    }
+    container.appendChild(btn)
+  })
+  loadEpisodes(id,1)
+}
 
-})
-
-document.getElementById("framePlayer").src=
-currentType==="movie"?servers[0].movie(currentId):servers[0].tv(currentId)
-
+async function loadEpisodes(id,season){
+  let r = await fetch(`https://api.themoviedb.org/3/tv/${id}/season/${season}?api_key=${API}&language=es-ES`)
+  let data = await r.json()
+  let container=document.getElementById("episodeSelector")
+  container.innerHTML=""
+  data.episodes.forEach(ep=>{
+    let btn=document.createElement("button")
+    btn.innerText="Ep "+ep.episode_number
+    btn.onclick=()=>{
+      currentEpisode=ep.episode_number
+      loadServers()
+    }
+    container.appendChild(btn)
+  })
 }
 
 function closePlayer(){
-
-document.getElementById("player").style.display="none"
-
-document.getElementById("framePlayer").src=""
-
+  document.getElementById("player").style.display="none"
+  document.getElementById("framePlayer").src=""
 }
 
 async function searchContent(){
-
-let q=document.getElementById("search").value
-
-if(q.length<3) return
-
-let r=await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API}&language=es-ES&query=${q}`)
-
-let d=await r.json()
-
-let row=document.getElementById("movies")
-
-row.innerHTML=""
-
-for(let item of d.results){
-
-if(!item.poster_path) continue
-
-let type=item.media_type==="tv"?"tv":"movie"
-
-let div=document.createElement("div")
-
-div.className="poster"
-
-div.innerHTML=`<img src="https://image.tmdb.org/t/p/w500${item.poster_path}">`
-
-div.onclick=()=>openPlayer(item.id,type)
-
-row.appendChild(div)
-
+  let q=document.getElementById("search").value
+  if(q.length<3) return
+  let r=await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API}&language=es-ES&query=${q}`)
+  let d=await r.json()
+  let row=document.getElementById("movies")
+  row.innerHTML=""
+  for(let item of d.results){
+    if(!item.poster_path) continue
+    let type=item.media_type==="tv"?"tv":"movie"
+    let div=document.createElement("div")
+    div.className="poster"
+    div.innerHTML=`<img src="https://image.tmdb.org/t/p/w500${item.poster_path}">`
+    div.onclick=()=>openPlayer(item.id,type)
+    row.appendChild(div)
+  }
 }
 
-}
-
+// CARGA INICIAL
 loadHero()
-
-loadCategory(
-`https://api.themoviedb.org/3/movie/popular?api_key=${API}&language=es-ES`,
-"movies",
-"movie"
-)
-
-loadCategory(
-`https://api.themoviedb.org/3/tv/popular?api_key=${API}&language=es-ES`,
-"series",
-"tv"
-)
-
+loadCategory(`https://api.themoviedb.org/3/movie/popular?api_key=${API}&language=es-ES`,"movies","movie")
+loadCategory(`https://api.themoviedb.org/3/tv/popular?api_key=${API}&language=es-ES`,"series","tv")
 </script>
-
 </body>
 </html>
