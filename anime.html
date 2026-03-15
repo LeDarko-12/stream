@@ -1,47 +1,365 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Ver anime online — Kawaii Anime">
+  <title>Anime — Kawaii Anime</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+  <style>
+    /* Estilos extra para la página de anime */
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    /* Personajes */
+    .characters-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 16px;
+      padding: 0 5% 40px;
+    }
+    .char-card {
+      text-align: center;
+      cursor: pointer;
+    }
+    .char-card img {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin: 0 auto 8px;
+      border: 2px solid var(--border);
+      transition: border-color var(--transition);
+    }
+    .char-card:hover img { border-color: var(--accent); }
+    .char-card .char-name {
+      font-size: 11px;
+      color: var(--text-secondary);
+      font-weight: 600;
+    }
 
-<title>Anime</title>
+    /* Sidebar de estadísticas */
+    .anime-page-layout {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 32px;
+      padding: 0 5% 80px;
+      align-items: flex-start;
+    }
+    .anime-sidebar-stats {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      position: sticky;
+      top: 80px;
+    }
+    .sidebar-stat {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 14px;
+    }
+    .sidebar-stat:last-child { border-bottom: none; }
+    .sidebar-stat .label { color: var(--text-muted); font-weight: 500; }
+    .sidebar-stat .value { color: var(--text-primary); font-weight: 700; }
+    .sidebar-stat .value.accent { color: var(--accent-light); }
 
-<link rel="stylesheet" href="style.css">
+    .watch-now-big {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, var(--accent), #6d28d9);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 16px;
+      font-weight: 800;
+      font-family: var(--font-body);
+      cursor: pointer;
+      margin-bottom: 16px;
+      transition: all var(--transition);
+      box-shadow: 0 4px 20px var(--accent-glow);
+    }
+    .watch-now-big:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px var(--accent-glow);
+    }
 
+    .add-list-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 600;
+      font-family: var(--font-body);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .add-list-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent-light);
+      background: rgba(124,58,237,0.1);
+    }
+
+    @media (max-width: 900px) {
+      .anime-page-layout { grid-template-columns: 1fr; }
+      .anime-sidebar-stats { position: static; }
+    }
+  </style>
 </head>
+<body data-page="anime">
 
-<body>
-
-<header class="navbar">
-<a href="index.html" class="logo">KawaiiAnime</a>
-</header>
-
-<div class="anime-container">
-
-<img id="animeImage">
-
-<div class="anime-info">
-
-<h1 id="animeTitle"></h1>
-
-<p id="animeSynopsis"></p>
-
-<div id="animeGenres"></div>
-
-<p><b>Rating:</b> <span id="animeRating"></span></p>
-
+<!-- ══════════════════════════════════════════════════════════
+     NAVBAR
+══════════════════════════════════════════════════════════ -->
+<nav class="navbar" id="navbar">
+  <a href="index.html" class="nav-logo">
+    <div class="logo-icon">🌸</div>
+    <span class="logo-text">KAWAII ANIME</span>
+  </a>
+  <div class="nav-search">
+    <input type="text" id="search-input" placeholder="Buscar anime..." autocomplete="off">
+    <span class="search-icon">🔍</span>
+    <div class="search-dropdown" id="search-dropdown"></div>
+  </div>
+  <nav class="nav-links">
+    <a href="index.html">Inicio</a>
+    <a href="index.html?tab=latino">Latino</a>
+    <a href="index.html?tab=sub">Subtitulado</a>
+    <a href="index.html?tab=peliculas">Películas</a>
+  </nav>
+  <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+</nav>
+<div class="mobile-nav" id="mobile-nav">
+  <a href="index.html">🏠 Inicio</a>
+  <a href="index.html?tab=latino">🎌 Latino</a>
+  <a href="index.html?tab=sub">📖 Subtitulado</a>
 </div>
 
+
+<!-- ══════════════════════════════════════════════════════════
+     ESTADO DE CARGA
+══════════════════════════════════════════════════════════ -->
+<div id="anime-loading" style="display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:16px;margin-top:64px">
+  <div class="spinner" style="width:56px;height:56px;border-width:4px"></div>
+  <p style="color:var(--text-muted);font-size:14px">Cargando información del anime...</p>
 </div>
 
-<h2>Episodios</h2>
 
-<div id="episodes" class="episodes"></div>
+<!-- ══════════════════════════════════════════════════════════
+     CONTENIDO PRINCIPAL (oculto hasta que carga)
+══════════════════════════════════════════════════════════ -->
+<div id="anime-detail-content" style="display:none">
+
+  <!-- ── HERO DEL ANIME ─────────────────────────────────── -->
+  <div class="anime-hero">
+    <div class="anime-hero-bg" id="anime-hero-bg"></div>
+    <div class="anime-hero-overlay"></div>
+  </div>
+
+  <!-- ── INFO DEL ANIME ─────────────────────────────────── -->
+  <div class="anime-detail">
+    <!-- Poster -->
+    <div class="anime-poster">
+      <img id="anime-poster-img" src="" alt="Portada" loading="lazy">
+    </div>
+
+    <!-- Info principal -->
+    <div class="anime-info">
+      <!-- Breadcrumb -->
+      <nav style="font-size:12px;color:var(--text-muted);margin-bottom:12px">
+        <a href="index.html" style="color:var(--accent-light)">Inicio</a>
+        <span style="margin:0 6px">›</span>
+        <span>Anime</span>
+      </nav>
+
+      <span class="status-badge" id="anime-status">Cargando...</span>
+      <h1 id="anime-title">Cargando...</h1>
+      <p class="jp-title" id="anime-jp-title"></p>
+
+      <div class="anime-stats">
+        <div class="stat-item">
+          <span class="stat-label">Rating</span>
+          <span class="stat-value gold">⭐ <span id="anime-score">?</span></span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Episodios</span>
+          <span class="stat-value"><span id="anime-episodes-count">?</span></span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Año</span>
+          <span class="stat-value"><span id="anime-year">?</span></span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Tipo</span>
+          <span class="stat-value"><span id="anime-type">TV</span></span>
+        </div>
+      </div>
+
+      <div class="genres-row" id="anime-genres"></div>
+
+      <p class="synopsis collapsed" id="anime-synopsis">Cargando sinopsis...</p>
+      <button class="read-more-btn" id="read-more-btn" onclick="toggleSynopsis()">Leer más ▼</button>
+
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <button class="btn-primary" id="anime-watch-btn">▶ Ver Episodio 1</button>
+        <button class="btn-secondary" onclick="window.history.back()">← Volver</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════
+       LAYOUT PRINCIPAL: Episodios + Sidebar de stats
+  ═══════════════════════════════════════════════════════ -->
+  <div class="anime-page-layout">
+
+    <!-- Columna izquierda: episodios + relacionados -->
+    <div>
+
+      <!-- ── LISTA DE EPISODIOS ─────────────────────────── -->
+      <section class="episodes-section" style="padding:0 0 40px">
+        <div class="episodes-header">
+          <h2>Lista de Episodios</h2>
+          <div class="ep-search">
+            <span>🔍</span>
+            <input
+              type="number"
+              placeholder="Ep #"
+              min="1"
+              oninput="filterEpisodes(this.value)"
+              title="Ir al episodio"
+            >
+          </div>
+        </div>
+
+        <!-- Los botones de episodio se generan con JS -->
+        <div class="episodes-grid" id="episodes-grid">
+          <div class="loading-spinner"><div class="spinner"></div></div>
+        </div>
+      </section>
+
+
+      <!-- ── ANIMES RELACIONADOS ─────────────────────────── -->
+      <section>
+        <div class="section-header" style="padding:0 0 20px">
+          <div class="section-title">
+            <div class="accent-bar"></div>
+            <span class="icon">🔗</span>
+            <h2>Animes Similares</h2>
+          </div>
+        </div>
+        <div class="scroll-row-wrapper">
+          <button class="scroll-arrow left">‹</button>
+          <div class="scroll-row" id="related-grid"></div>
+          <button class="scroll-arrow right">›</button>
+        </div>
+      </section>
+
+    </div><!-- /columna izquierda -->
+
+
+    <!-- Columna derecha: sidebar de estadísticas -->
+    <div class="anime-sidebar-stats">
+      <button class="watch-now-big" id="watch-btn-sidebar">▶ Ver Ahora</button>
+      <button class="add-list-btn" onclick="showToast('Función: Mi lista — próximamente 📋', 'info')">
+        ➕ Agregar a Mi Lista
+      </button>
+
+      <div style="margin-top:20px">
+        <div class="sidebar-stat">
+          <span class="label">Estado</span>
+          <span class="value accent" id="stat-status">—</span>
+        </div>
+        <div class="sidebar-stat">
+          <span class="label">Tipo</span>
+          <span class="value" id="stat-type">—</span>
+        </div>
+        <div class="sidebar-stat">
+          <span class="label">Episodios</span>
+          <span class="value" id="stat-episodes">—</span>
+        </div>
+        <div class="sidebar-stat">
+          <span class="label">Año</span>
+          <span class="value" id="stat-year">—</span>
+        </div>
+        <div class="sidebar-stat">
+          <span class="label">Rating</span>
+          <span class="value" style="color:#fbbf24" id="stat-rating">—</span>
+        </div>
+        <div class="sidebar-stat">
+          <span class="label">Popularidad</span>
+          <span class="value" id="stat-popularity">—</span>
+        </div>
+      </div>
+
+      <!-- Géneros en sidebar -->
+      <div style="margin-top:20px">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700;margin-bottom:10px">Géneros</div>
+        <div class="genres-row" id="sidebar-genres" style="gap:6px"></div>
+      </div>
+    </div>
+
+  </div><!-- /anime-page-layout -->
+
+</div><!-- /anime-detail-content -->
+
+
+<!-- ══════════════════════════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════════════════════ -->
+<footer>
+  <div class="footer-bottom" style="justify-content:center;border-top:none;padding-top:0">
+    <p>© 2024 Kawaii Anime · <a href="index.html" style="color:var(--accent-light)">Volver al inicio</a></p>
+  </div>
+</footer>
+
+<button class="scroll-top-btn" id="scroll-top-btn">↑</button>
+<div class="toast-container" id="toast-container"></div>
 
 <script src="script.js"></script>
+<script>
+  // Después de que carga el anime, llena también el sidebar
+  const originalRender = window.renderAnimeDetail;
+  window.renderAnimeDetail = (anime, id, source) => {
+    originalRender(anime, id, source);
 
+    // Sidebar stats
+    const setEl = (elId, val) => {
+      const el = document.getElementById(elId);
+      if (el) el.textContent = val || '—';
+    };
+    const isOngoing = anime.status === 'Currently Airing' || anime.status === 'RELEASING';
+    setEl('stat-status', isOngoing ? '🟢 En emisión' : '⬜ Finalizado');
+    setEl('stat-type', anime.type);
+    setEl('stat-episodes', anime.episodes ? anime.episodes + ' episodios' : '?');
+    setEl('stat-year', anime.year);
+    setEl('stat-rating', anime.rating ? '⭐ ' + anime.rating : '?');
+    setEl('stat-popularity', anime.members ? (anime.members / 1000).toFixed(0) + 'k vistas' : '?');
+
+    // Géneros en sidebar
+    const genresEl = document.getElementById('sidebar-genres');
+    if (genresEl) {
+      genresEl.innerHTML = (anime.genres || []).map(g =>
+        `<span class="tag" onclick="window.location.href='index.html?genre=${encodeURIComponent(g)}'">${g}</span>`
+      ).join('');
+    }
+
+    // Botón sidebar → player
+    const btn = document.getElementById('watch-btn-sidebar');
+    if (btn) btn.onclick = () => window.location.href = `player.html?id=${id}&source=${source}&ep=1`;
+  };
+</script>
 </body>
-
 </html>
