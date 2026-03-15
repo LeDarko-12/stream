@@ -7,33 +7,28 @@
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
   <style>
-    .anime-page-layout { display:grid; grid-template-columns:1fr 280px; gap:32px; padding:0 5% 80px; align-items:flex-start; }
-    .anime-sidebar-stats { background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:var(--radius-lg); padding:22px; position:sticky; top:80px; }
-    .sidebar-stat { display:flex; justify-content:space-between; align-items:flex-start; padding:9px 0; border-bottom:1px solid var(--border-subtle); font-size:13px; gap:8px; }
+    .anime-page-layout{display:grid;grid-template-columns:1fr 280px;gap:32px;padding:0 5% 80px;align-items:flex-start;}
+    .anime-sidebar-stats{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:22px;position:sticky;top:80px;}
+    .sidebar-stat{display:flex;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--border-subtle);font-size:13px;gap:8px;}
     .sidebar-stat:last-child{border-bottom:none;}
-    .sidebar-stat .label { color:var(--text-muted); font-weight:600; flex-shrink:0; }
-    .sidebar-stat .value { color:var(--text-primary); font-weight:700; text-align:right; }
-    .sidebar-stat .value.accent { color:var(--accent-light); }
-    .watch-now-big { display:flex; align-items:center; justify-content:center; gap:9px; width:100%; padding:13px; background:linear-gradient(135deg,var(--accent),#6d28d9); color:white; border:none; border-radius:var(--radius); font-size:16px; font-weight:800; font-family:var(--font-body); cursor:pointer; margin-bottom:11px; transition:all var(--transition); box-shadow:0 4px 20px var(--accent-glow); }
-    .watch-now-big:hover { transform:translateY(-2px); box-shadow:0 8px 28px var(--accent-glow); }
-    .add-list-btn { display:flex; align-items:center; justify-content:center; gap:7px; width:100%; padding:10px; background:var(--bg-secondary); border:1px solid var(--border); border-radius:var(--radius); color:var(--text-secondary); font-size:14px; font-weight:600; font-family:var(--font-body); cursor:pointer; transition:all var(--transition); }
-    .add-list-btn:hover { border-color:var(--accent); color:var(--accent-light); background:rgba(124,58,237,.1); }
-    .characters-section { padding:32px 5% 0; }
-    .characters-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(84px,1fr)); gap:13px; padding-top:14px; }
-    .char-card { text-align:center; }
-    .char-card img { width:70px; height:70px; border-radius:50%; object-fit:cover; margin:0 auto 6px; border:2px solid var(--border); transition:border-color var(--transition); display:block; }
-    .char-card:hover img { border-color:var(--accent); }
-    .char-card .char-name { font-size:11px; color:var(--text-secondary); font-weight:600; line-height:1.3; }
-    .aflv-bar { display:flex; align-items:center; gap:9px; padding:9px 13px; border-radius:var(--radius-sm); font-size:13px; margin-bottom:18px; }
-    .aflv-bar.ok       { background:rgba(16,185,129,.08);  border:1px solid rgba(16,185,129,.25);  color:#10b981; }
-    .aflv-bar.searching{ background:rgba(124,58,237,.08);  border:1px solid rgba(124,58,237,.25);  color:var(--accent-light); }
-    .aflv-bar.none     { background:rgba(148,163,184,.06); border:1px solid rgba(148,163,184,.18); color:var(--text-muted); }
-    @media(max-width:900px){ .anime-page-layout{grid-template-columns:1fr;} .anime-sidebar-stats{position:static;} }
+    .sidebar-stat .label{color:var(--text-muted);font-weight:600;flex-shrink:0;}
+    .sidebar-stat .value{color:var(--text-primary);font-weight:700;text-align:right;}
+    .sidebar-stat .value.accent{color:var(--accent-light);}
+    .watch-now-big{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),#6d28d9);color:white;border:none;border-radius:var(--radius);font-size:16px;font-weight:800;font-family:var(--font-body);cursor:pointer;margin-bottom:11px;transition:all var(--transition);box-shadow:0 4px 20px var(--accent-glow);}
+    .watch-now-big:hover{transform:translateY(-2px);box-shadow:0 8px 28px var(--accent-glow);}
+    .add-list-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:10px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-secondary);font-size:14px;font-weight:600;font-family:var(--font-body);cursor:pointer;transition:all var(--transition);}
+    .add-list-btn:hover{border-color:var(--accent);color:var(--accent-light);background:rgba(124,58,237,.1);}
+    .characters-section{padding:32px 5% 0;}
+    .characters-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:13px;padding-top:14px;}
+    .char-card{text-align:center;}
+    .char-card img{width:68px;height:68px;border-radius:50%;object-fit:cover;margin:0 auto 6px;border:2px solid var(--border);transition:border-color var(--transition);display:block;}
+    .char-card:hover img{border-color:var(--accent);}
+    .char-card .char-name{font-size:11px;color:var(--text-secondary);font-weight:600;line-height:1.3;}
+    @media(max-width:900px){.anime-page-layout{grid-template-columns:1fr;}.anime-sidebar-stats{position:static;}}
   </style>
 </head>
 <body data-page="anime">
 
-<!-- NAVBAR -->
 <nav class="navbar" id="navbar">
   <a href="index.html" class="nav-logo">
     <div class="logo-icon">🌸</div>
@@ -62,13 +57,11 @@
 <!-- CONTENIDO -->
 <div id="anime-detail-content" style="display:none">
 
-  <!-- Hero banner -->
   <div class="anime-hero">
     <div class="anime-hero-bg" id="anime-hero-bg"></div>
     <div class="anime-hero-overlay"></div>
   </div>
 
-  <!-- Poster + info principal -->
   <div class="anime-detail">
     <div class="anime-poster"><img id="anime-poster-img" src="" alt="Portada" loading="lazy"></div>
     <div class="anime-info">
@@ -97,15 +90,11 @@
     </div>
   </div>
 
-  <!-- Layout: episodios + sidebar -->
   <div class="anime-page-layout">
-
-    <!-- Columna izquierda -->
     <div>
-      <!-- Estado AnimeFLV -->
-      <div class="aflv-bar searching" id="aflv-bar">
-        <span id="aflv-bar-icon">⏳</span>
-        <span id="stat-aflv">Buscando contenido en español en AnimeFLV…</span>
+      <!-- Nota sobre streams -->
+      <div style="background:rgba(14,165,233,.08);border:1px solid rgba(14,165,233,.2);border-radius:var(--radius-sm);padding:11px 14px;font-size:13px;color:#7dd3fc;margin-bottom:20px;display:flex;align-items:center;gap:9px">
+        📡 <span>Streams vía <strong>Gogoanime</strong> y <strong>HiAnime</strong> · Sub Español / Latino según disponibilidad</span>
       </div>
 
       <!-- Episodios -->
@@ -148,24 +137,25 @@
       <button class="watch-now-big" id="watch-btn-sidebar">▶ Ver Ahora</button>
       <button class="add-list-btn" onclick="showToast('Mi lista — próximamente 📋','info')">➕ Mi Lista</button>
       <div style="margin-top:18px">
-        <div class="sidebar-stat"><span class="label">Estado</span>   <span class="value accent" id="stat-status">—</span></div>
-        <div class="sidebar-stat"><span class="label">Tipo</span>     <span class="value" id="stat-type">—</span></div>
+        <div class="sidebar-stat"><span class="label">Estado</span><span class="value accent" id="stat-status">—</span></div>
+        <div class="sidebar-stat"><span class="label">Tipo</span><span class="value" id="stat-type">—</span></div>
         <div class="sidebar-stat"><span class="label">Episodios</span><span class="value" id="stat-episodes">—</span></div>
-        <div class="sidebar-stat"><span class="label">Temporada</span><span class="value" id="stat-season">—</span></div>
-        <div class="sidebar-stat"><span class="label">Año</span>      <span class="value" id="stat-year">—</span></div>
-        <div class="sidebar-stat"><span class="label">Rating</span>   <span class="value" style="color:#fbbf24" id="stat-rating">—</span></div>
+        <div class="sidebar-stat"><span class="label">Año</span><span class="value" id="stat-year">—</span></div>
+        <div class="sidebar-stat"><span class="label">Rating</span><span class="value" style="color:#fbbf24" id="stat-rating">—</span></div>
         <div class="sidebar-stat"><span class="label">Popularidad</span><span class="value" id="stat-popularity">—</span></div>
-        <div class="sidebar-stat"><span class="label">Estudios</span> <span class="value" style="font-size:12px" id="stat-studios">—</span></div>
-        <div class="sidebar-stat"><span class="label">AnimeFLV</span> <span class="value accent" style="font-size:12px" id="stat-aflv-sb">⏳</span></div>
+        <div class="sidebar-stat"><span class="label">Estudios</span><span class="value" style="font-size:12px" id="stat-studios">—</span></div>
+        <div class="sidebar-stat">
+          <span class="label">Streams</span>
+          <span class="value accent" style="font-size:12px">📺 Gogoanime · HiAnime</span>
+        </div>
       </div>
       <div style="margin-top:18px">
         <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700;margin-bottom:9px">Géneros</div>
         <div class="genres-row" id="sidebar-genres" style="gap:5px"></div>
       </div>
     </div>
-
   </div>
-</div><!-- /content -->
+</div>
 
 <footer style="border-top:1px solid var(--border-subtle)">
   <div class="footer-bottom" style="justify-content:center;padding:22px 5%">
@@ -177,53 +167,15 @@
 <div class="toast-container" id="toast-container"></div>
 <script src="script.js"></script>
 <script>
-  /* Extensiones de anime.html */
-
-  /* Rellena los campos extra del sidebar */
+  /* Extiende renderSidebarStats con campos adicionales */
   const _origSS = window.renderSidebarStats;
-  window.renderSidebarStats = (a, id, source, aflvSlug) => {
-    _origSS(a, id, source, aflvSlug);
-
-    // Temporada
-    const sEl = document.getElementById('stat-season');
-    if (sEl) { const s=a.season?a.season.charAt(0).toUpperCase()+a.season.slice(1).toLowerCase():'—'; sEl.textContent=s+(a.year?' '+a.year:''); }
-
-    // Studios en sidebar
-    const stEl = document.getElementById('stat-studios');
-    if (stEl) stEl.textContent = (a.studios||[]).join(', ')||'—';
-
-    // AnimeFLV sidebar badge
-    const asbEl = document.getElementById('stat-aflv-sb');
-    if (asbEl) asbEl.textContent = aflvSlug ? '✅ En español' : '⏳ Buscando…';
-
-    // Breadcrumb tipo
+  window.renderSidebarStats = (a, id, source) => {
+    _origSS(a, id, source);
     const bc = document.getElementById('breadcrumb-type');
-    if (bc) bc.textContent = a.type||'Anime';
-
-    // Personajes
+    if (bc) bc.textContent = a.type || 'Anime';
     if (a.characters?.length) {
       const sec = document.getElementById('characters-section');
-      if (sec) sec.style.display='block';
-    }
-  };
-
-  /* Actualiza la barra de AnimeFLV */
-  const _origRAD = window.renderAnimeDetail;
-  window.renderAnimeDetail = (a, id, source, aflvSlug) => {
-    _origRAD(a, id, source, aflvSlug);
-    const bar=document.getElementById('aflv-bar'),
-          icon=document.getElementById('aflv-bar-icon'),
-          label=document.getElementById('stat-aflv'),
-          sb=document.getElementById('stat-aflv-sb');
-    if (aflvSlug) {
-      if(bar)   { bar.className='aflv-bar ok'; }
-      if(icon)  icon.textContent='✅';
-      if(label) label.textContent='Disponible en AnimeFLV — episodios en español';
-      if(sb)    sb.textContent='✅ En español';
-    } else {
-      if(bar)   { bar.className='aflv-bar searching'; }
-      if(icon)  icon.textContent='⏳';
-      if(label) label.textContent='Buscando en AnimeFLV…';
+      if (sec) sec.style.display = 'block';
     }
   };
 </script>
