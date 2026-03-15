@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-
 <meta charset="UTF-8">
-<title>AnimeStream</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kawaii Anime</title>
 
 <link rel="stylesheet" href="style.css">
-
-<meta name="viewport" content="width=device-width, initial-scale=1">
 
 </head>
 
@@ -15,32 +13,27 @@
 
 <header class="navbar">
 
-<h1 class="logo">AnimeStream</h1>
+<h1 class="logo">KawaiiAnime</h1>
 
-<input id="searchInput" type="text" placeholder="Buscar anime...">
+<input type="text" id="search" placeholder="Buscar anime...">
 
-<select id="genreFilter">
-<option value="">Genero</option>
-<option value="1">Acción</option>
-<option value="2">Aventura</option>
-<option value="4">Comedia</option>
-<option value="10">Fantasia</option>
-<option value="22">Romance</option>
-</select>
+<nav>
+<a href="#">Inicio</a>
+<a href="#popular">Populares</a>
+<a href="#top">Mejor Rating</a>
+</nav>
 
 </header>
 
-<main>
+<section class="hero">
+
+<h2>ANIMES POPULARES</h2>
 
 <div id="animeGrid" class="anime-grid"></div>
 
-<div id="loading" class="loading">
-Cargando anime...
-</div>
+</section>
 
-</main>
-
-<button id="topBtn">⬆</button>
+<div id="loader" class="loader">Cargando...</div>
 
 <script src="script.js"></script>
 
