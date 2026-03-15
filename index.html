@@ -5,16 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Kawaii Anime — Ver anime online en español latino y subtitulado. Miles de series gratis.">
   <meta name="keywords" content="anime online, ver anime, anime latino, anime subtitulado, kawaii anime">
-  <meta property="og:title" content="Kawaii Anime — Ver anime online gratis">
-  <meta property="og:description" content="La mejor plataforma de anime en español. Ver anime online en HD.">
-  <meta property="og:type" content="website">
   <title>Kawaii Anime — Ver anime online gratis</title>
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
 </head>
 <body data-page="home">
 
-<!-- ══ NAVBAR ════════════════════════════════════════════ -->
+<!-- NAVBAR -->
 <nav class="navbar" id="navbar">
   <a href="index.html" class="nav-logo">
     <div class="logo-icon">🌸</div>
@@ -27,10 +24,10 @@
   </div>
   <nav class="nav-links">
     <a href="index.html" class="active">Inicio</a>
-    <a href="#" onclick="document.querySelector('[data-tab=tab-latino]')?.click()">Latino</a>
-    <a href="#" onclick="document.querySelector('[data-tab=tab-sub]')?.click()">Subtitulado</a>
-    <a href="#" onclick="document.querySelector('[data-tab=tab-movies]')?.click()">Películas</a>
+    <a href="index.html?genre=Action&gname=Acción">Acción</a>
+    <a href="index.html?genre=Romance&gname=Romance">Romance</a>
     <a href="index.html?genre=Isekai&gname=Isekai">Isekai</a>
+    <a href="index.html?genre=Comedy&gname=Comedia">Comedia</a>
   </nav>
   <button class="hamburger" id="hamburger" aria-label="Menú">
     <span></span><span></span><span></span>
@@ -44,7 +41,7 @@
   <a href="index.html?genre=Comedy&gname=Comedia">😂 Comedia</a>
 </div>
 
-<!-- ══ HERO ══════════════════════════════════════════════ -->
+<!-- HERO -->
 <section class="hero" id="hero-section">
   <div class="hero-bg" id="hero-bg"></div>
   <div class="hero-gradient"></div>
@@ -62,10 +59,10 @@
   <div class="hero-dots" id="hero-dots"></div>
 </section>
 
-<!-- ══ CONTENIDO PRINCIPAL ══════════════════════════════ -->
+<!-- CONTENIDO PRINCIPAL -->
 <main class="main-content">
 
-  <!-- Resultados de búsqueda -->
+  <!-- Resultados búsqueda -->
   <section id="search-results-section" style="display:none;padding:40px 0 0">
     <div class="section-header">
       <div class="section-title"><div class="accent-bar"></div><span class="icon">🔍</span><h2 id="search-results-title">Resultados</h2></div>
@@ -73,7 +70,7 @@
     <div class="grid-section"><div class="anime-grid" id="search-results-grid"></div></div>
   </section>
 
-  <!-- Resultados de género -->
+  <!-- Resultados género -->
   <section id="genre-results-section" style="display:none;padding:40px 0 0">
     <div class="section-header">
       <div class="section-title"><div class="accent-bar"></div><span class="icon">🏷️</span><h2 id="genre-title">Género</h2></div>
@@ -84,13 +81,13 @@
     </div>
   </section>
 
-  <!-- ── RECIENTES (AnimeFLV en español) ─────────────── -->
+  <!-- RECIENTES — AnimeFLV en español -->
   <section class="section" style="padding-top:32px">
     <div class="section-header">
       <div class="section-title">
         <div class="accent-bar"></div><span class="icon">🆕</span>
         <h2>Recién Actualizados</h2>
-        <span style="font-size:11px;background:rgba(16,185,129,0.15);color:#10b981;padding:3px 8px;border-radius:99px;border:1px solid rgba(16,185,129,0.3);font-weight:700">AnimeFLV · En español</span>
+        <span style="font-size:11px;background:rgba(16,185,129,.15);color:#10b981;padding:3px 8px;border-radius:99px;border:1px solid rgba(16,185,129,.3);font-weight:700">AnimeFLV · Español</span>
       </div>
     </div>
     <div class="scroll-row-wrapper">
@@ -100,7 +97,7 @@
     </div>
   </section>
 
-  <!-- ── TRENDING (AniList) ───────────────────────────── -->
+  <!-- TRENDING -->
   <section class="section">
     <div class="section-header">
       <div class="section-title"><div class="accent-bar"></div><span class="icon">📈</span><h2>Trending Ahora</h2></div>
@@ -113,7 +110,7 @@
     </div>
   </section>
 
-  <!-- ── GÉNEROS ──────────────────────────────────────── -->
+  <!-- GÉNEROS -->
   <section class="genres-section">
     <div class="section-header" style="padding:0 0 20px">
       <div class="section-title"><div class="accent-bar"></div><span class="icon">🏷️</span><h2>Explorar por Géneros</h2></div>
@@ -121,10 +118,10 @@
     <div class="genres-grid" id="genres-grid"></div>
   </section>
 
-  <!-- ── POPULARES ────────────────────────────────────── -->
+  <!-- POPULARES -->
   <section class="section">
     <div class="section-header">
-      <div class="section-title"><div class="accent-bar"></div><span class="icon">🔥</span><h2>Animes Más Populares</h2></div>
+      <div class="section-title"><div class="accent-bar"></div><span class="icon">🔥</span><h2>Más Populares</h2></div>
     </div>
     <div class="scroll-row-wrapper">
       <button class="scroll-arrow left">‹</button>
@@ -133,10 +130,10 @@
     </div>
   </section>
 
-  <!-- ── MEJOR VALORADOS ──────────────────────────────── -->
+  <!-- TOP VALORADOS -->
   <section class="section">
     <div class="section-header">
-      <div class="section-title"><div class="accent-bar"></div><span class="icon">⭐</span><h2>Mejor Valorados — MyAnimeList</h2></div>
+      <div class="section-title"><div class="accent-bar"></div><span class="icon">⭐</span><h2>Mejor Valorados — MAL</h2></div>
     </div>
     <div class="scroll-row-wrapper">
       <button class="scroll-arrow left">‹</button>
@@ -145,65 +142,37 @@
     </div>
   </section>
 
-  <!-- ── TABS ─────────────────────────────────────────── -->
+  <!-- TABS -->
   <section class="section" style="padding-top:12px">
     <div class="tabs">
-      <button class="tab-btn active" data-tab="tab-latino" onclick="switchTab('tab-latino',this)">🎌 Latino</button>
-      <button class="tab-btn" data-tab="tab-sub"     onclick="switchTab('tab-sub',this)">📖 Subtitulado</button>
-      <button class="tab-btn" data-tab="tab-movies"  onclick="switchTab('tab-movies',this)">🎬 Películas</button>
-      <button class="tab-btn" data-tab="tab-top"     onclick="switchTab('tab-top',this)">🏆 Top 50</button>
+      <button class="tab-btn active" onclick="switchTab('tab-latino',this)">🎌 Latino</button>
+      <button class="tab-btn" onclick="switchTab('tab-sub',this)">📖 Subtitulado</button>
+      <button class="tab-btn" onclick="switchTab('tab-movies',this)">🎬 Películas</button>
+      <button class="tab-btn" onclick="switchTab('tab-top',this)">🏆 Top 50</button>
     </div>
 
     <div class="tab-content active" id="tab-latino">
-      <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;padding:0 5%">
-        🌎 Últimos animes actualizados en <strong style="color:#f59e0b">Español Latino</strong> · Fuente: AnimeFLV
-      </p>
-      <div class="scroll-row-wrapper">
-        <button class="scroll-arrow left">‹</button>
-        <div class="scroll-row" id="latino-row">
-          <div style="color:var(--text-muted);font-size:13px;padding:20px 0">Haz clic para cargar…</div>
-        </div>
-        <button class="scroll-arrow right">›</button>
-      </div>
+      <p style="color:var(--text-muted);font-size:13px;margin-bottom:18px;padding:0 5%">🌎 Últimos actualizados en <strong style="color:#f59e0b">Español Latino</strong> · Fuente: AnimeFLV</p>
+      <div class="scroll-row-wrapper"><button class="scroll-arrow left">‹</button><div class="scroll-row" id="latino-row"></div><button class="scroll-arrow right">›</button></div>
     </div>
 
     <div class="tab-content" id="tab-sub">
-      <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;padding:0 5%">
-        📖 Animes con <strong style="color:#0ea5e9">Subtítulos en Español</strong>
-      </p>
-      <div class="scroll-row-wrapper">
-        <button class="scroll-arrow left">‹</button>
-        <div class="scroll-row" id="sub-row">
-          <div style="color:var(--text-muted);font-size:13px;padding:20px 0">Haz clic para cargar…</div>
-        </div>
-        <button class="scroll-arrow right">›</button>
-      </div>
+      <p style="color:var(--text-muted);font-size:13px;margin-bottom:18px;padding:0 5%">📖 Animes con <strong style="color:#0ea5e9">Subtítulos en Español</strong></p>
+      <div class="scroll-row-wrapper"><button class="scroll-arrow left">‹</button><div class="scroll-row" id="sub-row"></div><button class="scroll-arrow right">›</button></div>
     </div>
 
     <div class="tab-content" id="tab-movies">
-      <p style="color:var(--text-muted);font-size:13px;margin-bottom:20px;padding:0 5%">
-        🎬 Películas de anime en alta calidad
-      </p>
-      <div class="scroll-row-wrapper">
-        <button class="scroll-arrow left">‹</button>
-        <div class="scroll-row" id="movies-row">
-          <div style="color:var(--text-muted);font-size:13px;padding:20px 0">Haz clic para cargar…</div>
-        </div>
-        <button class="scroll-arrow right">›</button>
-      </div>
+      <p style="color:var(--text-muted);font-size:13px;margin-bottom:18px;padding:0 5%">🎬 Películas de anime en alta calidad</p>
+      <div class="scroll-row-wrapper"><button class="scroll-arrow left">‹</button><div class="scroll-row" id="movies-row"></div><button class="scroll-arrow right">›</button></div>
     </div>
 
     <div class="tab-content" id="tab-top">
-      <div style="padding:0 5%">
-        <div class="top-list" id="top-rated-list">
-          <div class="loading-spinner"><div class="spinner"></div></div>
-        </div>
-      </div>
+      <div style="padding:0 5%"><div class="top-list" id="top-rated-list"><div class="loading-spinner"><div class="spinner"></div></div></div></div>
     </div>
   </section>
 
-  <!-- ── CATÁLOGO INFINITO ─────────────────────────────── -->
-  <section class="section" id="explore-section">
+  <!-- CATÁLOGO INFINITO -->
+  <section class="section">
     <div class="section-header">
       <div class="section-title"><div class="accent-bar"></div><span class="icon">🌐</span><h2>Explorar Catálogo Completo</h2></div>
     </div>
@@ -215,7 +184,7 @@
 
 </main>
 
-<!-- ══ FOOTER ════════════════════════════════════════════ -->
+<!-- FOOTER -->
 <footer>
   <div class="footer-top">
     <div class="footer-brand">
@@ -239,10 +208,10 @@
     <div class="footer-col">
       <h4>Categorías</h4>
       <ul>
-        <li><a href="#" onclick="document.querySelector('[data-tab=tab-latino]')?.click()">Anime Latino</a></li>
-        <li><a href="#" onclick="document.querySelector('[data-tab=tab-sub]')?.click()">Subtitulado</a></li>
-        <li><a href="#" onclick="document.querySelector('[data-tab=tab-movies]')?.click()">Películas</a></li>
-        <li><a href="#" onclick="document.querySelector('[data-tab=tab-top]')?.click()">Top 50</a></li>
+        <li><a href="#" onclick="document.querySelector('.tab-btn').click()">Anime Latino</a></li>
+        <li><a href="#" onclick="document.querySelectorAll('.tab-btn')[1].click()">Subtitulado</a></li>
+        <li><a href="#" onclick="document.querySelectorAll('.tab-btn')[2].click()">Películas</a></li>
+        <li><a href="#" onclick="document.querySelectorAll('.tab-btn')[3].click()">Top 50</a></li>
       </ul>
     </div>
     <div class="footer-col">
@@ -259,13 +228,10 @@
     <p>© 2024 Kawaii Anime. Todos los derechos reservados.</p>
     <p>Datos: <a href="https://jikan.moe" target="_blank" style="color:var(--accent-light)">Jikan/MAL</a> · <a href="https://anilist.co" target="_blank" style="color:var(--accent-light)">AniList</a> · <a href="https://animeflv.net" target="_blank" style="color:var(--accent-light)">AnimeFLV</a></p>
   </div>
-  <p class="footer-disclaimer">
-    Este sitio no aloja ningún archivo de video en sus servidores. Todo el contenido multimedia es proporcionado
-    por servidores externos de terceros. Kawaii Anime no tiene ninguna afiliación con los productores ni distribuidores.
-  </p>
+  <p class="footer-disclaimer">Este sitio no aloja ningún archivo de video en sus servidores. Todo el contenido multimedia es proporcionado por servidores externos de terceros.</p>
 </footer>
 
-<button class="scroll-top-btn" id="scroll-top-btn" aria-label="Volver arriba">↑</button>
+<button class="scroll-top-btn" id="scroll-top-btn">↑</button>
 <div class="toast-container" id="toast-container"></div>
 <script src="script.js"></script>
 </body>
