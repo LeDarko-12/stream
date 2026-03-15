@@ -1,13 +1,13 @@
 const JIKAN = "https://api.jikan.moe/v4/anime";
-const GOGO = "https://api.consumet.org/anime/gogoanime";
-
-/* ======================
-CATALOGO PRINCIPAL
-====================== */
 
 let page = 1;
+
 const grid = document.getElementById("animeGrid");
 const loader = document.getElementById("loader");
+
+/* =====================
+CARGAR CATALOGO
+===================== */
 
 async function loadAnime(){
 
@@ -27,6 +27,7 @@ function displayAnime(animes){
 animes.forEach(anime => {
 
 const card = document.createElement("div");
+
 card.className = "card";
 
 card.innerHTML = `
@@ -34,10 +35,10 @@ card.innerHTML = `
 <div class="card-title">${anime.title}</div>
 `;
 
-card.onclick = () => {
+card.onclick = ()=>{
 
 location.href =
-`anime.html?id=${anime.mal_id}&title=${encodeURIComponent(anime.title)}`;
+`anime.html?id=${anime.mal_id}`;
 
 };
 
@@ -47,15 +48,13 @@ grid.appendChild(card);
 
 }
 
-if(grid){
-loadAnime();
-}
+if(grid) loadAnime();
 
 /* infinite scroll */
 
 window.addEventListener("scroll",()=>{
 
-if(window.innerHeight + window.scrollY >= document.body.offsetHeight - 100){
+if(window.innerHeight + window.scrollY >= document.body.offsetHeight - 200){
 
 page++;
 loadAnime();
@@ -65,19 +64,18 @@ loadAnime();
 });
 
 
-/* ======================
-PAGINA DEL ANIME
-====================== */
+/* =====================
+PAGINA ANIME
+===================== */
 
 const params = new URLSearchParams(window.location.search);
-const malID = params.get("id");
-const title = params.get("title");
+const id = params.get("id");
 
-if(malID){
-loadAnimePage(malID,title);
+if(id){
+loadAnimePage(id);
 }
 
-async function loadAnimePage(id,title){
+async function loadAnimePage(id){
 
 const res = await fetch(`${JIKAN}/${id}`);
 const data = await res.json();
@@ -94,133 +92,85 @@ document.getElementById("animeRating").innerText = anime.score;
 const genresDiv = document.getElementById("animeGenres");
 
 anime.genres.forEach(g=>{
-
 const span = document.createElement("span");
 span.innerText = g.name + " ";
 genresDiv.appendChild(span);
-
 });
 
-/* buscar anime real en gogo */
+/* generar episodios */
 
-searchGogoAnime(title);
+generateEpisodes(anime.episodes);
 
 }
 
+/* =====================
+GENERAR EPISODIOS
+===================== */
 
-/* ======================
-BUSCAR ANIME EN GOGO
-====================== */
+function generateEpisodes(total){
 
-async function searchGogoAnime(name){
+const epDiv = document.getElementById("episodes");
 
-try{
+if(!total || total === 0){
 
-const res = await fetch(`${GOGO}/${encodeURIComponent(name)}`);
-const data = await res.json();
-
-if(!data.results || data.results.length == 0){
-
-document.getElementById("episodes").innerHTML =
-"No se encontraron episodios.";
-
+epDiv.innerHTML = "Episodios no disponibles.";
 return;
 
 }
 
-const animeID = data.results[0].id;
-
-loadEpisodes(animeID);
-
-}catch(err){
-
-console.log(err);
-
-}
-
-}
-
-
-/* ======================
-CARGAR EPISODIOS
-====================== */
-
-async function loadEpisodes(animeID){
-
-const res = await fetch(`${GOGO}/info/${animeID}`);
-const data = await res.json();
-
-generateEpisodes(data.episodes);
-
-}
-
-function generateEpisodes(episodes){
-
-const epDiv = document.getElementById("episodes");
-
-episodes.forEach(ep=>{
+for(let i=1;i<=total;i++){
 
 const btn = document.createElement("button");
 
-btn.innerText = "Episodio " + ep.number;
+btn.innerText = "Episodio "+i;
 
 btn.onclick = ()=>{
 
-location.href =
-`player.html?episodeId=${ep.id}&number=${ep.number}`;
+location.href = `player.html?ep=${i}`;
 
 };
 
 epDiv.appendChild(btn);
 
-});
+}
 
 }
 
 
-/* ======================
+/* =====================
 REPRODUCTOR
-====================== */
+===================== */
 
 const video = document.getElementById("videoPlayer");
 
-const epID = new URLSearchParams(location.search).get("episodeId");
+const ep = new URLSearchParams(location.search).get("ep");
 
-let servers = [];
+if(video){
 
-if(video && epID){
+/* demo embeds reales */
 
-loadEpisode(epID);
+const servers = [
 
-}
+`https://vidsrc.to/embed/tv/1399/${ep}`,
+`https://multiembed.mov/?video_id=1399&episode=${ep}`,
+`https://vidsrc.xyz/embed/tv?tmdb=1399&season=1&episode=${ep}`
 
-async function loadEpisode(id){
+];
 
-const res = await fetch(`${GOGO}/watch/${id}`);
-const data = await res.json();
+video.src = servers[0];
 
-servers = data.sources;
+window.changeServer = function(n){
 
-if(servers.length > 0){
-
-video.src = servers[0].url;
-
-}
+video.src = servers[n-1];
 
 }
-
-function changeServer(index){
-
-if(!servers[index]) return;
-
-video.src = servers[index].url;
 
 }
 
 
-/* ======================
+/* =====================
 BUSCADOR
-====================== */
+===================== */
 
 const searchInput = document.getElementById("search");
 
@@ -236,6 +186,7 @@ const res = await fetch(`${JIKAN}?q=${q}`);
 const data = await res.json();
 
 grid.innerHTML="";
+
 displayAnime(data.data);
 
 });
