@@ -3,82 +3,62 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Reproductor de anime — Kawaii Anime">
   <title>Reproduciendo — Kawaii Anime</title>
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+  <!-- HLS.js para reproducir streams m3u8 cuando AnimeFLV no tiene iframes -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.14/dist/hls.min.js"></script>
   <style>
     body { overflow-x: hidden; }
     .player-page { display:flex; flex-direction:column; min-height:100vh; margin-top:64px; }
 
-    /* Layout: video + sidebar */
-    .player-layout {
-      flex:1;
-      display:grid;
-      grid-template-columns: 1fr 320px;
-      min-height: calc(100vh - 64px - 56px);
-    }
-    .player-layout.theater { grid-template-columns: 1fr; }
-
+    .player-layout { flex:1; display:grid; grid-template-columns:1fr 320px; min-height:calc(100vh - 64px - 54px); }
+    .player-layout.theater { grid-template-columns:1fr; }
     .player-main { display:flex; flex-direction:column; background:#000; }
 
     /* Wrapper 16:9 */
-    .player-embed-wrap {
-      position: relative;
-      width: 100%;
-      padding-top: 56.25%;
-      background: #03060d;
+    .player-embed-wrap { position:relative; width:100%; padding-top:56.25%; background:#03060d; }
+    #player-embed { position:absolute; top:0; left:0; width:100%; height:100%; }
+
+    /* Video element para HLS */
+    #hls-video {
+      position:absolute; top:0; left:0; width:100%; height:100%; background:#000;
+      outline: none;
     }
-    #player-embed {
-      position: absolute;
-      top:0; left:0; width:100%; height:100%;
-    }
+    #hls-video::-webkit-media-controls { display:flex !important; }
 
     /* Controles extra */
     .player-extra-controls {
-      background: var(--bg-primary);
-      padding: 10px 20px;
-      border-top: 1px solid var(--border-subtle);
-      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+      background:var(--bg-primary); padding:9px 20px;
+      border-top:1px solid var(--border-subtle);
+      display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:9px;
     }
-    .sel-group { display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-muted); }
-    .sel-group select {
-      background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm);
-      color:var(--text-primary); font-family:var(--font-body); font-size:12px;
-      padding:4px 10px; cursor:pointer; outline:none;
-    }
+    .sel-group { display:flex; align-items:center; gap:7px; font-size:13px; color:var(--text-muted); }
+    .sel-group select { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-primary); font-family:var(--font-body); font-size:12px; padding:4px 9px; cursor:pointer; outline:none; }
     .sel-group select:focus { border-color:var(--accent); }
-    .theater-btn {
-      display:flex; align-items:center; gap:5px;
-      padding:6px 14px; background:var(--bg-card); border:1px solid var(--border);
-      border-radius:var(--radius-sm); color:var(--text-secondary); font-size:12px;
-      font-weight:600; font-family:var(--font-body); cursor:pointer; transition:all var(--transition);
-    }
+    .theater-btn { display:flex; align-items:center; gap:5px; padding:6px 13px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-secondary); font-size:12px; font-weight:600; font-family:var(--font-body); cursor:pointer; transition:all var(--transition); }
     .theater-btn:hover { border-color:var(--accent); color:var(--accent-light); }
 
-    /* Info bar bajo el video */
-    .player-info-bar {
-      background:var(--bg-secondary); padding:14px 20px;
-      display:flex; align-items:center; gap:14px;
-    }
-    .player-info-bar img {
-      width:46px; height:64px; object-fit:cover; border-radius:6px; flex-shrink:0;
-      border:1px solid var(--border);
-    }
-    .player-info-bar .pib-text .pib-title { font-size:14px; font-weight:700; }
-    .player-info-bar .pib-text .pib-sub   { font-size:12px; color:var(--text-muted); margin-top:2px; }
-    .player-info-bar .pib-actions { margin-left:auto; display:flex; gap:8px; flex-shrink:0; }
+    /* Info bar */
+    .player-info-bar { background:var(--bg-secondary); padding:13px 20px; display:flex; align-items:center; gap:13px; }
+    .player-info-bar img { width:44px; height:62px; object-fit:cover; border-radius:6px; flex-shrink:0; border:1px solid var(--border); }
+    .pib-text .pib-title { font-size:14px; font-weight:700; }
+    .pib-text .pib-sub   { font-size:12px; color:var(--text-muted); margin-top:2px; }
+    .pib-actions { margin-left:auto; display:flex; gap:8px; flex-shrink:0; }
 
-    /* Lang indicator */
-    .lang-indicator {
-      display:inline-flex; align-items:center; gap:5px;
-      padding:3px 10px; border-radius:99px; font-size:11px; font-weight:700;
-      text-transform:uppercase; letter-spacing:0.5px;
-    }
-    .lang-latino { background:rgba(245,158,11,0.15); border:1px solid rgba(245,158,11,0.4); color:#f59e0b; }
-    .lang-sub    { background:rgba(14,165,233,0.15); border:1px solid rgba(14,165,233,0.4); color:#0ea5e9; }
+    /* Badge de idioma */
+    .lang-indicator { display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:99px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
+    .lang-latino { background:rgba(245,158,11,.15); border:1px solid rgba(245,158,11,.4); color:#f59e0b; }
+    .lang-sub    { background:rgba(14,165,233,.15);  border:1px solid rgba(14,165,233,.4);  color:#0ea5e9; }
 
-    /* Animación pulsante */
+    /* Nota de stream HLS */
+    .hls-note {
+      background:rgba(14,165,233,0.08); border-top:1px solid rgba(14,165,233,0.2);
+      padding:8px 20px; font-size:12px; color:#7dd3fc;
+      display:none; align-items:center; gap:8px;
+    }
+    .hls-note.visible { display:flex; }
+
     @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.1);opacity:.75} }
 
     @media (max-width:900px) {
@@ -86,21 +66,22 @@
       .player-sidebar { max-height:360px; border-left:none; border-top:1px solid var(--border-subtle); }
     }
     @media (max-width:600px) {
-      .player-controls,.servers-section,.player-info-bar,.player-extra-controls { padding:10px 14px; }
+      .player-controls,.servers-section,.player-info-bar,.player-extra-controls { padding:10px 13px; }
       .player-title-row { flex-direction:column; }
-      .player-nav-btns { width:100%; justify-content:space-between; }
+      .player-nav-btns  { width:100%; justify-content:space-between; }
+      .pib-actions { flex-wrap:wrap; gap:6px; }
     }
   </style>
 </head>
 <body data-page="player">
 
-<!-- ══ NAVBAR ════════════════════════════════════════════ -->
+<!-- NAVBAR -->
 <nav class="navbar" id="navbar">
   <a href="index.html" class="nav-logo">
     <div class="logo-icon">🌸</div>
     <span class="logo-text">KAWAII ANIME</span>
   </a>
-  <div class="nav-search" style="max-width:320px">
+  <div class="nav-search" style="max-width:340px">
     <input type="text" id="search-input" placeholder="Buscar anime..." autocomplete="off">
     <span class="search-icon">🔍</span>
     <div class="search-dropdown" id="search-dropdown"></div>
@@ -114,32 +95,31 @@
 </nav>
 <div class="mobile-nav" id="mobile-nav"><a href="index.html">🏠 Inicio</a></div>
 
-<!-- ══ CARGANDO ══════════════════════════════════════════ -->
+<!-- CARGANDO -->
 <div id="player-loading" style="display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 64px);flex-direction:column;gap:16px">
   <div class="spinner" style="width:56px;height:56px;border-width:4px"></div>
   <p style="color:var(--text-muted);font-size:14px">Cargando reproductor…</p>
 </div>
 
-<!-- ══ PLAYER ════════════════════════════════════════════ -->
+<!-- PLAYER CONTENT -->
 <div class="player-page" id="player-content" style="display:none">
 
-  <!-- Breadcrumb -->
-  <div style="background:var(--bg-secondary);padding:9px 20px;border-bottom:1px solid var(--border-subtle);font-size:12px;color:var(--text-muted);display:flex;align-items:center;flex-wrap:wrap;gap:4px">
+  <!-- Breadcrumb con badge de idioma -->
+  <div style="background:var(--bg-secondary);padding:8px 20px;border-bottom:1px solid var(--border-subtle);font-size:12px;color:var(--text-muted);display:flex;align-items:center;flex-wrap:wrap;gap:4px">
     <a href="index.html" style="color:var(--accent-light)">Inicio</a>
     <span style="margin:0 4px">›</span>
     <a id="bc-anime-link" href="#" style="color:var(--accent-light)">Anime</a>
     <span style="margin:0 4px">›</span>
     <span id="bc-ep">Episodio 1</span>
-    <!-- Lang badge -->
-    <span id="lang-badge" class="lang-indicator lang-sub" style="margin-left:8px">📖 Sub esp</span>
+    <span id="lang-badge" class="lang-indicator lang-sub" style="margin-left:10px">📖 Sub esp</span>
   </div>
 
   <div class="player-layout" id="player-layout">
 
-    <!-- ── Columna principal: video ───────────────────── -->
+    <!-- ── COLUMNA PRINCIPAL ────────────────────────────── -->
     <div class="player-main">
 
-      <!-- Video embed 16:9 -->
+      <!-- Embed 16:9 — puede contener iframe o <video id="hls-video"> -->
       <div class="player-embed-wrap">
         <div id="player-embed">
           <div class="player-embed-placeholder">
@@ -149,14 +129,19 @@
         </div>
       </div>
 
-      <!-- Controles de calidad / idioma / modo cine -->
+      <!-- Nota cuando se usa HLS / Gogoanime -->
+      <div class="hls-note" id="hls-note">
+        📡 Reproduciendo vía Gogoanime (Sub inglés) · AnimeFLV no disponible para este episodio
+      </div>
+
+      <!-- Calidad / Idioma / Teatro -->
       <div class="player-extra-controls">
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
           <div class="sel-group">
             <span>📺 Calidad:</span>
             <select id="quality-select" onchange="changeQuality(this.value)">
-              <option value="1080">1080p HD</option>
-              <option value="720" selected>720p HD</option>
+              <option value="1080">1080p</option>
+              <option value="720" selected>720p</option>
               <option value="480">480p</option>
               <option value="360">360p</option>
             </select>
@@ -172,7 +157,7 @@
         <button class="theater-btn" onclick="toggleTheater()">⛶ Modo cine</button>
       </div>
 
-      <!-- Título + prev/next -->
+      <!-- Título + Anterior / Siguiente -->
       <div class="player-controls">
         <div class="player-title-row">
           <div>
@@ -186,14 +171,13 @@
         </div>
       </div>
 
-      <!-- ── SERVIDORES ────────────────────────────────── -->
+      <!-- SERVIDORES (generados por JS con datos reales de AnimeFLV / Consumet) -->
       <div class="servers-section">
         <div class="servers-label">🌐 Servidores disponibles</div>
-        <!-- JS carga los botones de servidor con los datos reales de AnimeFLV -->
         <div class="servers-row" id="servers-row">
           <div style="display:flex;align-items:center;gap:10px;color:var(--text-muted);font-size:13px">
-            <div class="spinner" style="width:18px;height:18px;border-width:2px"></div>
-            Conectando con AnimeFLV…
+            <div class="spinner" style="width:16px;height:16px;border-width:2px"></div>
+            Buscando en AnimeFLV…
           </div>
         </div>
       </div>
@@ -203,27 +187,27 @@
         <img id="player-poster" src="" alt="Portada">
         <div class="pib-text">
           <div class="pib-title" id="player-info-title">Cargando…</div>
-          <div class="pib-sub" id="player-info-subtitle">Episodio 1</div>
+          <div class="pib-sub"   id="player-info-subtitle">Episodio 1</div>
         </div>
         <div class="pib-actions">
-          <button class="btn-secondary" style="padding:8px 14px;font-size:13px" id="go-anime-btn">ℹ️ Ver ficha</button>
-          <button class="btn-secondary" style="padding:8px 14px;font-size:13px"
-                  onclick="showToast('Función: Favoritos — próximamente ❤️','info')">❤️</button>
+          <button class="btn-secondary" style="padding:8px 13px;font-size:13px" id="go-anime-btn">ℹ️ Ficha</button>
+          <button class="btn-secondary" style="padding:8px 13px;font-size:13px"
+                  onclick="showToast('❤️ Favoritos — próximamente','info')">❤️</button>
         </div>
       </div>
 
     </div><!-- /player-main -->
 
-    <!-- ── Sidebar: lista de episodios ────────────────── -->
+    <!-- ── SIDEBAR: lista de episodios ─────────────────── -->
     <div class="player-sidebar">
       <div class="sidebar-header">
         <span>📋 Episodios</span>
         <input type="text" placeholder="Buscar ep…"
-          style="background:var(--bg-card);border:1px solid var(--border);border-radius:99px;padding:4px 10px;font-size:12px;color:var(--text-primary);width:90px;outline:none;font-family:var(--font-body)"
+          style="background:var(--bg-card);border:1px solid var(--border);border-radius:99px;padding:4px 9px;font-size:12px;color:var(--text-primary);width:88px;outline:none;font-family:var(--font-body)"
           oninput="filterSidebarEps(this.value)">
       </div>
       <div class="sidebar-ep-list" id="sidebar-ep-list">
-        <div class="loading-spinner" style="padding:40px"><div class="spinner"></div></div>
+        <div class="loading-spinner" style="padding:36px"><div class="spinner"></div></div>
       </div>
     </div>
 
@@ -231,8 +215,8 @@
 
 </div><!-- /player-content -->
 
-<!-- ══ FOOTER ════════════════════════════════════════════ -->
-<footer style="background:var(--bg-secondary);border-top:1px solid var(--border-subtle);padding:16px 5%;text-align:center">
+<!-- FOOTER -->
+<footer style="background:var(--bg-secondary);border-top:1px solid var(--border-subtle);padding:14px 5%;text-align:center">
   <p style="font-size:12px;color:var(--text-muted)">
     © 2024 Kawaii Anime ·
     <a href="index.html" style="color:var(--accent-light)">Inicio</a> ·
@@ -242,37 +226,38 @@
 
 <button class="scroll-top-btn" id="scroll-top-btn">↑</button>
 <div class="toast-container" id="toast-container"></div>
+
 <script src="script.js"></script>
-
 <script>
-  /* ── Extensiones del player.html ──────────────────────── */
+  /* Extensiones del player.html */
 
-  /* Oculta loading y muestra el player cuando está listo */
+  /* Muestra el contenido cuando el player está listo */
   const _origRPUI = window.renderPlayerUI;
   window.renderPlayerUI = (anime, id, source, ep, aflvSlug) => {
     _origRPUI(anime, id, source, ep, aflvSlug);
-
     document.getElementById('player-loading').style.display = 'none';
     document.getElementById('player-content').style.display = 'flex';
-
-    // Actualiza título de la página
     document.title = `${anime.title} · Ep ${ep} — Kawaii Anime`;
   };
 
-  /* Actualiza el badge de idioma cuando se selecciona un servidor */
-  const _origSS = window.selectServer;
-  window.selectServer = (btn, enc, lang, name) => {
-    _origSS(btn, enc, lang, name);
-    const badge = document.getElementById('lang-badge');
-    if (!badge) return;
-    if (lang === 'latino') {
-      badge.className = 'lang-indicator lang-latino';
-      badge.textContent = '🎌 Latino';
-    } else {
-      badge.className = 'lang-indicator lang-sub';
-      badge.textContent = '📖 Sub esp';
-    }
+  /* Cuando se selecciona un servidor HLS, muestra la nota informativa */
+  const _origSrv = window.selectSrv;
+  window.selectSrv = (btn, enc, lang, name, mode) => {
+    _origSrv(btn, enc, lang, name, mode);
+    const note = document.getElementById('hls-note');
+    if (note) note.classList.toggle('visible', mode === 'hls');
   };
+
+  /* Muestra nota HLS automáticamente si el primer servidor ya es HLS */
+  const _origLPS = window.loadPlayerServers;
+  if (_origLPS) {
+    // Este hook ya está en script.js, pero añadimos la nota visual aquí
+    const origLoad = window.loadPlayerServers;
+    window.loadPlayerServers = async (...args) => {
+      await origLoad(...args);
+      // La nota HLS se gestiona dentro del flujo de selectSrv
+    };
+  }
 </script>
 </body>
 </html>
