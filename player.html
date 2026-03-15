@@ -3,110 +3,64 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reproduciendo — Kawaii Anime</title>
+  <title>YOAKE — Reproduciendo</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
-  <!-- HLS.js: reproduce streams m3u8 directamente en el browser -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='100%25' x2='100%25' y2='0%25'><stop offset='0%25' stop-color='%23e8932a'/><stop offset='100%25' stop-color='%236366f1'/></linearGradient></defs><circle cx='50' cy='62' r='18' fill='url(%23g)'/><rect x='47' y='5' width='6' height='14' rx='3' fill='url(%23g)'/><line x1='5' y1='82' x2='95' y2='82' stroke='url(%23g)' stroke-width='5' stroke-linecap='round'/></svg>">
+  <!-- HLS.js para reproducir streams m3u8 -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.8/dist/hls.min.js"></script>
   <style>
-    body { overflow-x: hidden; }
-    .player-page  { display:flex; flex-direction:column; min-height:100vh; margin-top:64px; }
-    .player-layout{ flex:1; display:grid; grid-template-columns:1fr 320px; min-height:calc(100vh - 64px - 54px); }
-    .player-layout.theater { grid-template-columns:1fr; }
-    .player-main  { display:flex; flex-direction:column; background:#000; }
-
-    /* Wrapper 16:9 */
-    .player-embed-wrap { position:relative; width:100%; padding-top:56.25%; background:#03060d; }
-    #player-embed { position:absolute; top:0; left:0; width:100%; height:100%; }
-    #hls-video {
-      position:absolute; top:0; left:0; width:100%; height:100%;
-      background:#000; outline:none;
-    }
-
-    /* Controles adicionales */
-    .player-extra {
-      background:var(--bg-primary); padding:9px 20px;
-      border-top:1px solid var(--border-subtle);
-      display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;
-    }
-    .sel-group { display:flex; align-items:center; gap:7px; font-size:13px; color:var(--text-muted); }
-    .sel-group select {
-      background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm);
-      color:var(--text-primary); font-family:var(--font-body); font-size:12px;
-      padding:4px 9px; cursor:pointer; outline:none;
-    }
-    .sel-group select:focus { border-color:var(--accent); }
-    .ctrl-btn {
-      display:flex; align-items:center; gap:5px; padding:6px 13px;
-      background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm);
-      color:var(--text-secondary); font-size:12px; font-weight:600; font-family:var(--font-body);
-      cursor:pointer; transition:all var(--transition);
-    }
-    .ctrl-btn:hover { border-color:var(--accent); color:var(--accent-light); }
-
+    body{overflow-x:hidden;}
+    .player-page{display:flex;flex-direction:column;min-height:100vh;margin-top:66px;}
+    .player-layout{flex:1;display:grid;grid-template-columns:1fr 320px;min-height:calc(100vh - 66px - 54px);}
+    .player-layout.theater{grid-template-columns:1fr;}
+    .player-main{display:flex;flex-direction:column;background:#000;}
+    /* Embed 16:9 */
+    .player-embed-wrap{position:relative;width:100%;padding-top:56.25%;background:#02040a;}
+    #player-embed{position:absolute;top:0;left:0;width:100%;height:100%;}
+    #hls-video{position:absolute;top:0;left:0;width:100%;height:100%;background:#000;outline:none;}
+    /* Controles extra */
+    .player-extra{background:var(--bg-primary);padding:9px 20px;border-top:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+    .ctrl-btn{display:flex;align-items:center;gap:5px;padding:6px 13px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-secondary);font-size:12px;font-weight:600;font-family:var(--font-body);cursor:pointer;transition:all var(--transition);}
+    .ctrl-btn:hover{border-color:var(--accent);color:var(--accent-light);}
     /* Info bar */
-    .player-info-bar { background:var(--bg-secondary); padding:12px 20px; display:flex; align-items:center; gap:12px; }
-    .player-info-bar img { width:44px; height:62px; object-fit:cover; border-radius:6px; flex-shrink:0; border:1px solid var(--border); }
-    .pib-text .pib-title { font-size:14px; font-weight:700; }
-    .pib-text .pib-sub   { font-size:12px; color:var(--text-muted); margin-top:2px; }
-    .pib-actions { margin-left:auto; display:flex; gap:7px; flex-shrink:0; }
-
-    /* Badge idioma */
-    .lang-indicator { display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:99px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
-    .lang-latino { background:rgba(245,158,11,.15); border:1px solid rgba(245,158,11,.4); color:#f59e0b; }
-    .lang-sub    { background:rgba(14,165,233,.15);  border:1px solid rgba(14,165,233,.4);  color:#0ea5e9; }
-
-    /* Grilla de servidores */
-    .srv-grid { display:flex; flex-wrap:wrap; align-items:center; gap:7px; }
-    .srv-lang-label {
-      font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px;
-      padding:2px 0; flex-basis:100%;
-    }
-    .srv-lang-label.latino { color:#f59e0b; }
-    .srv-lang-label.sub    { color:#0ea5e9; }
-    .srv-divider { flex-basis:100%; height:1px; background:var(--border-subtle); margin:4px 0; }
-    .srv-searching {
-      display:flex; align-items:center; gap:10px;
-      color:var(--text-muted); font-size:13px; padding:4px 0;
-    }
-
-    @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.1);opacity:.75} }
-
-    @media(max-width:900px){
-      .player-layout{grid-template-columns:1fr;}
-      .player-sidebar{max-height:360px;border-left:none;border-top:1px solid var(--border-subtle);}
-    }
-    @media(max-width:600px){
-      .player-controls,.servers-section,.player-info-bar,.player-extra{padding:10px 13px;}
-      .player-title-row{flex-direction:column;}
-      .player-nav-btns{width:100%;justify-content:space-between;}
-    }
+    .player-info-bar{background:var(--bg-secondary);padding:12px 20px;display:flex;align-items:center;gap:12px;}
+    .player-info-bar img{width:44px;height:62px;object-fit:cover;border-radius:6px;flex-shrink:0;border:1px solid var(--border);}
+    .pib-text .pib-title{font-size:14px;font-weight:700;}
+    .pib-text .pib-sub{font-size:12px;color:var(--text-muted);margin-top:2px;}
+    .pib-actions{margin-left:auto;display:flex;gap:7px;flex-shrink:0;}
+    @media(max-width:900px){.player-layout{grid-template-columns:1fr;}.player-sidebar{max-height:360px;border-left:none;border-top:1px solid var(--border-subtle);}}
+    @media(max-width:600px){.player-controls,.servers-section,.player-info-bar,.player-extra{padding:10px 13px;}.player-title-row{flex-direction:column;}.player-nav-btns{width:100%;justify-content:space-between;}}
   </style>
 </head>
 <body data-page="player">
 
 <!-- NAVBAR -->
 <nav class="navbar" id="navbar">
-  <a href="index.html" class="nav-logo">
-    <div class="logo-icon">🌸</div>
-    <span class="logo-text">KAWAII ANIME</span>
+  <a href="index.html" class="brand-logo">
+    <svg class="brand-icon" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="sg2" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#e8932a"/><stop offset="100%" stop-color="#6366f1"/></linearGradient></defs>
+      <circle cx="22" cy="27" r="8" fill="url(#sg2)"/>
+      <rect x="20.5" y="3" width="3" height="8" rx="1.5" fill="url(#sg2)"/>
+      <rect x="20.5" y="3" width="3" height="8" rx="1.5" fill="url(#sg2)" transform="rotate(45 22 22)"/>
+      <rect x="20.5" y="3" width="3" height="8" rx="1.5" fill="url(#sg2)" transform="rotate(-45 22 22)"/>
+      <rect x="20.5" y="3" width="3" height="8" rx="1.5" fill="url(#sg2)" transform="rotate(90 22 22)"/>
+      <line x1="3" y1="38" x2="41" y2="38" stroke="url(#sg2)" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M 8 38 Q 22 20 36 38" stroke="url(#sg2)" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
+    </svg>
+    <div class="brand-name-wrap"><span class="brand-name-en">YOAKE</span><span class="brand-name-jp">夜明け</span></div>
   </a>
-  <div class="nav-search" style="max-width:360px">
+  <div class="nav-search" style="max-width:380px">
     <input type="text" id="search-input" placeholder="Buscar anime..." autocomplete="off">
     <span class="search-icon">🔍</span>
     <div class="search-dropdown" id="search-dropdown"></div>
   </div>
-  <nav class="nav-links">
-    <a href="index.html">Inicio</a>
-    <a href="index.html?genre=Action&gname=Acción">Acción</a>
-    <a href="index.html?genre=Romance&gname=Romance">Romance</a>
-  </nav>
+  <nav class="nav-links"><a href="index.html">Inicio</a><a href="index.html?genre=Action&gname=Acción">Acción</a></nav>
   <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
 </nav>
 <div class="mobile-nav" id="mobile-nav"><a href="index.html">🏠 Inicio</a></div>
 
 <!-- CARGANDO -->
-<div id="player-loading" style="display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 64px);flex-direction:column;gap:16px">
+<div id="player-loading" style="display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 66px);flex-direction:column;gap:16px">
   <div class="spinner" style="width:56px;height:56px;border-width:4px"></div>
   <p style="color:var(--text-muted);font-size:14px">Cargando reproductor…</p>
 </div>
@@ -114,7 +68,7 @@
 <!-- PLAYER -->
 <div class="player-page" id="player-content" style="display:none">
 
-  <!-- Breadcrumb -->
+  <!-- Breadcrumb + badge idioma -->
   <div style="background:var(--bg-secondary);padding:8px 20px;border-bottom:1px solid var(--border-subtle);font-size:12px;color:var(--text-muted);display:flex;align-items:center;flex-wrap:wrap;gap:4px">
     <a href="index.html" style="color:var(--accent-light)">Inicio</a>
     <span style="margin:0 4px">›</span>
@@ -129,33 +83,23 @@
     <!-- Video + controles -->
     <div class="player-main">
 
-      <!-- ── EMBED 16:9 ── -->
+      <!-- Embed 16:9 -->
       <div class="player-embed-wrap">
         <div id="player-embed">
-          <div class="player-embed-placeholder">
-            <div class="big-play" style="animation:pulse 1.5s infinite">▶</div>
-            <p style="color:var(--accent-light);font-size:15px">Iniciando…</p>
+          <div class="embed-placeholder">
+            <div class="ep-icon" style="animation:pulse 1.5s infinite">▶</div>
+            <p style="color:var(--accent-light)">Iniciando…</p>
           </div>
         </div>
       </div>
 
-      <!-- Controles: modo cine -->
+      <!-- Extra: modo cine -->
       <div class="player-extra">
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-          <div class="sel-group">
-            <span>📺</span>
-            <select onchange="showToast('Cambia de servidor para cambiar la calidad','info')">
-              <option>Auto (según servidor)</option>
-              <option>1080p</option>
-              <option>720p</option>
-              <option>480p</option>
-            </select>
-          </div>
-        </div>
+        <div style="font-size:12px;color:var(--text-muted)">🎬 YOAKE Player · <span style="color:var(--accent-light)">Desu · Streamwish · VOE · Magi · Vidhide · Doodstream + más</span></div>
         <button class="ctrl-btn" onclick="toggleTheater()">⛶ Modo cine</button>
       </div>
 
-      <!-- Título + Anterior/Siguiente -->
+      <!-- Título + prev/next -->
       <div class="player-controls">
         <div class="player-title-row">
           <div>
@@ -169,18 +113,18 @@
         </div>
       </div>
 
-      <!-- ── SERVIDORES ── -->
+      <!-- SERVIDORES — se generan con JS, separados por Latino / Sub Español -->
       <div class="servers-section">
         <div class="servers-label">
-          🌐 Servidores
-          <span style="font-size:10px;font-weight:400;color:var(--text-muted);margin-left:8px">
-            · Gogoanime &amp; HiAnime · Sub Español / Latino
+          🌐 Servidores de reproducción
+          <span style="font-size:10px;color:var(--text-muted);font-weight:400;margin-left:8px;letter-spacing:0">
+            — AnimeFLV · Gogoanime · HiAnime
           </span>
         </div>
         <div class="servers-row" id="servers-row">
           <div class="srv-searching">
             <div class="spinner" style="width:16px;height:16px;border-width:2px"></div>
-            Conectando con servidores externos…
+            <span>Buscando servidores disponibles…</span>
           </div>
         </div>
       </div>
@@ -216,24 +160,19 @@
   </div><!-- /player-layout -->
 </div><!-- /player-content -->
 
-<!-- FOOTER -->
 <footer style="background:var(--bg-secondary);border-top:1px solid var(--border-subtle);padding:14px 5%;text-align:center">
-  <p style="font-size:12px;color:var(--text-muted)">
-    © 2024 Kawaii Anime ·
-    <a href="index.html" style="color:var(--accent-light)">Inicio</a>
-  </p>
+  <p style="font-size:12px;color:var(--text-muted)">© 2024 YOAKE · 夜明け · <a href="index.html" style="color:var(--accent-light)">Inicio</a></p>
 </footer>
 
 <button class="scroll-top-btn" id="scroll-top-btn">↑</button>
 <div class="toast-container" id="toast-container"></div>
 <script src="script.js"></script>
 <script>
-  /* Muestra el contenido cuando el player está listo */
-  const _origRPUI = window.renderPlayerUI;
-  window.renderPlayerUI = (...args) => {
+  const _origRPUI=window.renderPlayerUI;
+  window.renderPlayerUI=(...args)=>{
     _origRPUI(...args);
-    document.getElementById('player-loading').style.display = 'none';
-    document.getElementById('player-content').style.display = 'flex';
+    document.getElementById('player-loading').style.display='none';
+    document.getElementById('player-content').style.display='flex';
   };
 </script>
 </body>
