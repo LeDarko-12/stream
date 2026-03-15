@@ -1,44 +1,413 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Reproductor de anime — Kawaii Anime">
+  <title>Reproduciendo — Kawaii Anime</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+  <style>
+    /* ── Estilos extra del player ─────────────────────── */
+    body { overflow-x: hidden; }
 
-<meta charset="UTF-8">
+    .player-page {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      margin-top: 64px;
+    }
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    /* Layout principal: video + sidebar */
+    .player-layout {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      min-height: calc(100vh - 64px - 100px);
+    }
 
-<title>Reproductor</title>
+    /* Columna izquierda */
+    .player-main {
+      display: flex;
+      flex-direction: column;
+      background: #000;
+    }
 
-<link rel="stylesheet" href="style.css">
+    /* Wrapper del embed */
+    .player-embed-wrap {
+      position: relative;
+      width: 100%;
+      background: #000;
+    }
+    .player-embed-wrap.theater-mode {
+      padding-top: 0;
+    }
 
+    /* Controles extra del reproductor */
+    .player-extra-controls {
+      background: var(--bg-primary);
+      padding: 14px 24px;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .quality-selector {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .quality-selector select {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 12px;
+      padding: 4px 8px;
+      cursor: pointer;
+      outline: none;
+    }
+    .quality-selector select:focus { border-color: var(--accent); }
+
+    .theater-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--font-body);
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .theater-btn:hover { border-color: var(--accent); color: var(--accent-light); }
+
+    /* Info debajo del video */
+    .player-info-bar {
+      background: var(--bg-secondary);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .player-info-bar img {
+      width: 52px; height: 72px;
+      object-fit: cover;
+      border-radius: 8px;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+    .player-info-bar .text .title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.3;
+    }
+    .player-info-bar .text .subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+    .player-info-bar .actions {
+      margin-left: auto;
+      display: flex;
+      gap: 8px;
+    }
+
+    /* ── Nota de producción ─────────────────────────────── */
+    .dev-note {
+      background: rgba(124,58,237,0.08);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin: 20px;
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+    .dev-note strong { color: var(--accent-light); }
+    .dev-note code {
+      background: var(--bg-card);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #10b981;
+      font-family: 'Courier New', monospace;
+    }
+    .dev-note ul { margin: 8px 0 0 16px; }
+    .dev-note ul li { margin-bottom: 4px; }
+
+    /* Animación de loading del embed */
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50%       { transform: scale(1.1); opacity: 0.7; }
+    }
+
+    /* Sidebar en modo mobile */
+    @media (max-width: 900px) {
+      .player-layout { grid-template-columns: 1fr; }
+      .player-sidebar {
+        max-height: 380px;
+        border-left: none;
+        border-top: 1px solid var(--border-subtle);
+      }
+    }
+    @media (max-width: 600px) {
+      .player-info-bar { padding: 12px 16px; }
+      .player-extra-controls { padding: 10px 16px; }
+    }
+  </style>
 </head>
+<body data-page="player">
 
-<body>
-
-<header class="navbar">
-<a href="index.html" class="logo">KawaiiAnime</a>
-</header>
-
-<div class="player-container">
-
-<iframe id="videoPlayer"
-width="100%"
-height="500"
-allowfullscreen>
-</iframe>
-
-<div class="servers">
-
-<button onclick="changeServer(1)">Servidor 1</button>
-<button onclick="changeServer(2)">Servidor 2</button>
-<button onclick="changeServer(3)">Servidor 3</button>
-
+<!-- ══════════════════════════════════════════════════════════
+     NAVBAR
+══════════════════════════════════════════════════════════ -->
+<nav class="navbar" id="navbar">
+  <a href="index.html" class="nav-logo">
+    <div class="logo-icon">🌸</div>
+    <span class="logo-text">KAWAII ANIME</span>
+  </a>
+  <div class="nav-search" style="max-width:320px">
+    <input type="text" id="search-input" placeholder="Buscar anime..." autocomplete="off">
+    <span class="search-icon">🔍</span>
+    <div class="search-dropdown" id="search-dropdown"></div>
+  </div>
+  <nav class="nav-links">
+    <a href="index.html">Inicio</a>
+    <a href="index.html?tab=latino">Latino</a>
+    <a href="index.html?tab=sub">Subtitulado</a>
+  </nav>
+  <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+</nav>
+<div class="mobile-nav" id="mobile-nav">
+  <a href="index.html">🏠 Inicio</a>
 </div>
 
+
+<!-- ══════════════════════════════════════════════════════════
+     CARGANDO
+══════════════════════════════════════════════════════════ -->
+<div id="player-loading" style="display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 64px);flex-direction:column;gap:16px">
+  <div class="spinner" style="width:56px;height:56px;border-width:4px"></div>
+  <p style="color:var(--text-muted);font-size:14px">Cargando reproductor...</p>
 </div>
+
+
+<!-- ══════════════════════════════════════════════════════════
+     PÁGINA DEL REPRODUCTOR
+══════════════════════════════════════════════════════════ -->
+<div class="player-page" id="player-content" style="display:none">
+
+  <!-- ── BREADCRUMB ─────────────────────────────────────── -->
+  <div style="background:var(--bg-secondary);padding:10px 24px;border-bottom:1px solid var(--border-subtle);font-size:12px;color:var(--text-muted)">
+    <a href="index.html" style="color:var(--accent-light)">Inicio</a>
+    <span style="margin:0 6px">›</span>
+    <a id="bc-anime-link" href="#" style="color:var(--accent-light)" id="breadcrumb-anime">Anime</a>
+    <span style="margin:0 6px">›</span>
+    <span id="bc-ep">Episodio 1</span>
+  </div>
+
+  <!-- ── LAYOUT PRINCIPAL ───────────────────────────────── -->
+  <div class="player-layout">
+
+    <!-- ── COLUMNA IZQUIERDA: video + controles ─────────── -->
+    <div class="player-main">
+
+      <!-- Embed del video -->
+      <div class="player-embed-wrap" id="player-embed-wrapper">
+        <!-- Ratio 16:9 con padding-top -->
+        <div style="position:relative;padding-top:56.25%;background:#000">
+          <div id="player-embed" style="position:absolute;top:0;left:0;width:100%;height:100%">
+            <!-- JS renderiza aquí el iframe o el placeholder -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Controles extra: calidad + teatro -->
+      <div class="player-extra-controls">
+        <div class="quality-selector">
+          <span>📺 Calidad:</span>
+          <select id="quality-select" onchange="changeQuality(this.value)">
+            <option value="1080">1080p HD</option>
+            <option value="720" selected>720p HD</option>
+            <option value="480">480p</option>
+            <option value="360">360p</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="quality-selector">
+            <span>🌐 Idioma:</span>
+            <select id="lang-select" onchange="changeLang(this.value)">
+              <option value="sub">Subtitulado</option>
+              <option value="dub">Latino</option>
+            </select>
+          </div>
+          <button class="theater-btn" onclick="toggleTheater()">⛶ Modo cine</button>
+        </div>
+      </div>
+
+      <!-- Controles: título + prev/next -->
+      <div class="player-controls">
+        <div class="player-title-row">
+          <div>
+            <h1 id="player-anime-title">Cargando...</h1>
+            <p class="player-ep-info" id="player-ep-info">Episodio 1</p>
+          </div>
+          <div class="player-nav-btns">
+            <button class="player-nav-btn" id="prev-ep-btn" disabled>‹ Anterior</button>
+            <button class="player-nav-btn" id="next-ep-btn">Siguiente ›</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Servidores -->
+      <div class="servers-section">
+        <div class="servers-label">🌐 Seleccionar servidor</div>
+        <div class="servers-row" id="servers-row">
+          <!-- JS renderiza los botones de servidor -->
+        </div>
+      </div>
+
+      <!-- Info bar (poster + título + acciones) -->
+      <div class="player-info-bar">
+        <img id="player-poster" src="" alt="Portada">
+        <div class="text">
+          <div class="title" id="player-info-title">Cargando...</div>
+          <div class="subtitle" id="player-info-subtitle">Episodio 1</div>
+        </div>
+        <div class="actions">
+          <button
+            class="btn-secondary"
+            style="padding:8px 14px;font-size:13px"
+            id="go-anime-btn"
+          >ℹ️ Ver ficha</button>
+          <button
+            class="btn-secondary"
+            style="padding:8px 14px;font-size:13px"
+            onclick="showToast('Función: Favoritos — próximamente ❤️', 'info')"
+          >❤️ Favorito</button>
+        </div>
+      </div>
+
+      <!-- ── NOTA DE INTEGRACIÓN (solo para desarrollo) ─── -->
+      <div class="dev-note">
+        <strong>💡 Guía de integración del reproductor</strong><br><br>
+        Para integrar streams reales, reemplaza el contenido de <code>player-embed</code> con un <code>&lt;iframe&gt;</code> apuntando a la URL del video:
+        <ul>
+          <li>Usa tu propio backend para obtener URLs desde <strong>AnimeFLV API</strong>, <strong>Gogoanime</strong> o <strong>HiAnime</strong></li>
+          <li>Inserta el iframe: <code>&lt;iframe src="URL_STREAM" allowfullscreen&gt;&lt;/iframe&gt;</code></li>
+          <li>Servidores soportados: <strong>StreamSB, Filemoon, Mp4upload, Voe, Doodstream</strong></li>
+          <li>Formato recomendado: <strong>HLS (.m3u8)</strong> con <a href="https://hlsjs.video-dev.org/" target="_blank" style="color:var(--accent-light)">hls.js</a> para reproductor nativo</li>
+        </ul>
+        <strong style="color:#10b981">Ejemplo de iframe real:</strong><br>
+        <code>&lt;iframe src="https://www.gcdneu.pw/embed/CODIGO" allowfullscreen scrolling="no" allow="autoplay"&gt;&lt;/iframe&gt;</code>
+      </div>
+
+    </div><!-- /player-main -->
+
+
+    <!-- ── SIDEBAR: lista de episodios ──────────────────── -->
+    <div class="player-sidebar">
+      <div class="sidebar-header">
+        <span>📋 Episodios</span>
+        <input
+          type="text"
+          placeholder="Buscar ep..."
+          style="background:var(--bg-card);border:1px solid var(--border);border-radius:99px;padding:4px 10px;font-size:12px;color:var(--text-primary);width:100px;outline:none;font-family:var(--font-body)"
+          oninput="filterSidebarEps(this.value)"
+        >
+      </div>
+      <!-- Lista generada por JS -->
+      <div class="sidebar-ep-list" id="sidebar-ep-list">
+        <div class="loading-spinner" style="padding:40px"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+  </div><!-- /player-layout -->
+
+</div><!-- /player-content -->
+
+
+<!-- ══════════════════════════════════════════════════════════
+     FOOTER MÍNIMO
+══════════════════════════════════════════════════════════ -->
+<footer style="background:var(--bg-secondary);border-top:1px solid var(--border-subtle);padding:20px 5%;text-align:center">
+  <p style="font-size:12px;color:var(--text-muted)">
+    © 2024 Kawaii Anime ·
+    <a href="index.html" style="color:var(--accent-light)">Inicio</a> ·
+    <a href="#" style="color:var(--accent-light)">DMCA</a>
+  </p>
+</footer>
+
+<button class="scroll-top-btn" id="scroll-top-btn">↑</button>
+<div class="toast-container" id="toast-container"></div>
 
 <script src="script.js"></script>
+<script>
+  // ── Extensiones específicas del player ──────────────────
 
+  // Oculta el loading cuando el player está listo
+  const _origRenderPlayer = window.renderPlayer;
+  window.renderPlayer = function(anime, animeId, source, currentEp) {
+    _origRenderPlayer(anime, animeId, source, currentEp);
+
+    document.getElementById('player-loading').style.display = 'none';
+    document.getElementById('player-content').style.display = 'flex';
+
+    // Breadcrumb
+    const bcAnime = document.getElementById('bc-anime-link');
+    const bcEp = document.getElementById('bc-ep');
+    if (bcAnime) { bcAnime.textContent = anime.title; bcAnime.href = `anime.html?id=${animeId}&source=${source}`; }
+    if (bcEp) bcEp.textContent = `Episodio ${currentEp}`;
+
+    // Info bar
+    const infoTitle = document.getElementById('player-info-title');
+    const infoSub = document.getElementById('player-info-subtitle');
+    if (infoTitle) infoTitle.textContent = anime.title;
+    if (infoSub) infoSub.textContent = `Episodio ${currentEp} ${anime.episodes ? '/ ' + anime.episodes : ''}`;
+
+    // Botón ver ficha
+    const goBtn = document.getElementById('go-anime-btn');
+    if (goBtn) goBtn.onclick = () => window.location.href = `anime.html?id=${animeId}&source=${source}`;
+  };
+
+  // Filtro del sidebar
+  window.filterSidebarEps = (query) => {
+    document.querySelectorAll('.sidebar-ep-item').forEach(item => {
+      const num = item.querySelector('.ep-num')?.textContent || '';
+      item.style.display = !query || num.includes(query) ? '' : 'none';
+    });
+  };
+
+  // Cambio de calidad (placeholder)
+  window.changeQuality = (q) => showToast(`Calidad cambiada a ${q}p`, 'success');
+
+  // Cambio de idioma (placeholder)
+  window.changeLang = (lang) => {
+    const name = lang === 'dub' ? 'Español Latino 🎌' : 'Subtitulado 📖';
+    showToast(`Idioma: ${name}`, 'success');
+  };
+
+  // Modo teatro
+  window.toggleTheater = () => {
+    const sidebar = document.querySelector('.player-sidebar');
+    const layout = document.querySelector('.player-layout');
+    if (!layout) return;
+    const isTheater = layout.style.gridTemplateColumns === '1fr';
+    layout.style.gridTemplateColumns = isTheater ? '1fr 320px' : '1fr';
+    if (sidebar) sidebar.style.display = isTheater ? '' : 'none';
+    showToast(isTheater ? 'Modo normal' : 'Modo cine activado 🎬', 'info');
+  };
+</script>
 </body>
-
 </html>
