@@ -3,23 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Kawaii Anime — Ver anime online en español latino y subtitulado. Miles de series gratis.">
-  <title>Kawaii Anime — Ver anime online gratis</title>
+  <meta name="description" content="YOAKE — 夜明け · El amanecer del anime. Ver anime online en español latino y subtitulado.">
+  <meta name="keywords" content="anime online, ver anime, anime latino, anime subtitulado, yoake anime">
+  <meta property="og:title" content="YOAKE — Ver anime online gratis">
+  <meta property="og:description" content="夜明け · El amanecer del anime. Miles de series en español.">
+  <title>YOAKE — El amanecer del anime</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+  <!-- Favicon: sol naciente SVG -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='100%25' x2='100%25' y2='0%25'><stop offset='0%25' stop-color='%23e8932a'/><stop offset='100%25' stop-color='%236366f1'/></linearGradient></defs><circle cx='50' cy='62' r='18' fill='url(%23g)'/><rect x='47' y='5' width='6' height='14' rx='3' fill='url(%23g)'/><rect x='47' y='5' width='6' height='14' rx='3' fill='url(%23g)' transform='rotate(45 50 50)'/><rect x='47' y='5' width='6' height='14' rx='3' fill='url(%23g)' transform='rotate(90 50 50)'/><rect x='47' y='5' width='6' height='14' rx='3' fill='url(%23g)' transform='rotate(135 50 50)'/><line x1='5' y1='82' x2='95' y2='82' stroke='url(%23g)' stroke-width='5' stroke-linecap='round'/></svg>">
 </head>
 <body data-page="home">
 
+<!-- NAVBAR -->
 <nav class="navbar" id="navbar">
-  <a href="index.html" class="nav-logo">
-    <div class="logo-icon">🌸</div>
-    <span class="logo-text">KAWAII ANIME</span>
+  <!-- Logo YOAKE con SVG de amanecer -->
+  <a href="index.html" class="brand-logo">
+    <svg class="brand-icon" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="sunGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#e8932a"/>
+          <stop offset="100%" stop-color="#6366f1"/>
+        </linearGradient>
+      </defs>
+      <!-- Sol central -->
+      <circle cx="22" cy="27" r="8" fill="url(#sunGrad)"/>
+      <!-- Rayos superiores -->
+      <rect x="20.5" y="3" width="3" height="8" rx="1.5" fill="url(#sunGrad)"/>
+      <rect x="20.5" y="3" width="3" height="8" rx="1.5" fill="url(#sunGrad)" transform="rotate(45 22 22)"/>
+      <rect x="20.5" y="3" width="3" height="8" rx="1.5" fill="url(#sunGrad)" transform="rotate(-45 22 22)"/>
+      <rect x="20.5" y="3" width="3" height="8" rx="1.5" fill="url(#sunGrad)" transform="rotate(90 22 22)"/>
+      <!-- Línea horizonte -->
+      <line x1="3" y1="38" x2="41" y2="38" stroke="url(#sunGrad)" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- Media luna / arco horizonte -->
+      <path d="M 8 38 Q 22 20 36 38" stroke="url(#sunGrad)" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
+    </svg>
+    <div class="brand-name-wrap">
+      <span class="brand-name-en">YOAKE</span>
+      <span class="brand-name-jp">夜明け · amanecer</span>
+    </div>
   </a>
+
   <div class="nav-search">
     <input type="text" id="search-input" placeholder="Buscar anime..." autocomplete="off" spellcheck="false">
     <span class="search-icon">🔍</span>
     <div class="search-dropdown" id="search-dropdown"></div>
   </div>
+
   <nav class="nav-links">
     <a href="index.html" class="active">Inicio</a>
     <a href="index.html?genre=Action&gname=Acción">Acción</a>
@@ -27,7 +56,7 @@
     <a href="index.html?genre=Isekai&gname=Isekai">Isekai</a>
     <a href="index.html?genre=Comedy&gname=Comedia">Comedia</a>
   </nav>
-  <button class="hamburger" id="hamburger" aria-label="Menú"><span></span><span></span><span></span></button>
+  <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
 </nav>
 <div class="mobile-nav" id="mobile-nav">
   <a href="index.html">🏠 Inicio</a>
@@ -41,11 +70,12 @@
   <div class="hero-bg" id="hero-bg"></div>
   <div class="hero-gradient"></div>
   <div class="hero-gradient-side"></div>
+  <div class="hero-dawn"></div>
   <div class="hero-content">
     <div class="hero-badge">🔥 Trending Ahora</div>
     <h1 class="hero-title" id="hero-title">Cargando…</h1>
     <div class="hero-meta" id="hero-meta"></div>
-    <p class="hero-desc" id="hero-desc">Cargando sinopsis…</p>
+    <p class="hero-desc" id="hero-desc"></p>
     <div class="hero-actions">
       <button class="btn-primary" id="hero-watch-btn">▶ Ver ahora</button>
       <button class="btn-secondary" id="hero-info-btn">ℹ️ Más info</button>
@@ -77,7 +107,7 @@
       <div class="section-title">
         <div class="accent-bar"></div><span class="icon">📅</span>
         <h2>Esta Temporada</h2>
-        <span style="font-size:11px;background:rgba(16,185,129,.15);color:#10b981;padding:3px 8px;border-radius:99px;border:1px solid rgba(16,185,129,.3);font-weight:700">En emisión · MAL</span>
+        <span style="font-size:11px;background:rgba(16,185,129,.14);color:#10b981;padding:3px 8px;border-radius:99px;border:1px solid rgba(16,185,129,.3);font-weight:700">En emisión · MAL</span>
       </div>
     </div>
     <div class="scroll-row-wrapper">
@@ -141,15 +171,15 @@
       <button class="tab-btn" onclick="switchTab('tab-top',this)">🏆 Top 50</button>
     </div>
     <div class="tab-content active" id="tab-season">
-      <p style="color:var(--text-muted);font-size:13px;margin-bottom:18px;padding:0 5%">📅 Animes <strong style="color:#10b981">actualmente en emisión</strong> · Fuente: MyAnimeList</p>
+      <p style="color:var(--text-muted);font-size:13px;margin-bottom:18px;padding:0 5%">📅 Animes <strong style="color:#10b981">en emisión</strong> esta temporada · MyAnimeList</p>
       <div class="scroll-row-wrapper"><button class="scroll-arrow left">‹</button><div class="scroll-row" id="season-row"></div><button class="scroll-arrow right">›</button></div>
     </div>
     <div class="tab-content" id="tab-sub">
-      <p style="color:var(--text-muted);font-size:13px;margin-bottom:18px;padding:0 5%">📖 Anime subtitulado · Streams vía <strong style="color:#0ea5e9">Gogoanime + HiAnime</strong></p>
+      <p style="color:var(--text-muted);font-size:13px;margin-bottom:18px;padding:0 5%">📖 Subtitulado al español · Gogoanime + HiAnime</p>
       <div class="scroll-row-wrapper"><button class="scroll-arrow left">‹</button><div class="scroll-row" id="sub-row"></div><button class="scroll-arrow right">›</button></div>
     </div>
     <div class="tab-content" id="tab-movies">
-      <p style="color:var(--text-muted);font-size:13px;margin-bottom:18px;padding:0 5%">🎬 Películas de anime en alta calidad</p>
+      <p style="color:var(--text-muted);font-size:13px;margin-bottom:18px;padding:0 5%">🎬 Películas de anime</p>
       <div class="scroll-row-wrapper"><button class="scroll-arrow left">‹</button><div class="scroll-row" id="movies-row"></div><button class="scroll-arrow right">›</button></div>
     </div>
     <div class="tab-content" id="tab-top">
@@ -160,7 +190,7 @@
   <!-- CATÁLOGO INFINITO -->
   <section class="section">
     <div class="section-header">
-      <div class="section-title"><div class="accent-bar"></div><span class="icon">🌐</span><h2>Explorar Catálogo Completo</h2></div>
+      <div class="section-title"><div class="accent-bar"></div><span class="icon">🌐</span><h2>Explorar Catálogo</h2></div>
     </div>
     <div class="grid-section">
       <div class="anime-grid" id="main-grid"></div>
@@ -170,11 +200,13 @@
 
 </main>
 
+<!-- FOOTER -->
 <footer>
   <div class="footer-top">
     <div class="footer-brand">
-      <div class="logo-text">🌸 KAWAII ANIME</div>
-      <p>La mejor plataforma de anime en español. Miles de series disponibles con streams en Sub Español y Latino.</p>
+      <span class="brand-name-en">YOAKE</span>
+      <span class="brand-name-jp">夜明け · amanecer</span>
+      <p>El amanecer del anime. Miles de series disponibles en Sub Español y Latino. Gratis y sin registro.</p>
       <div class="social-links" style="margin-top:16px">
         <a href="#" title="Twitter">🐦</a><a href="#" title="Discord">💬</a>
         <a href="#" title="Telegram">✈️</a><a href="#" title="Instagram">📸</a>
@@ -191,12 +223,13 @@
       </ul>
     </div>
     <div class="footer-col">
-      <h4>Fuentes</h4>
+      <h4>Servidores</h4>
       <ul>
-        <li><a href="https://jikan.moe" target="_blank">Jikan / MAL</a></li>
-        <li><a href="https://anilist.co" target="_blank">AniList</a></li>
-        <li><a href="https://gogoanime.tel" target="_blank">Gogoanime</a></li>
-        <li><a href="https://hianime.to" target="_blank">HiAnime</a></li>
+        <li><a href="#">Desu</a></li>
+        <li><a href="#">Streamwish</a></li>
+        <li><a href="#">VOE</a></li>
+        <li><a href="#">Gogoanime</a></li>
+        <li><a href="#">HiAnime</a></li>
       </ul>
     </div>
     <div class="footer-col">
@@ -210,10 +243,10 @@
     </div>
   </div>
   <div class="footer-bottom">
-    <p>© 2024 Kawaii Anime. Todos los derechos reservados.</p>
-    <p>Streams: <a href="https://gogoanime.tel" target="_blank" style="color:var(--accent-light)">Gogoanime</a> · <a href="https://hianime.to" target="_blank" style="color:var(--accent-light)">HiAnime</a></p>
+    <p>© 2024 YOAKE · 夜明け · El amanecer del anime</p>
+    <p>Datos: <a href="https://jikan.moe" target="_blank" style="color:var(--accent-light)">Jikan/MAL</a> · <a href="https://anilist.co" target="_blank" style="color:var(--accent-light)">AniList</a></p>
   </div>
-  <p class="footer-disclaimer">Este sitio no aloja ningún archivo de video. Los streams son provistos por servidores externos de terceros.</p>
+  <p class="footer-disclaimer">YOAKE no aloja ningún archivo de video. Los streams son provistos por servidores externos de terceros.</p>
 </footer>
 
 <button class="scroll-top-btn" id="scroll-top-btn">↑</button>
