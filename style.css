@@ -1,142 +1,199 @@
-body{
+*{
 margin:0;
+padding:0;
+box-sizing:border-box;
 font-family:Arial;
-background:#0f0f0f;
+}
+
+body{
+
+background:#0f172a;
 color:white;
+
 }
 
 .navbar{
+
 display:flex;
-gap:10px;
+justify-content:space-between;
 align-items:center;
-padding:10px 20px;
-background:#111;
+
+padding:20px;
+
+background:#020617;
+
 position:sticky;
 top:0;
-z-index:100;
+
 }
 
 .logo{
-font-size:22px;
-font-weight:bold;
-color:#ff0055;
-text-decoration:none;
+
+color:#a855f7;
+font-size:24px;
+
 }
 
-input,select{
+#search{
+
 padding:8px;
-border:none;
+
 border-radius:6px;
-background:#222;
-color:white;
+
+border:none;
+
+width:200px;
+
+}
+
+.hero{
+
+padding:30px;
+
 }
 
 .anime-grid{
+
 display:grid;
+
 grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+
 gap:20px;
-padding:20px;
+
+margin-top:20px;
+
 }
 
 .card{
-background:#1a1a1a;
+
+background:#1e293b;
+
 border-radius:10px;
+
 overflow:hidden;
+
 cursor:pointer;
+
 transition:0.3s;
+
 }
 
 .card:hover{
+
 transform:scale(1.05);
+
 }
 
 .card img{
+
 width:100%;
+
 height:260px;
+
 object-fit:cover;
+
 }
 
-.card h3{
+.card-title{
+
 padding:10px;
+
 font-size:14px;
+
 }
 
-.rating{
-padding:0 10px 10px;
-color:#ffd000;
-}
+.anime-container{
 
-.loading{
-text-align:center;
-padding:20px;
-}
-
-.anime-page{
 display:flex;
+
 gap:20px;
-padding:20px;
+
+padding:30px;
+
 }
 
-.anime-page img{
+.anime-container img{
+
 width:250px;
+
 border-radius:10px;
+
+}
+
+.anime-info{
+
+max-width:600px;
+
 }
 
 .episodes{
-display:grid;
-grid-template-columns:repeat(auto-fill,60px);
+
+display:flex;
+
+flex-wrap:wrap;
+
 gap:10px;
+
 padding:20px;
+
 }
 
 .episodes button{
-background:#222;
-border:none;
-color:white;
-padding:10px;
-border-radius:6px;
-cursor:pointer;
-}
 
-.episodes button:hover{
-background:#ff0055;
+padding:10px 15px;
+
+background:#7c3aed;
+
+border:none;
+
+border-radius:6px;
+
+cursor:pointer;
+
+color:white;
+
 }
 
 .player-container{
-max-width:1000px;
-margin:auto;
-padding:20px;
+
+padding:40px;
+
 }
 
-iframe{
-width:100%;
-height:500px;
+.servers button{
+
+margin:10px;
+
+padding:10px 20px;
+
+background:#9333ea;
+
 border:none;
-background:black;
-}
 
-.server-selector{
-margin-top:15px;
-display:flex;
-gap:10px;
-flex-wrap:wrap;
-}
+border-radius:5px;
 
-.server-selector button{
-padding:10px;
-background:#222;
-border:none;
-color:white;
 cursor:pointer;
+
 }
 
-#topBtn{
-position:fixed;
-bottom:20px;
-right:20px;
-background:#ff0055;
-border:none;
-padding:10px;
-color:white;
-cursor:pointer;
+.loader{
+
+text-align:center;
+
+padding:40px;
+
+display:none;
+
+}
+
+@media(max-width:700px){
+
+.anime-container{
+
+flex-direction:column;
+
+align-items:center;
+
+}
+
 }
