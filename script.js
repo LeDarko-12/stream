@@ -1,14 +1,13 @@
 const JIKAN = "https://api.jikan.moe/v4/anime";
 const GOGO = "https://api.consumet.org/anime/gogoanime";
 
-let page = 1;
+/* ======================
+CATALOGO PRINCIPAL
+====================== */
 
+let page = 1;
 const grid = document.getElementById("animeGrid");
 const loader = document.getElementById("loader");
-
-/* =========================
-   CARGAR ANIMES (JIKAN)
-========================= */
 
 async function loadAnime(){
 
@@ -36,7 +35,10 @@ card.innerHTML = `
 `;
 
 card.onclick = () => {
-location.href = `anime.html?id=${anime.mal_id}&title=${encodeURIComponent(anime.title)}`;
+
+location.href =
+`anime.html?id=${anime.mal_id}&title=${encodeURIComponent(anime.title)}`;
+
 };
 
 grid.appendChild(card);
@@ -44,6 +46,12 @@ grid.appendChild(card);
 });
 
 }
+
+if(grid){
+loadAnime();
+}
+
+/* infinite scroll */
 
 window.addEventListener("scroll",()=>{
 
@@ -56,25 +64,24 @@ loadAnime();
 
 });
 
-if(grid) loadAnime();
 
-
-/* =========================
-   PAGINA DEL ANIME
-========================= */
+/* ======================
+PAGINA DEL ANIME
+====================== */
 
 const params = new URLSearchParams(window.location.search);
-const id = params.get("id");
+const malID = params.get("id");
 const title = params.get("title");
 
-if(id){
-loadAnimePage(id,title);
+if(malID){
+loadAnimePage(malID,title);
 }
 
 async function loadAnimePage(id,title){
 
 const res = await fetch(`${JIKAN}/${id}`);
 const data = await res.json();
+
 const anime = data.data;
 
 document.getElementById("animeTitle").innerText = anime.title;
@@ -82,40 +89,68 @@ document.getElementById("animeImage").src = anime.images.jpg.image_url;
 document.getElementById("animeSynopsis").innerText = anime.synopsis;
 document.getElementById("animeRating").innerText = anime.score;
 
+/* generos */
+
 const genresDiv = document.getElementById("animeGenres");
 
 anime.genres.forEach(g=>{
+
 const span = document.createElement("span");
 span.innerText = g.name + " ";
 genresDiv.appendChild(span);
+
 });
 
-/* buscar anime en GOGO */
+/* buscar anime real en gogo */
 
-searchEpisodes(title);
+searchGogoAnime(title);
 
 }
 
-/* =========================
-   BUSCAR EPISODIOS
-========================= */
 
-async function searchEpisodes(name){
+/* ======================
+BUSCAR ANIME EN GOGO
+====================== */
 
-const query = name.toLowerCase().replace(/\s/g,"-");
+async function searchGogoAnime(name){
 
 try{
 
-const res = await fetch(`${GOGO}/${query}`);
+const res = await fetch(`${GOGO}/${encodeURIComponent(name)}`);
+const data = await res.json();
+
+if(!data.results || data.results.length == 0){
+
+document.getElementById("episodes").innerHTML =
+"No se encontraron episodios.";
+
+return;
+
+}
+
+const animeID = data.results[0].id;
+
+loadEpisodes(animeID);
+
+}catch(err){
+
+console.log(err);
+
+}
+
+}
+
+
+/* ======================
+CARGAR EPISODIOS
+====================== */
+
+async function loadEpisodes(animeID){
+
+const res = await fetch(`${GOGO}/info/${animeID}`);
 const data = await res.json();
 
 generateEpisodes(data.episodes);
-
-}catch(e){
-
-console.log("No se encontraron episodios");
-
-}
 
 }
 
@@ -130,7 +165,10 @@ const btn = document.createElement("button");
 btn.innerText = "Episodio " + ep.number;
 
 btn.onclick = ()=>{
-location.href = `player.html?id=${ep.id}&ep=${ep.number}`;
+
+location.href =
+`player.html?episodeId=${ep.id}&number=${ep.number}`;
+
 };
 
 epDiv.appendChild(btn);
@@ -139,21 +177,22 @@ epDiv.appendChild(btn);
 
 }
 
-/* =========================
-   REPRODUCTOR
-========================= */
+
+/* ======================
+REPRODUCTOR
+====================== */
 
 const video = document.getElementById("videoPlayer");
 
-const epID = new URLSearchParams(location.search).get("id");
+const epID = new URLSearchParams(location.search).get("episodeId");
+
+let servers = [];
 
 if(video && epID){
 
 loadEpisode(epID);
 
 }
-
-let servers = [];
 
 async function loadEpisode(id){
 
@@ -172,14 +211,16 @@ video.src = servers[0].url;
 
 function changeServer(index){
 
+if(!servers[index]) return;
+
 video.src = servers[index].url;
 
 }
 
 
-/* =========================
-   BUSCADOR
-========================= */
+/* ======================
+BUSCADOR
+====================== */
 
 const searchInput = document.getElementById("search");
 
