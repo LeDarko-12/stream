@@ -1,12 +1,14 @@
 'use strict';
 
-/* ======================================
+/* =====================================
 CONFIG
-====================================== */
+===================================== */
 
 const CFG = {
 
   JIKAN: "https://api.jikan.moe/v4",
+
+  ANILIST: "https://graphql.anilist.co",
 
   CONSUMET: [
     "https://consumet-api.vercel.app",
@@ -16,13 +18,13 @@ const CFG = {
 
 };
 
-/* ======================================
-UTILS
-====================================== */
+/* =====================================
+HTTP
+===================================== */
 
-async function http(url){
+async function http(url,opts={}){
 
-  const r = await fetch(url);
+  const r = await fetch(url,opts);
 
   if(!r.ok) throw new Error("HTTP "+r.status);
 
@@ -52,6 +54,10 @@ async function consumet(path){
 
 }
 
+/* =====================================
+UTILS
+===================================== */
+
 function qs(id){
   return document.getElementById(id);
 }
@@ -64,18 +70,27 @@ function goPlayer(id,src,ep){
   location.href=`player.html?id=${id}&source=${src}&ep=${ep}`;
 }
 
-/* ======================================
-NORMALIZAR ANIME
-====================================== */
+function coverImg(a){
 
-function norm(a){
+  return a?.images?.jpg?.large_image_url ||
+         a?.images?.jpg?.image_url ||
+         a?.coverImage?.large ||
+         "https://placehold.co/300x420";
+
+}
+
+/* =====================================
+NORMALIZADORES
+===================================== */
+
+function normJikan(a){
 
   return {
 
     id:a.mal_id,
     source:"jikan",
     title:a.title,
-    cover:a.images?.jpg?.large_image_url || a.images?.jpg?.image_url,
+    cover:coverImg(a),
     rating:a.score,
     episodes:a.episodes
 
@@ -83,49 +98,98 @@ function norm(a){
 
 }
 
-/* ======================================
-CARGAR HOME
-====================================== */
+function normAni(a){
 
-async function loadTrending(){
+  return {
 
-  const row = qs("trending-row");
+    id:a.id,
+    source:"anilist",
+    title:a.title.english || a.title.romaji,
+    cover:a.coverImage.large,
+    rating:a.averageScore ? a.averageScore/10 : null,
+    episodes:a.episodes
 
-  if(!row) return;
-
-  const d = await http(`${CFG.JIKAN}/top/anime?limit=20`);
-
-  row.innerHTML = d.data.map(a=>card(norm(a))).join("");
+  };
 
 }
 
-async function loadSeason(){
+/* =====================================
+ANILIST
+===================================== */
 
-  const row = qs("recent-row");
+async function anilistTrending(){
 
-  if(!row) return;
+  const query = `
+  query{
+    Page(page:1,perPage:20){
+      media(sort:TRENDING_DESC,type:ANIME){
+        id
+        episodes
+        averageScore
+        title{romaji english}
+        coverImage{large}
+      }
+    }
+  }`;
+
+  const d = await http(CFG.ANILIST,{
+    method:"POST",
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({query})
+  });
+
+  return d.data.Page.media.map(normAni);
+
+}
+
+async function anilistPopular(){
+
+  const query = `
+  query{
+    Page(page:1,perPage:20){
+      media(sort:POPULARITY_DESC,type:ANIME){
+        id
+        episodes
+        averageScore
+        title{romaji english}
+        coverImage{large}
+      }
+    }
+  }`;
+
+  const d = await http(CFG.ANILIST,{
+    method:"POST",
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({query})
+  });
+
+  return d.data.Page.media.map(normAni);
+
+}
+
+/* =====================================
+JIKAN
+===================================== */
+
+async function jikanSeason(){
 
   const d = await http(`${CFG.JIKAN}/seasons/now`);
 
-  row.innerHTML = d.data.map(a=>card(norm(a))).join("");
+  return d.data.map(normJikan);
 
 }
 
-async function loadPopular(){
+async function jikanDetail(id){
 
-  const row = qs("popular-row");
+  const d = await http(`${CFG.JIKAN}/anime/${id}/full`);
 
-  if(!row) return;
-
-  const d = await http(`${CFG.JIKAN}/top/anime?filter=bypopularity`);
-
-  row.innerHTML = d.data.map(a=>card(norm(a))).join("");
+  return normJikan(d.data);
 
 }
 
-/* ======================================
-CARD HTML
-====================================== */
+/* =====================================
+CARD
+===================================== */
 
 function card(a){
 
@@ -134,19 +198,12 @@ function card(a){
   <div class="anime-card" onclick="goAnime('${a.id}','${a.source}')">
 
     <div class="cover-wrap">
-
       <img src="${a.cover}" loading="lazy">
-
     </div>
 
     <div class="card-info">
-
       <div class="card-title">${a.title}</div>
-
-      <div class="card-sub">
-        ⭐ ${a.rating || "?"}
-      </div>
-
+      <div class="card-sub">⭐ ${a.rating || "?"}</div>
     </div>
 
   </div>
@@ -155,28 +212,43 @@ function card(a){
 
 }
 
-/* ======================================
-BUSCAR
-====================================== */
+/* =====================================
+CARGAR HOME
+===================================== */
 
-async function searchAnime(q){
+async function loadHome(){
 
-  const d = await http(`${CFG.JIKAN}/anime?q=${encodeURIComponent(q)}&limit=10`);
+  try{
 
-  return d.data.map(norm);
+    const season = await jikanSeason();
+
+    const trending = await anilistTrending();
+
+    const popular = await anilistPopular();
+
+    const r1 = qs("recent-row");
+    const r2 = qs("trending-row");
+    const r3 = qs("popular-row");
+
+    if(r1) r1.innerHTML = season.map(card).join("");
+    if(r2) r2.innerHTML = trending.map(card).join("");
+    if(r3) r3.innerHTML = popular.map(card).join("");
+
+  }catch(e){
+
+    console.error("Home error",e);
+
+  }
 
 }
 
-/* ======================================
-STREAMS
-SIN ANIMEFLV
-====================================== */
+/* =====================================
+BUSCAR STREAM
+===================================== */
 
 async function resolveStreams(anime,ep){
 
   const title = anime.title || "";
-
-  const results = [];
 
   const providers = [
     "zoro",
@@ -184,56 +256,58 @@ async function resolveStreams(anime,ep){
     "animepahe"
   ];
 
-  for(const provider of providers){
+  const streams = [];
+
+  for(const p of providers){
 
     try{
 
       const search = await consumet(
-        `/anime/${provider}/${encodeURIComponent(title)}`
+        `/anime/${p}/${encodeURIComponent(title)}`
       );
 
       if(!search?.results?.length) continue;
 
-      const animeId = search.results[0].id;
+      const id = search.results[0].id;
 
       const info = await consumet(
-        `/anime/${provider}/info?id=${animeId}`
+        `/anime/${p}/info?id=${id}`
       );
 
-      const episode = info?.episodes?.find(e => e.number == ep);
+      const episode = info?.episodes?.find(e=>e.number==ep);
 
       if(!episode) continue;
 
       const watch = await consumet(
-        `/anime/${provider}/watch?episodeId=${episode.id}`
+        `/anime/${p}/watch?episodeId=${episode.id}`
       );
 
       for(const s of watch?.sources || []){
 
-        results.push({
+        streams.push({
 
-          server: s.server || provider,
-          url: s.url,
-          quality: s.quality || "auto",
-          lang: s.url.includes("lat") ? "latino" : "sub"
+          server:s.server || p,
+          url:s.url,
+          quality:s.quality || "auto",
+          lang:s.url.includes("lat") ? "latino":"sub"
 
         });
 
       }
 
     }catch(e){
-      console.warn("Provider error:", provider);
+      console.warn("stream error",p);
     }
 
   }
 
-  return results;
+  return streams;
 
 }
 
-/* ======================================
-AUTOPLAY PLAYER
-====================================== */
+/* =====================================
+PLAYER
+===================================== */
 
 async function playEpisode(anime,ep){
 
@@ -267,16 +341,12 @@ async function playEpisode(anime,ep){
 
 }
 
-/* ======================================
+/* =====================================
 INIT
-====================================== */
+===================================== */
 
 document.addEventListener("DOMContentLoaded",()=>{
 
-  loadSeason();
-
-  loadTrending();
-
-  loadPopular();
+  loadHome();
 
 });
