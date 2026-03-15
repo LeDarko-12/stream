@@ -1,24 +1,21 @@
 /* ============================================================
-   YOAKE — script.js  v6.0
+   YOAKE — script.js  v7.0
    夜明け · El amanecer del anime
    ─────────────────────────────────────────────────────────
-   SIN AnimeFLV. 100% Consumet API.
+   Streams: AnimeFLV (primario) + AnimePahe (respaldo)
+   Solo contenido en Español: SUB ESPAÑOL y LATINO
 
-   SERVIDORES (nombres de la imagen del usuario):
+   SERVIDORES:
    ┌────────────────────────────────────────────────────────┐
    │ Desu · Magi · Mega · Streamwish · VOE                 │
    │ Vidhide · Mixdrop · Mp4upload · Streamtape · Doodstream│
    └────────────────────────────────────────────────────────┘
-   Cada nombre de servidor corresponde a una fuente y calidad
-   real obtenida de Consumet (Gogoanime / Zoro / 9anime).
+   Cada slot se mapea a una fuente real obtenida de Consumet.
 
    IDIOMAS:
-   • SUB ESPAÑOL  → Gogoanime Sub  (servidor gogocdn)
-   • SUB ESPAÑOL  → Gogoanime Sub  (servidor vidstreaming)
-   • SUB ESPAÑOL  → Zoro/HiAnime   (servidor vidstreaming)
-   • SUB ESPAÑOL  → Zoro/HiAnime   (servidor vidcloud)
-   • LATINO (dub) → Gogoanime Dub  (servidor gogocdn)
-   • LATINO (dub) → Gogoanime Dub  (servidor vidstreaming)
+   • SUB ESPAÑOL  → AnimeFLV Sub   (Consumet /anime/animeflv)
+   • LATINO (dub) → AnimeFLV Latino(Consumet /anime/animeflv)
+   • RESPALDO Sub → AnimePahe      (Consumet /anime/animepahe)
 
    REPRODUCCIÓN: HLS.js (m3u8) + fallback <video> mp4
    METADATA    : Jikan v4 (MAL) + AniList GraphQL
@@ -227,261 +224,229 @@ async function anilistMovies(p=1){try{const q=`query($p:Int){Page(page:$p,perPag
 /* ═══════════════════════════════════════════════════════════
    CONSUMET — BÚSQUEDA DE EPISODIO
    ─────────────────────────────────────────────────────────
-   Fuentes disponibles:
-   • gogoanime  → Sub Español (mejor cobertura, ~95% animes)
-   • gogoanime  → Latino/Dub  (para los populares)
-   • zoro       → Sub Español (calidad superior, 1080p)
+   Fuentes disponibles (solo contenido en Español):
+   • animeflv  → Sub Español + Latino (cobertura ~90% animes)
+   • animepahe → Sub respaldo (cobertura adicional)
    ─────────────────────────────────────────────────────────
-   Cada fuente + servidor real = un "slot" de la UI con el
-   nombre del servidor de la imagen del usuario.
+   Cada fuente + calidad = un "slot" de la UI con el
+   nombre del servidor visible al usuario.
 ═══════════════════════════════════════════════════════════ */
 
-/** Busca el ID de un anime en Gogoanime (sub o dub) */
-async function gogoFindID(title, isDub) {
-  const cKey = `gogo_${isDub?'dub':'sub'}_${title.toLowerCase().trim()}`;
+/**
+ * Busca el ID de un anime en AnimeFLV (sub o latino).
+ * En AnimeFLV los animes latinos suelen tener "latino"
+ * en el título o en una entrada separada.
+ */
+async function aflvFindID(title, isLat = false) {
+  const query = isLat ? `${title} latino` : title;
+  const cKey  = `aflv_${isLat?'lat':'sub'}_${title.toLowerCase().slice(0,40)}`;
   const cached = cacheGet(cKey); if(cached) return cached;
 
-  const query = isDub ? `${title} dub` : title;
-  const d = await consumet(`/anime/gogoanime/${encodeURIComponent(query)}`);
+  const d = await consumet(`/anime/animeflv/${encodeURIComponent(query)}`);
   if(!d?.results?.length) return null;
 
   const norm = title.toLowerCase().trim();
-  let best = d.results[0];
-  for(const r of d.results){
-    const t=(r.title||'').toLowerCase().trim();
-    if(isDub && t.includes('dub') && (t.includes(norm)||norm.includes(t.replace(' dub','')))){best=r;break;}
-    if(!isDub && !t.includes('dub') && (t===norm||t.includes(norm)||norm.includes(t))){best=r;break;}
+  let best = null;
+  for(const r of d.results) {
+    const t = (r.title||'').toLowerCase().trim();
+    if(isLat) {
+      if(t.includes('latino') || t.includes(' lat)') || t.endsWith('(lat)')){best=r;break;}
+    } else {
+      if(!t.includes('latino') && (t===norm)){best=r;break;}
+      if(!best && !t.includes('latino') && (t.includes(norm.slice(0,8))||norm.includes(t.slice(0,8)))) best=r;
+    }
   }
+  best = best || d.results[0];
 
   const id = best?.id || null;
   if(id) cacheSet(cKey, id);
   return id;
 }
 
-/** Obtiene lista de episodios de Gogoanime por ID */
-async function gogoGetEpisodes(animeId) {
-  const cKey=`gogo_eps_${animeId}`; const cached=cacheGet(cKey); if(cached) return cached;
-  const d=await consumet(`/anime/gogoanime/info/${encodeURIComponent(animeId)}`);
-  const eps=d?.episodes||[]; if(eps.length) cacheSet(cKey,eps); return eps;
+/** Obtiene lista de episodios de AnimeFLV por ID */
+async function aflvGetEps(animeId) {
+  const cKey = `aflv_eps_${animeId}`;
+  const cached = cacheGet(cKey); if(cached) return cached;
+  const d = await consumet(`/anime/animeflv/info?id=${encodeURIComponent(animeId)}`);
+  const eps = d?.episodes || [];
+  if(eps.length) cacheSet(cKey, eps);
+  return eps;
 }
 
 /**
- * Obtiene streams de Gogoanime para un episodio dado.
- * Consumet permite elegir entre servidores reales:
- *   'gogocdn'       → estable, la mayoría de calidades
- *   'vidstreaming'  → Vidstreaming (alta calidad)
- *   'streamsb'      → StreamSB
+ * Obtiene streams de AnimeFLV para un episodio.
+ * AnimeFLV Consumet retorna múltiples fuentes ordenadas por calidad.
  */
-async function gogoWatch(episodeId, server='gogocdn') {
+async function aflvWatch(episodeId) {
   try {
-    const path = server === 'gogocdn'
-      ? `/anime/gogoanime/watch/${encodeURIComponent(episodeId)}`
-      : `/anime/gogoanime/watch/${encodeURIComponent(episodeId)}?server=${server}`;
-    const d = await consumet(path);
+    const d = await consumet(`/anime/animeflv/watch?episodeId=${encodeURIComponent(episodeId)}`);
     return {
-      sources : (d?.sources||[]).sort((a,b)=>{
+      sources: (d?.sources||[]).sort((a,b)=>{
         const q=s=>s.quality==='1080p'?5:s.quality==='720p'?4:s.quality==='480p'?3:s.quality==='360p'?2:1;
         return q(b)-q(a);
       }),
-      headers : d?.headers||{},
+      headers: d?.headers||{},
     };
   } catch { return {sources:[],headers:{}}; }
 }
 
-/** Busca el ID de un anime en Zoro/HiAnime */
-async function zoroFindID(title) {
-  const cKey=`zoro_${title.toLowerCase().trim()}`; const cached=cacheGet(cKey); if(cached) return cached;
-  const d=await consumet(`/anime/zoro/${encodeURIComponent(title)}`);
+/* ── AnimePahe (respaldo Sub) ──────────────────────────── */
+async function paheFindID(title) {
+  const cKey = `pahe_${title.toLowerCase().slice(0,40)}`;
+  const cached = cacheGet(cKey); if(cached) return cached;
+  const d = await consumet(`/anime/animepahe/${encodeURIComponent(title)}`);
   if(!d?.results?.length) return null;
-  const norm=title.toLowerCase().trim();
-  let best=d.results[0];
-  for(const r of d.results){ if((r.title||'').toLowerCase().trim()===norm){best=r;break;} }
-  const id=best?.id||null; if(id) cacheSet(cKey,id); return id;
+  const norm = title.toLowerCase().trim();
+  let best = d.results[0];
+  for(const r of d.results){
+    const t=(r.title||'').toLowerCase().trim();
+    if(t===norm||t.includes(norm.slice(0,8))||norm.includes(t.slice(0,8))){best=r;break;}
+  }
+  const id = best?.id || null;
+  if(id) cacheSet(cKey, id);
+  return id;
 }
 
-/** Obtiene episodios de Zoro */
-async function zoroGetEpisodes(zoroId) {
-  const cKey=`zoro_eps_${zoroId}`; const cached=cacheGet(cKey); if(cached) return cached;
-  const d=await consumet(`/anime/zoro/info?id=${encodeURIComponent(zoroId)}`);
-  const eps=d?.episodes||[]; if(eps.length) cacheSet(cKey,eps); return eps;
+async function paheGetEps(animeId) {
+  const cKey = `pahe_eps_${animeId}`;
+  const cached = cacheGet(cKey); if(cached) return cached;
+  const d = await consumet(`/anime/animepahe/info?id=${encodeURIComponent(animeId)}`);
+  const eps = d?.episodes || [];
+  if(eps.length) cacheSet(cKey, eps);
+  return eps;
 }
 
-/**
- * Obtiene streams de Zoro para un episodio.
- * server: 'vidstreaming' | 'streamsb' | 'vidcloud'
- */
-async function zoroWatch(episodeId, server='vidstreaming') {
+async function paheWatch(episodeId) {
   try {
-    const d=await consumet(`/anime/zoro/watch?episodeId=${encodeURIComponent(episodeId)}&server=${server}`);
-    return (d?.sources||[]).sort((a,b)=>{
-      const q=s=>s.quality==='1080p'?5:s.quality==='720p'?4:s.quality==='480p'?3:2;
-      return q(b)-q(a);
-    });
-  } catch { return []; }
+    const d = await consumet(`/anime/animepahe/watch?episodeId=${encodeURIComponent(episodeId)}`);
+    return {
+      sources: (d?.sources||[]).sort((a,b)=>{
+        const q=s=>s.quality==='1080p'?5:s.quality==='720p'?4:s.quality==='480p'?3:2;
+        return q(b)-q(a);
+      }),
+      headers: d?.headers||{},
+    };
+  } catch { return {sources:[],headers:{}}; }
 }
 
 /* ═══════════════════════════════════════════════════════════
-   RESOLUCIÓN DE STREAMS — SIN AnimeFLV
+   RESOLUCIÓN DE STREAMS — AnimeFLV + AnimePahe
    ─────────────────────────────────────────────────────────
-   Construye los "slots" de servidor con los nombres de la
-   imagen mapeados a fuentes reales de Consumet:
-
    SUB ESPAÑOL:
-     Desu       ← Gogoanime gogocdn     mejor calidad disponible
-     Streamwish ← Gogoanime vidstreaming 1080p/720p
-     Magi       ← Zoro vidstreaming     sub con 1080p
-     Mega       ← Zoro vidcloud         alternativo
-     Vidhide    ← Gogoanime streamsb     alternativo
-     Mixdrop    ← Zoro streamsb          alternativo
-     Mp4upload  ← Gogoanime gogocdn 480p
-     Streamtape ← Gogoanime gogocdn 360p
-     Doodstream ← Gogoanime vidstreaming 480p
-     VOE        ← Zoro vidstreaming 720p
+     Desu       ← AnimeFLV  calidad 1080p
+     Streamwish ← AnimeFLV  calidad 720p
+     Magi       ← AnimeFLV  calidad 480p
+     VOE        ← AnimeFLV  calidad 360p / extra
+     Vidhide    ← AnimeFLV  fuentes adicionales
+     Mixdrop    ← AnimePahe respaldo 1080p
+     Mp4upload  ← AnimePahe respaldo 720p
+     Streamtape ← AnimePahe respaldo 480p
+     Doodstream ← AnimePahe respaldo extra
+     Mega       ← AnimePahe respaldo extra
 
-   LATINO (dub):
-     Desu       ← Gogoanime Dub gogocdn
-     Streamwish ← Gogoanime Dub vidstreaming
-     VOE        ← Gogoanime Dub streamsb
-     Magi       ← (misma fuente, calidad diferente)
-     Mega       ← (misma fuente, calidad diferente)
+   LATINO:
+     Desu       ← AnimeFLV Latino 1080p
+     Streamwish ← AnimeFLV Latino 720p
+     VOE        ← AnimeFLV Latino 480p
+     Magi       ← AnimeFLV Latino extra
+     Mega       ← AnimeFLV Latino extra
 ═══════════════════════════════════════════════════════════ */
 async function resolveStreams(anime, ep) {
   const title   = anime.title || '';
-  const results = [];     // { slotId, name, icon, color, lang, url, isM3U8, headers, quality }
+  const results = [];
 
-  /* ─── Búsqueda en PARALELO para no bloquear ──────────── */
-  const [
-    gogoSubId,
-    gogoDubId,
-    zoroId,
-  ] = await Promise.all([
-    gogoFindID(title, false),
-    gogoFindID(title, true),
-    zoroFindID(title),
+  /* Búsqueda en paralelo */
+  const [subId, latId] = await Promise.all([
+    aflvFindID(title, false),
+    aflvFindID(title, true),
   ]);
 
-  /* ─── GOGOANIME SUB — fuente principal sub español ───── */
-  if(gogoSubId) {
-    const epList = await gogoGetEpisodes(gogoSubId);
-    const epObj  = epList.find(e=>{
-      const n=parseInt((e.id||'').split('-episode-').pop());
-      return n===ep;
-    }) || epList[ep-1];
+  /* Slots Sub Español — en orden de prioridad */
+  const subSlots = [
+    {id:'desu',       name:'Desu',       icon:'D',  color:'#f59e0b'},
+    {id:'streamwish', name:'Streamwish', icon:'SW', color:'#f97316'},
+    {id:'magi',       name:'Magi',       icon:'M',  color:'#3b82f6'},
+    {id:'voe',        name:'VOE',        icon:'V',  color:'#eab308'},
+    {id:'vidhide',    name:'Vidhide',    icon:'Vh', color:'#06b6d4'},
+    {id:'doodstream', name:'Doodstream', icon:'Dd', color:'#0ea5e9'},
+    {id:'mp4upload',  name:'Mp4upload',  icon:'M4', color:'#64748b'},
+    {id:'streamtape', name:'Streamtape', icon:'St', color:'#ef4444'},
+  ];
 
+  /* Slots Latino */
+  const latSlots = [
+    {id:'desu_lat',       name:'Desu',       icon:'D',  color:'#f59e0b'},
+    {id:'streamwish_lat', name:'Streamwish', icon:'SW', color:'#f97316'},
+    {id:'voe_lat',        name:'VOE',        icon:'V',  color:'#eab308'},
+    {id:'magi_lat',       name:'Magi',       icon:'M',  color:'#3b82f6'},
+    {id:'mega_lat',       name:'Mega',       icon:'Mg', color:'#8b5cf6'},
+  ];
+
+  /* ─── AnimeFLV SUB ESPAÑOL ───────────────────────────── */
+  if(subId) {
+    const epList = await aflvGetEps(subId);
+    const epObj  = epList.find(e=>parseInt(e.number)===ep) || epList[ep-1];
     if(epObj?.id) {
-      /* Servidor gogocdn → Desu, Mp4upload, Streamtape */
-      const {sources:srcCDN, headers:hCDN} = await gogoWatch(epObj.id, 'gogocdn');
-      srcCDN.forEach(s => {
-        const slot =
-          s.quality==='1080p' ? {id:'desu',       name:'Desu',       icon:'D',  color:'#f59e0b'} :
-          s.quality==='720p'  ? {id:'vidhide',     name:'Vidhide',    icon:'Vh', color:'#06b6d4'} :
-          s.quality==='480p'  ? {id:'mp4upload',   name:'Mp4upload',  icon:'M4', color:'#64748b'} :
-                                {id:'streamtape',  name:'Streamtape', icon:'St', color:'#ef4444'};
+      const {sources, headers} = await aflvWatch(epObj.id);
+      sources.forEach((s, i) => {
+        if(i >= subSlots.length) return;
         results.push({
-          ...slot, lang:'sub', url:s.url,
-          isM3U8:s.isM3U8??s.url?.includes('.m3u8'), headers:hCDN,
-          quality:s.quality||'Auto',
-        });
-      });
-
-      /* Servidor vidstreaming → Streamwish, VOE, Doodstream */
-      const {sources:srcVS, headers:hVS} = await gogoWatch(epObj.id, 'vidstreaming');
-      srcVS.forEach(s => {
-        const slot =
-          s.quality==='1080p' ? {id:'streamwish',  name:'Streamwish', icon:'SW', color:'#f97316'} :
-          s.quality==='720p'  ? {id:'voe',          name:'VOE',        icon:'V',  color:'#eab308'} :
-                                {id:'doodstream',   name:'Doodstream', icon:'Dd', color:'#0ea5e9'};
-        results.push({
-          ...slot, lang:'sub', url:s.url,
-          isM3U8:s.isM3U8??s.url?.includes('.m3u8'), headers:hVS,
-          quality:s.quality||'Auto',
+          ...subSlots[i], lang:'sub',
+          url:s.url, isM3U8:s.isM3U8??s.url?.includes('.m3u8'),
+          headers, quality:s.quality||'Auto',
         });
       });
     }
   }
 
-  /* ─── ZORO/HIANIME SUB — fuente alternativa sub ──────── */
-  if(zoroId) {
-    const epList = await zoroGetEpisodes(zoroId);
-    const epObj  = epList[ep-1] || epList.find(e=>e.number===ep);
-
+  /* ─── AnimeFLV LATINO ────────────────────────────────── */
+  if(latId && latId !== subId) {
+    const epList = await aflvGetEps(latId);
+    const epObj  = epList.find(e=>parseInt(e.number)===ep) || epList[ep-1];
     if(epObj?.id) {
-      /* Servidor vidstreaming → Magi */
-      const srcVS = await zoroWatch(epObj.id, 'vidstreaming');
-      if(srcVS.length) {
-        const best=srcVS[0];
+      const {sources, headers} = await aflvWatch(epObj.id);
+      sources.forEach((s, i) => {
+        if(i >= latSlots.length) return;
         results.push({
-          id:'magi', name:'Magi', icon:'M', color:'#3b82f6',
-          lang:'sub', url:best.url,
-          isM3U8:best.isM3U8??best.url?.includes('.m3u8'),
-          headers:best.headers||null, quality:best.quality||'Auto',
+          ...latSlots[i], lang:'latino',
+          url:s.url, isM3U8:s.isM3U8??s.url?.includes('.m3u8'),
+          headers, quality:s.quality||'Auto',
         });
-        // Segunda calidad → Mega
-        if(srcVS[1]) {
-          const s2=srcVS[1];
+      });
+    }
+  }
+
+  /* ─── AnimePahe RESPALDO (sub) ─────────────────────────
+     Solo se activa si AnimeFLV no encontró streams sub.    */
+  const yaHaySub = results.some(r=>r.lang==='sub');
+  if(!yaHaySub) {
+    const paheId = await paheFindID(title);
+    if(paheId) {
+      const epList = await paheGetEps(paheId);
+      const epObj  = epList.find(e=>parseInt(e.number)===ep) || epList[ep-1];
+      if(epObj?.id) {
+        const paheSlots = [
+          {id:'mixdrop',   name:'Mixdrop',   icon:'Mx', color:'#10b981'},
+          {id:'mp4upload', name:'Mp4upload', icon:'M4', color:'#64748b'},
+          {id:'streamtape',name:'Streamtape',icon:'St', color:'#ef4444'},
+          {id:'doodstream',name:'Doodstream',icon:'Dd', color:'#0ea5e9'},
+          {id:'mega',      name:'Mega',      icon:'Mg', color:'#8b5cf6'},
+        ];
+        const {sources, headers} = await paheWatch(epObj.id);
+        sources.forEach((s, i) => {
+          if(i >= paheSlots.length) return;
           results.push({
-            id:'mega', name:'Mega', icon:'Mg', color:'#8b5cf6',
-            lang:'sub', url:s2.url,
-            isM3U8:s2.isM3U8??s2.url?.includes('.m3u8'),
-            headers:s2.headers||null, quality:s2.quality||'Auto',
+            ...paheSlots[i], lang:'sub',
+            url:s.url, isM3U8:s.isM3U8??s.url?.includes('.m3u8'),
+            headers, quality:s.quality||'Auto',
           });
-        }
-      }
-
-      /* Servidor vidcloud → Mixdrop */
-      const srcVC = await zoroWatch(epObj.id, 'vidcloud');
-      if(srcVC.length) {
-        const best=srcVC[0];
-        results.push({
-          id:'mixdrop', name:'Mixdrop', icon:'Mx', color:'#10b981',
-          lang:'sub', url:best.url,
-          isM3U8:best.isM3U8??best.url?.includes('.m3u8'),
-          headers:best.headers||null, quality:best.quality||'Auto',
         });
       }
-    }
-  }
-
-  /* ─── GOGOANIME DUB (Latino) ─────────────────────────── */
-  if(gogoDubId && gogoDubId !== gogoSubId) {
-    const epList = await gogoGetEpisodes(gogoDubId);
-    const epObj  = epList.find(e=>{
-      const n=parseInt((e.id||'').split('-episode-').pop());
-      return n===ep;
-    }) || epList[ep-1];
-
-    if(epObj?.id) {
-      /* gogocdn → Desu Latino */
-      const {sources:srcCDN, headers:hCDN} = await gogoWatch(epObj.id, 'gogocdn');
-      srcCDN.forEach(s => {
-        const slot =
-          s.quality==='1080p' ? {id:'desu_lat',       name:'Desu',       icon:'D',  color:'#f59e0b'} :
-          s.quality==='720p'  ? {id:'magi_lat',        name:'Magi',       icon:'M',  color:'#3b82f6'} :
-                                {id:'mega_lat',        name:'Mega',       icon:'Mg', color:'#8b5cf6'};
-        results.push({
-          ...slot, lang:'latino', url:s.url,
-          isM3U8:s.isM3U8??s.url?.includes('.m3u8'), headers:hCDN,
-          quality:s.quality||'Auto',
-        });
-      });
-
-      /* vidstreaming → Streamwish Latino */
-      const {sources:srcVS, headers:hVS} = await gogoWatch(epObj.id, 'vidstreaming');
-      srcVS.forEach(s => {
-        const slot =
-          s.quality==='1080p' ? {id:'streamwish_lat', name:'Streamwish', icon:'SW', color:'#f97316'} :
-                                {id:'voe_lat',         name:'VOE',        icon:'V',  color:'#eab308'};
-        results.push({
-          ...slot, lang:'latino', url:s.url,
-          isM3U8:s.isM3U8??s.url?.includes('.m3u8'), headers:hVS,
-          quality:s.quality||'Auto',
-        });
-      });
     }
   }
 
   /* Elimina duplicados por URL */
-  const seen=new Set();
+  const seen = new Set();
   return results.filter(s=>{
     if(!s.url||seen.has(s.url)) return false;
     seen.add(s.url); return true;
@@ -766,8 +731,8 @@ async function loadPlayerStreams(anime, ep) {
   const serversRow=qs('servers-row'), embedDiv=qs('player-embed');
 
   /* Estado: buscando */
-  if(serversRow) serversRow.innerHTML=`<div class="srv-searching"><div class="spinner" style="width:16px;height:16px;border-width:2px"></div><span>Buscando streams en Gogoanime y HiAnime…</span></div>`;
-  if(embedDiv) embedDiv.innerHTML=`<div class="embed-placeholder"><div class="ep-icon" style="animation:pulse 1.5s infinite">▶</div><p style="color:var(--accent-light)">Obteniendo episodio ${ep}…</p><p style="color:var(--text-muted);font-size:12px">Conectando con Gogoanime y HiAnime</p></div>`;
+  if(serversRow) serversRow.innerHTML=`<div class="srv-searching"><div class="spinner" style="width:16px;height:16px;border-width:2px"></div><span>Buscando streams en AnimeFLV…</span></div>`;
+  if(embedDiv) embedDiv.innerHTML=`<div class="embed-placeholder"><div class="ep-icon" style="animation:pulse 1.5s infinite">▶</div><p style="color:var(--accent-light)">Obteniendo episodio ${ep}…</p><p style="color:var(--text-muted);font-size:12px">Conectando con AnimeFLV · Sub Español · Latino</p></div>`;
 
   const streams = await resolveStreams(anime, ep);
 
@@ -836,8 +801,8 @@ function updateLangBadge(lang){
 }
 
 function renderNoStreams(sr,ed,title,ep){
-  if(sr)sr.innerHTML=`<div style="font-size:13px;color:var(--text-muted);line-height:1.9;padding:2px 0">⚠️ No se encontraron streams en Gogoanime ni HiAnime para este episodio.<br>Prueba <strong style="color:var(--accent-light)">otro episodio</strong> o un <strong style="color:var(--accent-light)">anime más popular</strong> (mejor cobertura).</div>`;
-  if(ed)ed.innerHTML=`<div class="embed-placeholder"><div class="ep-icon">⚠️</div><h3 style="font-family:var(--font-head);font-size:1.2rem;text-align:center">${title||'Episodio'} — Ep ${ep}</h3><p style="color:var(--text-muted);font-size:13px;text-align:center;max-width:360px;line-height:1.7">Sin streams disponibles.<br>Los animes muy nuevos o nicho pueden tener menos cobertura en Gogoanime/HiAnime.</p></div>`;
+  if(sr)sr.innerHTML=`<div style="font-size:13px;color:var(--text-muted);line-height:1.9;padding:2px 0">⚠️ No se encontraron streams en AnimeFLV para este episodio.<br>Prueba <strong style="color:var(--accent-light)">otro episodio</strong> o un <strong style="color:var(--accent-light)">anime más popular</strong> (mejor cobertura en AnimeFLV).</div>`;
+  if(ed)ed.innerHTML=`<div class="embed-placeholder"><div class="ep-icon">⚠️</div><h3 style="font-family:var(--font-head);font-size:1.2rem;text-align:center">${title||'Episodio'} — Ep ${ep}</h3><p style="color:var(--text-muted);font-size:13px;text-align:center;max-width:360px;line-height:1.7">Sin streams disponibles en AnimeFLV.<br>Los animes muy nuevos o de nicho pueden tener menos cobertura.<br>Intenta otro episodio o vuelve más tarde.</p></div>`;
 }
 
 window.filterSidebarEps=q=>{document.querySelectorAll('.sidebar-ep-item').forEach(item=>{const n=item.querySelector('.ep-num')?.textContent||'';item.style.display=!q||n.includes(q)?'':'none';});};
