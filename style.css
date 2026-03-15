@@ -308,6 +308,8 @@ ul{list-style:none;}
   position:relative;flex-shrink:0;
 }
 .srv-name{position:relative;}
+.srv-quality{font-size:10px;color:var(--text-muted);background:rgba(255,255,255,.06);padding:1px 5px;border-radius:4px;position:relative;font-weight:600;}
+.srv-btn.active .srv-quality{color:var(--text-secondary);}
 .srv-searching{display:flex;align-items:center;gap:10px;color:var(--text-muted);font-size:13px;padding:4px 0;}
 
 /* Sidebar */
