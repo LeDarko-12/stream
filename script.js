@@ -805,3 +805,48 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(page==='player')initPlayerPage();
   qs('scroll-top-btn')?.addEventListener('click',()=>scrollTo({top:0,behavior:'smooth'}));
 });
+/* =========================================
+   JKANIME EMBED PLAYER
+========================================= */
+
+function jkLoadServers(servers){
+
+const container = document.getElementById("servers");
+
+container.innerHTML = servers.map((s,i)=>`
+
+<button onclick="jkSetServer('${s}')"
+style="
+padding:8px 14px;
+background:#111;
+color:#fff;
+border-radius:6px;
+border:none;
+cursor:pointer;
+">
+
+Servidor ${i+1}
+
+</button>
+
+`).join("");
+
+jkSetServer(servers[0]);
+
+}
+
+
+function jkSetServer(url){
+
+const player = document.getElementById("player-embed");
+
+player.innerHTML = `
+<iframe
+src="${url}"
+frameborder="0"
+allowfullscreen
+style="width:100%;height:100%">
+</iframe>
+`;
+
+}
