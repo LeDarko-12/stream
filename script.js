@@ -1,8 +1,8 @@
 'use strict';
 
-/* =========================================
+/* ======================================
 CONFIG
-========================================= */
+====================================== */
 
 const CFG = {
 
@@ -11,15 +11,14 @@ const CFG = {
   CONSUMET: [
     "https://consumet-api.vercel.app",
     "https://api.consumet.org",
-    "https://consumet.pages.dev",
-    "https://consumet-clone.vercel.app"
+    "https://consumet.pages.dev"
   ]
 
 };
 
-/* =========================================
-UTILIDADES
-========================================= */
+/* ======================================
+UTILS
+====================================== */
 
 async function http(url){
 
@@ -65,252 +64,178 @@ function goPlayer(id,src,ep){
   location.href=`player.html?id=${id}&source=${src}&ep=${ep}`;
 }
 
-/* =========================================
-METADATA (JIKAN)
-========================================= */
+/* ======================================
+NORMALIZAR ANIME
+====================================== */
 
-async function jikanSearch(q){
+function norm(a){
 
-  const d = await http(
-    `${CFG.JIKAN}/anime?q=${encodeURIComponent(q)}&limit=10`
-  );
+  return {
 
-  return d.data;
+    id:a.mal_id,
+    source:"jikan",
+    title:a.title,
+    cover:a.images?.jpg?.large_image_url || a.images?.jpg?.image_url,
+    rating:a.score,
+    episodes:a.episodes
 
-}
-
-async function jikanDetail(id){
-
-  const d = await http(`${CFG.JIKAN}/anime/${id}/full`);
-
-  return d.data;
+  };
 
 }
 
-/* =========================================
-SERVIDORES DISPONIBLES
-15 SERVIDORES
-========================================= */
+/* ======================================
+CARGAR HOME
+====================================== */
 
-const SERVERS = [
+async function loadTrending(){
 
-  "Zoro",
-  "Gogoanime",
-  "AnimePahe",
+  const row = qs("trending-row");
 
-  "Streamwish",
-  "VidHide",
-  "VOE",
+  if(!row) return;
 
-  "MixDrop",
-  "DoodStream",
-  "Mp4Upload",
+  const d = await http(`${CFG.JIKAN}/top/anime?limit=20`);
 
-  "StreamTape",
-  "Mega",
-
-  "Filemoon",
-  "Upstream",
-  "Okru",
-  "YourUpload"
-
-];
-
-/* =========================================
-BUSCAR ANIME EN FUENTES
-========================================= */
-
-async function findAnime(title){
-
-  const sources = [];
-
-  const zoro = await consumet(
-    `/anime/zoro/${encodeURIComponent(title)}`
-  );
-
-  if(zoro?.results?.length){
-
-    sources.push({
-      provider:"zoro",
-      id:zoro.results[0].id
-    });
-
-  }
-
-  const gogo = await consumet(
-    `/anime/gogoanime/${encodeURIComponent(title)}`
-  );
-
-  if(gogo?.results?.length){
-
-    sources.push({
-      provider:"gogoanime",
-      id:gogo.results[0].id
-    });
-
-  }
-
-  const pahe = await consumet(
-    `/anime/animepahe/${encodeURIComponent(title)}`
-  );
-
-  if(pahe?.results?.length){
-
-    sources.push({
-      provider:"animepahe",
-      id:pahe.results[0].id
-    });
-
-  }
-
-  return sources;
+  row.innerHTML = d.data.map(a=>card(norm(a))).join("");
 
 }
 
-/* =========================================
-AUTOCARGA DE EPISODIOS
-========================================= */
+async function loadSeason(){
 
-async function getEpisodes(provider,id){
+  const row = qs("recent-row");
 
-  const d = await consumet(
-    `/anime/${provider}/info?id=${id}`
-  );
+  if(!row) return;
 
-  return d?.episodes || [];
+  const d = await http(`${CFG.JIKAN}/seasons/now`);
+
+  row.innerHTML = d.data.map(a=>card(norm(a))).join("");
 
 }
 
-/* =========================================
-OBTENER STREAMS
-========================================= */
+async function loadPopular(){
 
-async function getStreams(provider,ep){
+  const row = qs("popular-row");
 
-  const d = await consumet(
-    `/anime/${provider}/watch?episodeId=${ep}`
-  );
+  if(!row) return;
 
-  return d?.sources || [];
+  const d = await http(`${CFG.JIKAN}/top/anime?filter=bypopularity`);
+
+  row.innerHTML = d.data.map(a=>card(norm(a))).join("");
 
 }
 
-/* =========================================
-DETECTAR IDIOMA
-========================================= */
+/* ======================================
+CARD HTML
+====================================== */
 
-function detectLanguage(url){
+function card(a){
 
-  const u = url.toLowerCase();
+  return `
+  
+  <div class="anime-card" onclick="goAnime('${a.id}','${a.source}')">
 
-  if(
-    u.includes("lat") ||
-    u.includes("dub") ||
-    u.includes("latino")
-  ){
+    <div class="cover-wrap">
 
-    return "latino";
+      <img src="${a.cover}" loading="lazy">
 
-  }
+    </div>
 
-  return "sub";
+    <div class="card-info">
+
+      <div class="card-title">${a.title}</div>
+
+      <div class="card-sub">
+        ⭐ ${a.rating || "?"}
+      </div>
+
+    </div>
+
+  </div>
+  
+  `;
 
 }
 
-/* =========================================
-RESOLVER STREAMS
-========================================= */
+/* ======================================
+BUSCAR
+====================================== */
+
+async function searchAnime(q){
+
+  const d = await http(`${CFG.JIKAN}/anime?q=${encodeURIComponent(q)}&limit=10`);
+
+  return d.data.map(norm);
+
+}
+
+/* ======================================
+STREAMS
+SIN ANIMEFLV
+====================================== */
 
 async function resolveStreams(anime,ep){
 
   const title = anime.title || "";
 
-  const streams = [];
+  const results = [];
 
-  const sources = await findAnime(title);
+  const providers = [
+    "zoro",
+    "gogoanime",
+    "animepahe"
+  ];
 
-  for(const src of sources){
+  for(const provider of providers){
 
     try{
 
-      const eps = await getEpisodes(
-        src.provider,
-        src.id
+      const search = await consumet(
+        `/anime/${provider}/${encodeURIComponent(title)}`
       );
 
-      const episode = eps.find(e=>e.number==ep);
+      if(!search?.results?.length) continue;
+
+      const animeId = search.results[0].id;
+
+      const info = await consumet(
+        `/anime/${provider}/info?id=${animeId}`
+      );
+
+      const episode = info?.episodes?.find(e => e.number == ep);
 
       if(!episode) continue;
 
-      const videos = await getStreams(
-        src.provider,
-        episode.id
+      const watch = await consumet(
+        `/anime/${provider}/watch?episodeId=${episode.id}`
       );
 
-      for(const v of videos){
+      for(const s of watch?.sources || []){
 
-        streams.push({
+        results.push({
 
-          server: v.server || src.provider,
-          url: v.url,
-          quality: v.quality || "auto",
-          lang: detectLanguage(v.url)
+          server: s.server || provider,
+          url: s.url,
+          quality: s.quality || "auto",
+          lang: s.url.includes("lat") ? "latino" : "sub"
 
         });
 
       }
 
-    }catch(e){}
+    }catch(e){
+      console.warn("Provider error:", provider);
+    }
 
   }
 
-  return streams;
+  return results;
 
 }
 
-/* =========================================
-AUTOCAMBIO DE SERVIDOR
-========================================= */
+/* ======================================
+AUTOPLAY PLAYER
+====================================== */
 
-async function autoPlay(streams){
-
-  const video = document.getElementById("hls-video");
-
-  for(const s of streams){
-
-    try{
-
-      if(Hls.isSupported()){
-
-        const hls = new Hls();
-
-        hls.loadSource(s.url);
-
-        hls.attachMedia(video);
-
-        return;
-
-      }else{
-
-        video.src = s.url;
-
-        return;
-
-      }
-
-    }catch(e){}
-
-  }
-
-  alert("No se pudo reproducir el episodio");
-
-}
-
-/* =========================================
-CARGAR EPISODIO
-========================================= */
-
-async function loadEpisode(anime,ep){
+async function playEpisode(anime,ep){
 
   const streams = await resolveStreams(anime,ep);
 
@@ -322,6 +247,36 @@ async function loadEpisode(anime,ep){
 
   }
 
-  autoPlay(streams);
+  const video = qs("hls-video");
+
+  const url = streams[0].url;
+
+  if(Hls.isSupported()){
+
+    const hls = new Hls();
+
+    hls.loadSource(url);
+
+    hls.attachMedia(video);
+
+  }else{
+
+    video.src = url;
+
+  }
 
 }
+
+/* ======================================
+INIT
+====================================== */
+
+document.addEventListener("DOMContentLoaded",()=>{
+
+  loadSeason();
+
+  loadTrending();
+
+  loadPopular();
+
+});
