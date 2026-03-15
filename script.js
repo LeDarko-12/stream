@@ -1,41 +1,44 @@
-const api = "https://api.jikan.moe/v4/anime";
+const API = "https://api.jikan.moe/v4/anime";
 
 let page = 1;
-let loading = false;
 
 const grid = document.getElementById("animeGrid");
 
-/* CATALOGO */
+const loader = document.getElementById("loader");
 
 async function loadAnime(){
 
-if(loading) return;
+loader.style.display = "block";
 
-loading = true;
+const res = await fetch(`${API}?page=${page}`);
 
-document.getElementById("loading").style.display="block";
-
-const res = await fetch(`${api}?page=${page}`);
 const data = await res.json();
 
-data.data.forEach(anime=>{
+displayAnime(data.data);
+
+loader.style.display = "none";
+
+}
+
+function displayAnime(animes){
+
+animes.forEach(anime => {
 
 const card = document.createElement("div");
-card.className="card";
 
-card.innerHTML=`
+card.className = "card";
 
-<img loading="lazy" src="${anime.images.jpg.large_image_url}">
+card.innerHTML = `
 
-<h3>${anime.title}</h3>
+<img loading="lazy" src="${anime.images.jpg.image_url}">
 
-<div class="rating">⭐ ${anime.score || "N/A"}</div>
+<div class="card-title">${anime.title}</div>
 
 `;
 
-card.onclick=()=>{
+card.onclick = () => {
 
-location.href=`anime.html?id=${anime.mal_id}`;
+location.href = `anime.html?id=${anime.mal_id}`;
 
 };
 
@@ -43,231 +46,140 @@ grid.appendChild(card);
 
 });
 
+}
+
+window.addEventListener("scroll",()=>{
+
+if(window.innerHeight + window.scrollY >= document.body.offsetHeight - 100){
+
 page++;
 
-loading=false;
-
-document.getElementById("loading").style.display="none";
+loadAnime();
 
 }
+
+});
 
 if(grid){
 
 loadAnime();
 
-window.addEventListener("scroll",()=>{
-
-if(window.innerHeight+window.scrollY >= document.body.offsetHeight-200){
-
-loadAnime();
-
 }
 
-});
-
-}
-
-/* SEARCH */
-
-const searchInput = document.getElementById("searchInput");
-
-if(searchInput){
-
-searchInput.addEventListener("keyup", async ()=>{
-
-grid.innerHTML="";
-
-const q = searchInput.value;
-
-const res = await fetch(`${api}?q=${q}`);
-const data = await res.json();
-
-data.data.forEach(anime=>{
-
-const card = document.createElement("div");
-
-card.className="card";
-
-card.innerHTML=`
-
-<img src="${anime.images.jpg.image_url}">
-
-<h3>${anime.title}</h3>
-
-<div class="rating">${anime.score}</div>
-
-`;
-
-card.onclick=()=>{
-
-location.href=`anime.html?id=${anime.mal_id}`;
-
-};
-
-grid.appendChild(card);
-
-});
-
-});
-
-}
-
-/* ANIME PAGE */
-
-const params = new URLSearchParams(location.search);
+const params = new URLSearchParams(window.location.search);
 
 const id = params.get("id");
 
-const container = document.getElementById("animeContainer");
+if(id){
 
-if(container && id){
-
-loadAnimePage();
+loadAnimePage(id);
 
 }
 
-async function loadAnimePage(){
+async function loadAnimePage(id){
 
-const res = await fetch(`https://api.jikan.moe/v4/anime/${id}/full`);
+const res = await fetch(`${API}/${id}`);
 
 const data = await res.json();
 
 const anime = data.data;
 
-container.innerHTML=`
+document.getElementById("animeTitle").innerText = anime.title;
 
-<img src="${anime.images.jpg.large_image_url}">
+document.getElementById("animeImage").src = anime.images.jpg.image_url;
 
-<div>
+document.getElementById("animeSynopsis").innerText = anime.synopsis;
 
-<h1>${anime.title}</h1>
+document.getElementById("animeRating").innerText = anime.score;
 
-<p>${anime.synopsis}</p>
+const genresDiv = document.getElementById("animeGenres");
 
-<p>⭐ ${anime.score}</p>
+anime.genres.forEach(g=>{
 
-<p>${anime.status}</p>
+const span = document.createElement("span");
 
-<p>${anime.year || ""}</p>
+span.innerText = g.name;
 
-</div>
-
-`;
-
-generateEpisodes(anime.title);
-
-}
-
-/* EPISODIOS */
-
-async function generateEpisodes(title){
-
-const list = document.getElementById("episodesList");
-
-list.innerHTML="Cargando episodios...";
-
-try{
-
-const slug = title.toLowerCase()
-.replace(/ /g,"-")
-.replace(/[^a-z0-9\-]/g,"");
-
-const res = await fetch(`https://api.consumet.org/anime/gogoanime/${slug}`);
-
-const data = await res.json();
-
-list.innerHTML="";
-
-data.episodes.forEach(ep=>{
-
-const btn=document.createElement("button");
-
-btn.textContent=ep.number;
-
-btn.onclick=()=>{
-
-location.href=`player.html?epId=${ep.id}`;
-
-};
-
-list.appendChild(btn);
+genresDiv.appendChild(span);
 
 });
 
-}catch{
+generateEpisodes(anime.episodes);
 
-list.innerHTML="No se pudieron cargar los episodios";
+}
+
+function generateEpisodes(num){
+
+const epDiv = document.getElementById("episodes");
+
+for(let i=1;i<=num;i++){
+
+const btn = document.createElement("button");
+
+btn.innerText = "Episodio "+i;
+
+btn.onclick = ()=>{
+
+location.href = `player.html?ep=${i}`;
+
+};
+
+epDiv.appendChild(btn);
 
 }
 
 }
 
-/* PLAYER */
+const video = document.getElementById("videoPlayer");
 
-const player=document.getElementById("videoPlayer");
+let episode = new URLSearchParams(location.search).get("ep");
 
-if(player){
+function changeServer(server){
 
-loadServers();
+if(server==1){
+
+video.src = "https://filemoon.sx/e/"+episode;
 
 }
 
-async function loadServers(){
+if(server==2){
 
-const params = new URLSearchParams(location.search);
+video.src = "https://voe.sx/e/"+episode;
 
-const epId = params.get("epId");
+}
 
-if(!epId) return;
+if(server==3){
 
-try{
+video.src = "https://streamsb.net/e/"+episode;
 
-const res = await fetch(`https://api.consumet.org/anime/gogoanime/watch/${epId}`);
+}
+
+}
+
+if(video){
+
+changeServer(1);
+
+}
+
+const searchInput = document.getElementById("search");
+
+if(searchInput){
+
+searchInput.addEventListener("input", async e=>{
+
+const q = e.target.value;
+
+if(q.length<3) return;
+
+const res = await fetch(`https://api.jikan.moe/v4/anime?q=${q}`);
 
 const data = await res.json();
 
-const servers = data.sources;
+grid.innerHTML="";
 
-player.src = servers[0].url;
-
-const selector=document.querySelector(".server-selector");
-
-selector.innerHTML="";
-
-servers.forEach(server=>{
-
-const btn=document.createElement("button");
-
-btn.textContent = server.quality || "server";
-
-btn.onclick=()=>{
-
-player.src = server.url;
-
-};
-
-selector.appendChild(btn);
+displayAnime(data.data);
 
 });
-
-}catch{
-
-player.src="";
-
-}
-
-}
-
-/* BOTON SUBIR */
-
-const topBtn=document.getElementById("topBtn");
-
-if(topBtn){
-
-topBtn.onclick=()=>{
-
-window.scrollTo({top:0,behavior:"smooth"});
-
-};
 
 }
