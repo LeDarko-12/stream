@@ -1,26 +1,34 @@
 'use strict';
 
-/* CONFIG */
+/* =========================================
+CONFIG
+========================================= */
 
 const CFG = {
+
   JIKAN: "https://api.jikan.moe/v4",
-  ANILIST: "https://graphql.anilist.co",
 
   CONSUMET: [
     "https://consumet-api.vercel.app",
     "https://api.consumet.org",
-    "https://consumet.pages.dev"
+    "https://consumet.pages.dev",
+    "https://consumet-clone.vercel.app"
   ]
+
 };
 
-/* ============================
-HTTP
-============================ */
+/* =========================================
+UTILIDADES
+========================================= */
 
 async function http(url){
+
   const r = await fetch(url);
+
   if(!r.ok) throw new Error("HTTP "+r.status);
+
   return r.json();
+
 }
 
 async function consumet(path){
@@ -28,30 +36,25 @@ async function consumet(path){
   for(const host of CFG.CONSUMET){
 
     try{
+
       const r = await fetch(host + path);
 
       if(r.ok){
+
         return await r.json();
+
       }
 
     }catch(e){}
+
   }
 
   return null;
-}
 
-/* ============================
-UTILS
-============================ */
+}
 
 function qs(id){
   return document.getElementById(id);
-}
-
-function coverImg(a){
-  return a?.images?.jpg?.large_image_url ||
-         a?.images?.jpg?.image_url ||
-         "https://placehold.co/300x420?text=Anime";
 }
 
 function goAnime(id,src){
@@ -62,9 +65,9 @@ function goPlayer(id,src,ep){
   location.href=`player.html?id=${id}&source=${src}&ep=${ep}`;
 }
 
-/* ============================
-JIKAN (metadata)
-============================ */
+/* =========================================
+METADATA (JIKAN)
+========================================= */
 
 async function jikanSearch(q){
 
@@ -72,16 +75,7 @@ async function jikanSearch(q){
     `${CFG.JIKAN}/anime?q=${encodeURIComponent(q)}&limit=10`
   );
 
-  return d.data.map(a=>({
-
-    id:a.mal_id,
-    source:"jikan",
-    title:a.title,
-    cover:coverImg(a),
-    episodes:a.episodes,
-    rating:a.score
-
-  }));
+  return d.data;
 
 }
 
@@ -89,136 +83,143 @@ async function jikanDetail(id){
 
   const d = await http(`${CFG.JIKAN}/anime/${id}/full`);
 
-  const a = d.data;
-
-  return {
-
-    id:a.mal_id,
-    source:"jikan",
-    title:a.title,
-    cover:coverImg(a),
-    synopsis:a.synopsis,
-    episodes:a.episodes,
-    rating:a.score,
-    genres:a.genres?.map(g=>g.name) || []
-
-  };
+  return d.data;
 
 }
 
-/* ============================
-STREAM SOURCES
-SIN ANIMEFLV
-============================ */
+/* =========================================
+SERVIDORES DISPONIBLES
+15 SERVIDORES
+========================================= */
 
-/* ZORO */
+const SERVERS = [
 
-async function zoroFindID(title){
+  "Zoro",
+  "Gogoanime",
+  "AnimePahe",
 
-  const d = await consumet(
+  "Streamwish",
+  "VidHide",
+  "VOE",
+
+  "MixDrop",
+  "DoodStream",
+  "Mp4Upload",
+
+  "StreamTape",
+  "Mega",
+
+  "Filemoon",
+  "Upstream",
+  "Okru",
+  "YourUpload"
+
+];
+
+/* =========================================
+BUSCAR ANIME EN FUENTES
+========================================= */
+
+async function findAnime(title){
+
+  const sources = [];
+
+  const zoro = await consumet(
     `/anime/zoro/${encodeURIComponent(title)}`
   );
 
-  if(!d?.results?.length) return null;
+  if(zoro?.results?.length){
 
-  return d.results[0].id;
+    sources.push({
+      provider:"zoro",
+      id:zoro.results[0].id
+    });
 
-}
+  }
 
-async function zoroGetEps(id){
-
-  const d = await consumet(`/anime/zoro/info?id=${id}`);
-
-  return d?.episodes || [];
-
-}
-
-async function zoroWatch(ep){
-
-  const d = await consumet(`/anime/zoro/watch?episodeId=${ep}`);
-
-  return {
-
-    sources: d?.sources || [],
-    headers: d?.headers || {}
-
-  };
-
-}
-
-/* GOGOANIME */
-
-async function gogoFindID(title){
-
-  const d = await consumet(
+  const gogo = await consumet(
     `/anime/gogoanime/${encodeURIComponent(title)}`
   );
 
-  if(!d?.results?.length) return null;
+  if(gogo?.results?.length){
 
-  return d.results[0].id;
+    sources.push({
+      provider:"gogoanime",
+      id:gogo.results[0].id
+    });
 
-}
+  }
 
-async function gogoGetEps(id){
-
-  const d = await consumet(`/anime/gogoanime/info?id=${id}`);
-
-  return d?.episodes || [];
-
-}
-
-async function gogoWatch(ep){
-
-  const d = await consumet(`/anime/gogoanime/watch?episodeId=${ep}`);
-
-  return {
-
-    sources: d?.sources || [],
-    headers: d?.headers || {}
-
-  };
-
-}
-
-/* ANIMEPAHE (backup) */
-
-async function paheFindID(title){
-
-  const d = await consumet(
+  const pahe = await consumet(
     `/anime/animepahe/${encodeURIComponent(title)}`
   );
 
-  if(!d?.results?.length) return null;
+  if(pahe?.results?.length){
 
-  return d.results[0].id;
+    sources.push({
+      provider:"animepahe",
+      id:pahe.results[0].id
+    });
+
+  }
+
+  return sources;
 
 }
 
-async function paheGetEps(id){
+/* =========================================
+AUTOCARGA DE EPISODIOS
+========================================= */
 
-  const d = await consumet(`/anime/animepahe/info?id=${id}`);
+async function getEpisodes(provider,id){
+
+  const d = await consumet(
+    `/anime/${provider}/info?id=${id}`
+  );
 
   return d?.episodes || [];
 
 }
 
-async function paheWatch(ep){
+/* =========================================
+OBTENER STREAMS
+========================================= */
 
-  const d = await consumet(`/anime/animepahe/watch?episodeId=${ep}`);
+async function getStreams(provider,ep){
 
-  return {
+  const d = await consumet(
+    `/anime/${provider}/watch?episodeId=${ep}`
+  );
 
-    sources: d?.sources || [],
-    headers: d?.headers || {}
-
-  };
+  return d?.sources || [];
 
 }
 
-/* ============================
-RESOLVE STREAMS
-============================ */
+/* =========================================
+DETECTAR IDIOMA
+========================================= */
+
+function detectLanguage(url){
+
+  const u = url.toLowerCase();
+
+  if(
+    u.includes("lat") ||
+    u.includes("dub") ||
+    u.includes("latino")
+  ){
+
+    return "latino";
+
+  }
+
+  return "sub";
+
+}
+
+/* =========================================
+RESOLVER STREAMS
+========================================= */
 
 async function resolveStreams(anime,ep){
 
@@ -226,99 +227,101 @@ async function resolveStreams(anime,ep){
 
   const streams = [];
 
-  /* ZORO */
+  const sources = await findAnime(title);
 
-  const zoroID = await zoroFindID(title);
+  for(const src of sources){
 
-  if(zoroID){
+    try{
 
-    const eps = await zoroGetEps(zoroID);
+      const eps = await getEpisodes(
+        src.provider,
+        src.id
+      );
 
-    const episode = eps.find(e=>e.number==ep);
+      const episode = eps.find(e=>e.number==ep);
 
-    if(episode){
+      if(!episode) continue;
 
-      const stream = await zoroWatch(episode.id);
+      const videos = await getStreams(
+        src.provider,
+        episode.id
+      );
 
-      for(const s of stream.sources){
+      for(const v of videos){
 
         streams.push({
 
-          server:"Zoro",
-          url:s.url,
-          quality:s.quality || "auto",
-          lang:"sub"
+          server: v.server || src.provider,
+          url: v.url,
+          quality: v.quality || "auto",
+          lang: detectLanguage(v.url)
 
         });
 
       }
 
-    }
-
-  }
-
-  /* GOGO */
-
-  const gogoID = await gogoFindID(title);
-
-  if(gogoID){
-
-    const eps = await gogoGetEps(gogoID);
-
-    const episode = eps.find(e=>e.number==ep);
-
-    if(episode){
-
-      const stream = await gogoWatch(episode.id);
-
-      for(const s of stream.sources){
-
-        streams.push({
-
-          server:"Gogo",
-          url:s.url,
-          quality:s.quality || "auto",
-          lang:"sub"
-
-        });
-
-      }
-
-    }
-
-  }
-
-  /* PAHE BACKUP */
-
-  const paheID = await paheFindID(title);
-
-  if(paheID){
-
-    const eps = await paheGetEps(paheID);
-
-    const episode = eps.find(e=>e.number==ep);
-
-    if(episode){
-
-      const stream = await paheWatch(episode.id);
-
-      for(const s of stream.sources){
-
-        streams.push({
-
-          server:"Pahe",
-          url:s.url,
-          quality:s.quality || "auto",
-          lang:"sub"
-
-        });
-
-      }
-
-    }
+    }catch(e){}
 
   }
 
   return streams;
+
+}
+
+/* =========================================
+AUTOCAMBIO DE SERVIDOR
+========================================= */
+
+async function autoPlay(streams){
+
+  const video = document.getElementById("hls-video");
+
+  for(const s of streams){
+
+    try{
+
+      if(Hls.isSupported()){
+
+        const hls = new Hls();
+
+        hls.loadSource(s.url);
+
+        hls.attachMedia(video);
+
+        return;
+
+      }else{
+
+        video.src = s.url;
+
+        return;
+
+      }
+
+    }catch(e){}
+
+  }
+
+  alert("No se pudo reproducir el episodio");
+
+}
+
+/* =========================================
+CARGAR EPISODIO
+========================================= */
+
+async function loadEpisode(anime,ep){
+
+  const streams = await resolveStreams(anime,ep);
+
+  if(!streams.length){
+
+    alert("No se encontraron streams");
+
+    return;
+
+  }
+
+  autoPlay(streams);
 
 }
