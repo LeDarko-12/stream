@@ -4,28 +4,41 @@
 <head>
 
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Anime</title>
 
 <link rel="stylesheet" href="style.css">
-
-<meta name="viewport" content="width=device-width, initial-scale=1">
 
 </head>
 
 <body>
 
 <header class="navbar">
-
-<a href="index.html" class="logo">AnimeStream</a>
-
+<a href="index.html" class="logo">KawaiiAnime</a>
 </header>
 
-<div id="animeContainer" class="anime-page"></div>
+<div class="anime-container">
 
-<h2 class="episodes-title">Episodios</h2>
+<img id="animeImage">
 
-<div id="episodesList" class="episodes"></div>
+<div class="anime-info">
+
+<h1 id="animeTitle"></h1>
+
+<p id="animeSynopsis"></p>
+
+<div id="animeGenres"></div>
+
+<p><b>Rating:</b> <span id="animeRating"></span></p>
+
+</div>
+
+</div>
+
+<h2>Episodios</h2>
+
+<div id="episodes" class="episodes"></div>
 
 <script src="script.js"></script>
 
