@@ -6,70 +6,80 @@
   <title>Reproduciendo — Kawaii Anime</title>
   <link rel="stylesheet" href="style.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
-  <!-- HLS.js para reproducir streams m3u8 cuando AnimeFLV no tiene iframes -->
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.14/dist/hls.min.js"></script>
+  <!-- HLS.js: reproduce streams m3u8 directamente en el browser -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.8/dist/hls.min.js"></script>
   <style>
     body { overflow-x: hidden; }
-    .player-page { display:flex; flex-direction:column; min-height:100vh; margin-top:64px; }
-
-    .player-layout { flex:1; display:grid; grid-template-columns:1fr 320px; min-height:calc(100vh - 64px - 54px); }
+    .player-page  { display:flex; flex-direction:column; min-height:100vh; margin-top:64px; }
+    .player-layout{ flex:1; display:grid; grid-template-columns:1fr 320px; min-height:calc(100vh - 64px - 54px); }
     .player-layout.theater { grid-template-columns:1fr; }
-    .player-main { display:flex; flex-direction:column; background:#000; }
+    .player-main  { display:flex; flex-direction:column; background:#000; }
 
     /* Wrapper 16:9 */
     .player-embed-wrap { position:relative; width:100%; padding-top:56.25%; background:#03060d; }
     #player-embed { position:absolute; top:0; left:0; width:100%; height:100%; }
-
-    /* Video element para HLS */
     #hls-video {
-      position:absolute; top:0; left:0; width:100%; height:100%; background:#000;
-      outline: none;
+      position:absolute; top:0; left:0; width:100%; height:100%;
+      background:#000; outline:none;
     }
-    #hls-video::-webkit-media-controls { display:flex !important; }
 
-    /* Controles extra */
-    .player-extra-controls {
+    /* Controles adicionales */
+    .player-extra {
       background:var(--bg-primary); padding:9px 20px;
       border-top:1px solid var(--border-subtle);
-      display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:9px;
+      display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;
     }
     .sel-group { display:flex; align-items:center; gap:7px; font-size:13px; color:var(--text-muted); }
-    .sel-group select { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-primary); font-family:var(--font-body); font-size:12px; padding:4px 9px; cursor:pointer; outline:none; }
+    .sel-group select {
+      background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm);
+      color:var(--text-primary); font-family:var(--font-body); font-size:12px;
+      padding:4px 9px; cursor:pointer; outline:none;
+    }
     .sel-group select:focus { border-color:var(--accent); }
-    .theater-btn { display:flex; align-items:center; gap:5px; padding:6px 13px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text-secondary); font-size:12px; font-weight:600; font-family:var(--font-body); cursor:pointer; transition:all var(--transition); }
-    .theater-btn:hover { border-color:var(--accent); color:var(--accent-light); }
+    .ctrl-btn {
+      display:flex; align-items:center; gap:5px; padding:6px 13px;
+      background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm);
+      color:var(--text-secondary); font-size:12px; font-weight:600; font-family:var(--font-body);
+      cursor:pointer; transition:all var(--transition);
+    }
+    .ctrl-btn:hover { border-color:var(--accent); color:var(--accent-light); }
 
     /* Info bar */
-    .player-info-bar { background:var(--bg-secondary); padding:13px 20px; display:flex; align-items:center; gap:13px; }
+    .player-info-bar { background:var(--bg-secondary); padding:12px 20px; display:flex; align-items:center; gap:12px; }
     .player-info-bar img { width:44px; height:62px; object-fit:cover; border-radius:6px; flex-shrink:0; border:1px solid var(--border); }
     .pib-text .pib-title { font-size:14px; font-weight:700; }
     .pib-text .pib-sub   { font-size:12px; color:var(--text-muted); margin-top:2px; }
-    .pib-actions { margin-left:auto; display:flex; gap:8px; flex-shrink:0; }
+    .pib-actions { margin-left:auto; display:flex; gap:7px; flex-shrink:0; }
 
-    /* Badge de idioma */
+    /* Badge idioma */
     .lang-indicator { display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:99px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; }
     .lang-latino { background:rgba(245,158,11,.15); border:1px solid rgba(245,158,11,.4); color:#f59e0b; }
     .lang-sub    { background:rgba(14,165,233,.15);  border:1px solid rgba(14,165,233,.4);  color:#0ea5e9; }
 
-    /* Nota de stream HLS */
-    .hls-note {
-      background:rgba(14,165,233,0.08); border-top:1px solid rgba(14,165,233,0.2);
-      padding:8px 20px; font-size:12px; color:#7dd3fc;
-      display:none; align-items:center; gap:8px;
+    /* Grilla de servidores */
+    .srv-grid { display:flex; flex-wrap:wrap; align-items:center; gap:7px; }
+    .srv-lang-label {
+      font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px;
+      padding:2px 0; flex-basis:100%;
     }
-    .hls-note.visible { display:flex; }
+    .srv-lang-label.latino { color:#f59e0b; }
+    .srv-lang-label.sub    { color:#0ea5e9; }
+    .srv-divider { flex-basis:100%; height:1px; background:var(--border-subtle); margin:4px 0; }
+    .srv-searching {
+      display:flex; align-items:center; gap:10px;
+      color:var(--text-muted); font-size:13px; padding:4px 0;
+    }
 
     @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.1);opacity:.75} }
 
-    @media (max-width:900px) {
-      .player-layout { grid-template-columns:1fr; }
-      .player-sidebar { max-height:360px; border-left:none; border-top:1px solid var(--border-subtle); }
+    @media(max-width:900px){
+      .player-layout{grid-template-columns:1fr;}
+      .player-sidebar{max-height:360px;border-left:none;border-top:1px solid var(--border-subtle);}
     }
-    @media (max-width:600px) {
-      .player-controls,.servers-section,.player-info-bar,.player-extra-controls { padding:10px 13px; }
-      .player-title-row { flex-direction:column; }
-      .player-nav-btns  { width:100%; justify-content:space-between; }
-      .pib-actions { flex-wrap:wrap; gap:6px; }
+    @media(max-width:600px){
+      .player-controls,.servers-section,.player-info-bar,.player-extra{padding:10px 13px;}
+      .player-title-row{flex-direction:column;}
+      .player-nav-btns{width:100%;justify-content:space-between;}
     }
   </style>
 </head>
@@ -81,7 +91,7 @@
     <div class="logo-icon">🌸</div>
     <span class="logo-text">KAWAII ANIME</span>
   </a>
-  <div class="nav-search" style="max-width:340px">
+  <div class="nav-search" style="max-width:360px">
     <input type="text" id="search-input" placeholder="Buscar anime..." autocomplete="off">
     <span class="search-icon">🔍</span>
     <div class="search-dropdown" id="search-dropdown"></div>
@@ -101,63 +111,51 @@
   <p style="color:var(--text-muted);font-size:14px">Cargando reproductor…</p>
 </div>
 
-<!-- PLAYER CONTENT -->
+<!-- PLAYER -->
 <div class="player-page" id="player-content" style="display:none">
 
-  <!-- Breadcrumb con badge de idioma -->
+  <!-- Breadcrumb -->
   <div style="background:var(--bg-secondary);padding:8px 20px;border-bottom:1px solid var(--border-subtle);font-size:12px;color:var(--text-muted);display:flex;align-items:center;flex-wrap:wrap;gap:4px">
     <a href="index.html" style="color:var(--accent-light)">Inicio</a>
     <span style="margin:0 4px">›</span>
     <a id="bc-anime-link" href="#" style="color:var(--accent-light)">Anime</a>
     <span style="margin:0 4px">›</span>
     <span id="bc-ep">Episodio 1</span>
-    <span id="lang-badge" class="lang-indicator lang-sub" style="margin-left:10px">📖 Sub esp</span>
+    <span id="lang-badge" class="lang-indicator lang-sub" style="margin-left:10px">📖 Sub Esp</span>
   </div>
 
   <div class="player-layout" id="player-layout">
 
-    <!-- ── COLUMNA PRINCIPAL ────────────────────────────── -->
+    <!-- Video + controles -->
     <div class="player-main">
 
-      <!-- Embed 16:9 — puede contener iframe o <video id="hls-video"> -->
+      <!-- ── EMBED 16:9 ── -->
       <div class="player-embed-wrap">
         <div id="player-embed">
           <div class="player-embed-placeholder">
             <div class="big-play" style="animation:pulse 1.5s infinite">▶</div>
-            <p style="color:var(--accent-light);font-size:15px">Iniciando reproductor…</p>
+            <p style="color:var(--accent-light);font-size:15px">Iniciando…</p>
           </div>
         </div>
       </div>
 
-      <!-- Nota cuando se usa HLS / Gogoanime -->
-      <div class="hls-note" id="hls-note">
-        📡 Reproduciendo vía Gogoanime (Sub inglés) · AnimeFLV no disponible para este episodio
-      </div>
-
-      <!-- Calidad / Idioma / Teatro -->
-      <div class="player-extra-controls">
-        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <!-- Controles: modo cine -->
+      <div class="player-extra">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
           <div class="sel-group">
-            <span>📺 Calidad:</span>
-            <select id="quality-select" onchange="changeQuality(this.value)">
-              <option value="1080">1080p</option>
-              <option value="720" selected>720p</option>
-              <option value="480">480p</option>
-              <option value="360">360p</option>
-            </select>
-          </div>
-          <div class="sel-group">
-            <span>🌐 Idioma:</span>
-            <select id="lang-select" onchange="changeLang(this.value)">
-              <option value="sub" selected>Subtitulado</option>
-              <option value="dub">Español Latino</option>
+            <span>📺</span>
+            <select onchange="showToast('Cambia de servidor para cambiar la calidad','info')">
+              <option>Auto (según servidor)</option>
+              <option>1080p</option>
+              <option>720p</option>
+              <option>480p</option>
             </select>
           </div>
         </div>
-        <button class="theater-btn" onclick="toggleTheater()">⛶ Modo cine</button>
+        <button class="ctrl-btn" onclick="toggleTheater()">⛶ Modo cine</button>
       </div>
 
-      <!-- Título + Anterior / Siguiente -->
+      <!-- Título + Anterior/Siguiente -->
       <div class="player-controls">
         <div class="player-title-row">
           <div>
@@ -171,13 +169,18 @@
         </div>
       </div>
 
-      <!-- SERVIDORES (generados por JS con datos reales de AnimeFLV / Consumet) -->
+      <!-- ── SERVIDORES ── -->
       <div class="servers-section">
-        <div class="servers-label">🌐 Servidores disponibles</div>
+        <div class="servers-label">
+          🌐 Servidores
+          <span style="font-size:10px;font-weight:400;color:var(--text-muted);margin-left:8px">
+            · Gogoanime &amp; HiAnime · Sub Español / Latino
+          </span>
+        </div>
         <div class="servers-row" id="servers-row">
-          <div style="display:flex;align-items:center;gap:10px;color:var(--text-muted);font-size:13px">
+          <div class="srv-searching">
             <div class="spinner" style="width:16px;height:16px;border-width:2px"></div>
-            Buscando en AnimeFLV…
+            Conectando con servidores externos…
           </div>
         </div>
       </div>
@@ -190,15 +193,14 @@
           <div class="pib-sub"   id="player-info-subtitle">Episodio 1</div>
         </div>
         <div class="pib-actions">
-          <button class="btn-secondary" style="padding:8px 13px;font-size:13px" id="go-anime-btn">ℹ️ Ficha</button>
-          <button class="btn-secondary" style="padding:8px 13px;font-size:13px"
-                  onclick="showToast('❤️ Favoritos — próximamente','info')">❤️</button>
+          <button class="btn-secondary" style="padding:7px 12px;font-size:13px" id="go-anime-btn">ℹ️ Ficha</button>
+          <button class="btn-secondary" style="padding:7px 12px;font-size:13px" onclick="showToast('❤️ Favoritos — próximamente','info')">❤️</button>
         </div>
       </div>
 
     </div><!-- /player-main -->
 
-    <!-- ── SIDEBAR: lista de episodios ─────────────────── -->
+    <!-- Sidebar episodios -->
     <div class="player-sidebar">
       <div class="sidebar-header">
         <span>📋 Episodios</span>
@@ -212,52 +214,27 @@
     </div>
 
   </div><!-- /player-layout -->
-
 </div><!-- /player-content -->
 
 <!-- FOOTER -->
 <footer style="background:var(--bg-secondary);border-top:1px solid var(--border-subtle);padding:14px 5%;text-align:center">
   <p style="font-size:12px;color:var(--text-muted)">
     © 2024 Kawaii Anime ·
-    <a href="index.html" style="color:var(--accent-light)">Inicio</a> ·
-    <a href="#" style="color:var(--accent-light)">DMCA</a>
+    <a href="index.html" style="color:var(--accent-light)">Inicio</a>
   </p>
 </footer>
 
 <button class="scroll-top-btn" id="scroll-top-btn">↑</button>
 <div class="toast-container" id="toast-container"></div>
-
 <script src="script.js"></script>
 <script>
-  /* Extensiones del player.html */
-
   /* Muestra el contenido cuando el player está listo */
   const _origRPUI = window.renderPlayerUI;
-  window.renderPlayerUI = (anime, id, source, ep, aflvSlug) => {
-    _origRPUI(anime, id, source, ep, aflvSlug);
+  window.renderPlayerUI = (...args) => {
+    _origRPUI(...args);
     document.getElementById('player-loading').style.display = 'none';
     document.getElementById('player-content').style.display = 'flex';
-    document.title = `${anime.title} · Ep ${ep} — Kawaii Anime`;
   };
-
-  /* Cuando se selecciona un servidor HLS, muestra la nota informativa */
-  const _origSrv = window.selectSrv;
-  window.selectSrv = (btn, enc, lang, name, mode) => {
-    _origSrv(btn, enc, lang, name, mode);
-    const note = document.getElementById('hls-note');
-    if (note) note.classList.toggle('visible', mode === 'hls');
-  };
-
-  /* Muestra nota HLS automáticamente si el primer servidor ya es HLS */
-  const _origLPS = window.loadPlayerServers;
-  if (_origLPS) {
-    // Este hook ya está en script.js, pero añadimos la nota visual aquí
-    const origLoad = window.loadPlayerServers;
-    window.loadPlayerServers = async (...args) => {
-      await origLoad(...args);
-      // La nota HLS se gestiona dentro del flujo de selectSrv
-    };
-  }
 </script>
 </body>
 </html>
