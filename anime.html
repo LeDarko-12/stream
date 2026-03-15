@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Anime — Kawaii Anime</title>
+  <title>YOAKE — Anime</title>
   <link rel="stylesheet" href="style.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><linearGradient id='g' x1='0%25' y1='100%25' x2='100%25' y2='0%25'><stop offset='0%25' stop-color='%23e8932a'/><stop offset='100%25' stop-color='%236366f1'/></linearGradient></defs><circle cx='50' cy='62' r='18' fill='url(%23g)'/><rect x='47' y='5' width='6' height='14' rx='3' fill='url(%23g)'/><rect x='47' y='5' width='6' height='14' rx='3' fill='url(%23g)' transform='rotate(45 50 50)'/><rect x='47' y='5' width='6' height='14' rx='3' fill='url(%23g)' transform='rotate(90 50 50)'/><rect x='47' y='5' width='6' height='14' rx='3' fill='url(%23g)' transform='rotate(135 50 50)'/><line x1='5' y1='82' x2='95' y2='82' stroke='url(%23g)' stroke-width='5' stroke-linecap='round'/></svg>">
   <style>
     .anime-page-layout{display:grid;grid-template-columns:1fr 280px;gap:32px;padding:0 5% 80px;align-items:flex-start;}
     .anime-sidebar-stats{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:22px;position:sticky;top:80px;}
@@ -14,10 +14,10 @@
     .sidebar-stat .label{color:var(--text-muted);font-weight:600;flex-shrink:0;}
     .sidebar-stat .value{color:var(--text-primary);font-weight:700;text-align:right;}
     .sidebar-stat .value.accent{color:var(--accent-light);}
-    .watch-now-big{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),#6d28d9);color:white;border:none;border-radius:var(--radius);font-size:16px;font-weight:800;font-family:var(--font-body);cursor:pointer;margin-bottom:11px;transition:all var(--transition);box-shadow:0 4px 20px var(--accent-glow);}
+    .watch-now-big{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;padding:13px;background:linear-gradient(135deg,var(--accent),#c97a1e);color:white;border:none;border-radius:var(--radius);font-size:16px;font-weight:800;font-family:var(--font-body);cursor:pointer;margin-bottom:11px;transition:all var(--transition);box-shadow:0 4px 20px var(--accent-glow);}
     .watch-now-big:hover{transform:translateY(-2px);box-shadow:0 8px 28px var(--accent-glow);}
     .add-list-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:10px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius);color:var(--text-secondary);font-size:14px;font-weight:600;font-family:var(--font-body);cursor:pointer;transition:all var(--transition);}
-    .add-list-btn:hover{border-color:var(--accent);color:var(--accent-light);background:rgba(124,58,237,.1);}
+    .add-list-btn:hover{border-color:var(--accent);color:var(--accent-light);background:rgba(232,147,42,.1);}
     .characters-section{padding:32px 5% 0;}
     .characters-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(82px,1fr));gap:13px;padding-top:14px;}
     .char-card{text-align:center;}
@@ -30,9 +30,18 @@
 <body data-page="anime">
 
 <nav class="navbar" id="navbar">
-  <a href="index.html" class="nav-logo">
-    <div class="logo-icon">🌸</div>
-    <span class="logo-text">KAWAII ANIME</span>
+  <a href="index.html" class="brand-logo">
+    <svg class="brand-icon" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="sg" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stop-color="#e8932a"/><stop offset="100%" stop-color="#6366f1"/></linearGradient></defs>
+      <circle cx="22" cy="27" r="8" fill="url(#sg)"/>
+      <rect x="20.5" y="3" width="3" height="8" rx="1.5" fill="url(#sg)"/>
+      <rect x="20.5" y="3" width="3" height="8" rx="1.5" fill="url(#sg)" transform="rotate(45 22 22)"/>
+      <rect x="20.5" y="3" width="3" height="8" rx="1.5" fill="url(#sg)" transform="rotate(-45 22 22)"/>
+      <rect x="20.5" y="3" width="3" height="8" rx="1.5" fill="url(#sg)" transform="rotate(90 22 22)"/>
+      <line x1="3" y1="38" x2="41" y2="38" stroke="url(#sg)" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M 8 38 Q 22 20 36 38" stroke="url(#sg)" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.5"/>
+    </svg>
+    <div class="brand-name-wrap"><span class="brand-name-en">YOAKE</span><span class="brand-name-jp">夜明け</span></div>
   </a>
   <div class="nav-search">
     <input type="text" id="search-input" placeholder="Buscar anime..." autocomplete="off">
@@ -49,26 +58,19 @@
 <div class="mobile-nav" id="mobile-nav"><a href="index.html">🏠 Inicio</a></div>
 
 <!-- CARGANDO -->
-<div id="anime-loading" style="display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:16px;margin-top:64px">
+<div id="anime-loading" style="display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:16px;margin-top:66px">
   <div class="spinner" style="width:56px;height:56px;border-width:4px"></div>
-  <p style="color:var(--text-muted);font-size:14px">Cargando información del anime…</p>
+  <p style="color:var(--text-muted);font-size:14px">Cargando información…</p>
 </div>
 
 <!-- CONTENIDO -->
 <div id="anime-detail-content" style="display:none">
-
-  <div class="anime-hero">
-    <div class="anime-hero-bg" id="anime-hero-bg"></div>
-    <div class="anime-hero-overlay"></div>
-  </div>
-
+  <div class="anime-hero"><div class="anime-hero-bg" id="anime-hero-bg"></div><div class="anime-hero-overlay"></div></div>
   <div class="anime-detail">
     <div class="anime-poster"><img id="anime-poster-img" src="" alt="Portada" loading="lazy"></div>
     <div class="anime-info">
       <nav style="font-size:12px;color:var(--text-muted);margin-bottom:10px">
-        <a href="index.html" style="color:var(--accent-light)">Inicio</a>
-        <span style="margin:0 6px">›</span>
-        <span id="breadcrumb-type">Anime</span>
+        <a href="index.html" style="color:var(--accent-light)">Inicio</a><span style="margin:0 6px">›</span><span id="breadcrumb-type">Anime</span>
       </nav>
       <span class="status-badge" id="anime-status">…</span>
       <h1 id="anime-title">Cargando…</h1>
@@ -92,43 +94,27 @@
 
   <div class="anime-page-layout">
     <div>
-      <!-- Nota sobre streams -->
-      <div style="background:rgba(14,165,233,.08);border:1px solid rgba(14,165,233,.2);border-radius:var(--radius-sm);padding:11px 14px;font-size:13px;color:#7dd3fc;margin-bottom:20px;display:flex;align-items:center;gap:9px">
-        📡 <span>Streams vía <strong>Gogoanime</strong> y <strong>HiAnime</strong> · Sub Español / Latino según disponibilidad</span>
+      <!-- Info servidores -->
+      <div style="background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.2);border-radius:var(--radius-sm);padding:11px 14px;font-size:13px;color:var(--accent2-light);margin-bottom:20px;display:flex;align-items:center;gap:9px">
+        📡 <span>Servidores: <strong>Desu · Magi · Streamwish · VOE · Vidhide · Mp4upload · Doodstream</strong> + más</span>
       </div>
-
       <!-- Episodios -->
       <section style="padding:0 0 40px">
         <div class="episodes-header">
           <h2>Lista de Episodios</h2>
-          <div class="ep-search">
-            <span>🔍</span>
-            <input type="number" placeholder="Ep #" min="1" oninput="filterEpisodes('Episodio '+this.value)">
-          </div>
+          <div class="ep-search"><span>🔍</span><input type="number" placeholder="Ep #" min="1" oninput="filterEpisodes('Episodio '+this.value)"></div>
         </div>
-        <div class="episodes-grid" id="episodes-grid">
-          <div class="loading-spinner"><div class="spinner"></div></div>
-        </div>
+        <div class="episodes-grid" id="episodes-grid"><div class="loading-spinner"><div class="spinner"></div></div></div>
       </section>
-
       <!-- Personajes -->
       <section class="characters-section" id="characters-section" style="display:none">
-        <div class="section-title" style="margin-bottom:4px">
-          <div class="accent-bar"></div><span class="icon">👥</span><h2>Personajes Principales</h2>
-        </div>
+        <div class="section-title" style="margin-bottom:4px"><div class="accent-bar"></div><span class="icon">👥</span><h2>Personajes Principales</h2></div>
         <div class="characters-grid" id="characters-grid"></div>
       </section>
-
       <!-- Relacionados -->
       <section style="padding:40px 0 0">
-        <div class="section-header" style="padding:0 0 18px">
-          <div class="section-title"><div class="accent-bar"></div><span class="icon">🔗</span><h2>Animes Similares</h2></div>
-        </div>
-        <div class="scroll-row-wrapper">
-          <button class="scroll-arrow left">‹</button>
-          <div class="scroll-row" id="related-grid"></div>
-          <button class="scroll-arrow right">›</button>
-        </div>
+        <div class="section-header" style="padding:0 0 18px"><div class="section-title"><div class="accent-bar"></div><span class="icon">🔗</span><h2>Animes Similares</h2></div></div>
+        <div class="scroll-row-wrapper"><button class="scroll-arrow left">‹</button><div class="scroll-row" id="related-grid"></div><button class="scroll-arrow right">›</button></div>
       </section>
     </div>
 
@@ -141,13 +127,9 @@
         <div class="sidebar-stat"><span class="label">Tipo</span><span class="value" id="stat-type">—</span></div>
         <div class="sidebar-stat"><span class="label">Episodios</span><span class="value" id="stat-episodes">—</span></div>
         <div class="sidebar-stat"><span class="label">Año</span><span class="value" id="stat-year">—</span></div>
-        <div class="sidebar-stat"><span class="label">Rating</span><span class="value" style="color:#fbbf24" id="stat-rating">—</span></div>
+        <div class="sidebar-stat"><span class="label">Rating</span><span class="value" style="color:var(--accent-light)" id="stat-rating">—</span></div>
         <div class="sidebar-stat"><span class="label">Popularidad</span><span class="value" id="stat-popularity">—</span></div>
         <div class="sidebar-stat"><span class="label">Estudios</span><span class="value" style="font-size:12px" id="stat-studios">—</span></div>
-        <div class="sidebar-stat">
-          <span class="label">Streams</span>
-          <span class="value accent" style="font-size:12px">📺 Gogoanime · HiAnime</span>
-        </div>
       </div>
       <div style="margin-top:18px">
         <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);font-weight:700;margin-bottom:9px">Géneros</div>
@@ -159,7 +141,7 @@
 
 <footer style="border-top:1px solid var(--border-subtle)">
   <div class="footer-bottom" style="justify-content:center;padding:22px 5%">
-    <p style="font-size:12px;color:var(--text-muted)">© 2024 Kawaii Anime · <a href="index.html" style="color:var(--accent-light)">Inicio</a></p>
+    <p style="font-size:12px;color:var(--text-muted)">© 2024 YOAKE · 夜明け · <a href="index.html" style="color:var(--accent-light)">Inicio</a></p>
   </div>
 </footer>
 
@@ -167,16 +149,11 @@
 <div class="toast-container" id="toast-container"></div>
 <script src="script.js"></script>
 <script>
-  /* Extiende renderSidebarStats con campos adicionales */
-  const _origSS = window.renderSidebarStats;
-  window.renderSidebarStats = (a, id, source) => {
-    _origSS(a, id, source);
-    const bc = document.getElementById('breadcrumb-type');
-    if (bc) bc.textContent = a.type || 'Anime';
-    if (a.characters?.length) {
-      const sec = document.getElementById('characters-section');
-      if (sec) sec.style.display = 'block';
-    }
+  const _origSS=window.renderSidebarStats;
+  window.renderSidebarStats=(a,id,source)=>{
+    _origSS(a,id,source);
+    const bc=document.getElementById('breadcrumb-type');if(bc)bc.textContent=a.type||'Anime';
+    if(a.characters?.length){const sec=document.getElementById('characters-section');if(sec)sec.style.display='block';}
   };
 </script>
 </body>
